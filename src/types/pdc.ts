@@ -124,6 +124,8 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  /** Slug del tenant al que pertenece el usuario (ej. "acme", "default") */
+  tenantSlug: string;
 }
 
 export const STATUS_LABELS: Record<PdcStatus, string> = {

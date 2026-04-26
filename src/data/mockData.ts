@@ -1,12 +1,12 @@
 import type { Pdc, PdcMilestone, TechnicalSpec, Rfq, RfqSupplier, PurchaseOrder, FatEvent, LogisticsEvent, Alert, User } from "@/types/pdc";
 
 export const mockUsers: User[] = [
-  { id: "u1", name: "Carlos Mendoza", email: "carlos@procurement.cl", role: "admin" },
-  { id: "u2", name: "María López", email: "maria@procurement.cl", role: "compras" },
-  { id: "u3", name: "Juan Torres", email: "juan@procurement.cl", role: "ingenieria" },
-  { id: "u4", name: "Ana Ruiz", email: "ana@procurement.cl", role: "gerente" },
-  { id: "u5", name: "Pedro Silva", email: "pedro@procurement.cl", role: "planificacion" },
-  { id: "u6", name: "Lucia Vargas", email: "lucia@procurement.cl", role: "logistica" },
+  { id: "u1", name: "Carlos Mendoza", email: "carlos@procurement.cl", role: "admin", tenantSlug: "default" },
+  { id: "u2", name: "María López", email: "maria@procurement.cl", role: "compras", tenantSlug: "default" },
+  { id: "u3", name: "Juan Torres", email: "juan@procurement.cl", role: "ingenieria", tenantSlug: "acme" },
+  { id: "u4", name: "Ana Ruiz", email: "ana@procurement.cl", role: "gerente", tenantSlug: "codelco" },
+  { id: "u5", name: "Pedro Silva", email: "pedro@procurement.cl", role: "planificacion", tenantSlug: "default" },
+  { id: "u6", name: "Lucia Vargas", email: "lucia@procurement.cl", role: "logistica", tenantSlug: "default" },
 ];
 
 export const mockPdcs: Pdc[] = [
