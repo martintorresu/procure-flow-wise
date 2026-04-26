@@ -4,10 +4,12 @@ import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Link2 } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
 import inhrLogo from "@/assets/inhr-logo.png";
+import { useTenant } from "@/config/tenants";
 
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const tenant = useTenant();
   const [email, setEmail] = useState("carlos@procurement.cl");
   const [password, setPassword] = useState("demo123");
   const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +66,7 @@ export default function LoginPage() {
               </div>
             </div>
             <h1 className="text-[32px] font-bold text-white tracking-tight leading-none">
-              Procurement
+              {tenant.name}
             </h1>
             <p className="mt-2 text-[16px] font-light text-[#4ABFB5]">
               by <span className="font-medium">InHR</span>
