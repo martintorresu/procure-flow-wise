@@ -64,27 +64,27 @@ export default function LoginPage() {
       {/* Login card */}
       <div className="relative w-full max-w-md">
         <div
-          className="relative rounded-[24px] border border-white/25 bg-[#0A1628]/75 backdrop-blur-2xl p-8 sm:p-10 shadow-[0_30px_80px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(74,191,181,0.15)] ring-1 ring-white/10 animate-fade-in-up"
+          className="relative rounded-[24px] border border-white/30 bg-[#0A1628]/85 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_30px_80px_-15px_rgba(0,0,0,0.8),0_0_0_1px_rgba(74,191,181,0.18)] ring-1 ring-white/15 animate-fade-in-up"
         >
           {/* Logo */}
-          <div className="flex flex-col items-center text-center mb-8">
+          <div className="flex flex-col items-center text-center mb-7 sm:mb-8">
             <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2255E8] via-[#4ABFB5] to-[#E8934A] p-[1.5px] mb-5 shadow-[0_8px_24px_rgba(34,85,232,0.4)]">
-              <div className="w-full h-full rounded-[14px] bg-[#0A1628]/60 backdrop-blur-md flex items-center justify-center">
+              <div className="w-full h-full rounded-[14px] bg-[#0A1628]/80 backdrop-blur-md flex items-center justify-center">
                 <Link2 className="w-6 h-6 text-white" strokeWidth={2.2} />
               </div>
             </div>
-            <h1 className="text-[32px] font-bold text-white tracking-tight leading-none">
+            <h1 className="text-[26px] sm:text-[32px] font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
               {tenant.name}
             </h1>
-            <p className="mt-2 text-[16px] font-light text-[#4ABFB5]">
-              by <span className="font-medium">InHR</span>
+            <p className="mt-2 text-[15px] sm:text-[16px] font-light text-[#7AD9CF]">
+              by <span className="font-semibold text-white">InHR</span>
             </p>
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-xs font-medium text-white/70 uppercase tracking-wider">
+              <label htmlFor="email" className="text-xs font-semibold text-white/90 uppercase tracking-wider">
                 Correo
               </label>
               <input
@@ -93,12 +93,12 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@empresa.com"
-                className="w-full h-12 px-4 rounded-xl bg-[#0A1628]/60 border border-white/10 text-white placeholder:text-[#7A8AA8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/30 focus:bg-[#0A1628]/80"
+                className="w-full h-12 px-4 rounded-xl bg-[#0A1628]/80 border border-white/20 text-white placeholder:text-[#94A3B8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/40 focus:bg-[#0A1628]/95"
               />
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="password" className="text-xs font-medium text-white/70 uppercase tracking-wider">
+              <label htmlFor="password" className="text-xs font-semibold text-white/90 uppercase tracking-wider">
                 Contraseña
               </label>
               <div className="relative">
@@ -108,12 +108,12 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-12 px-4 pr-12 rounded-xl bg-[#0A1628]/60 border border-white/10 text-white placeholder:text-[#7A8AA8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/30 focus:bg-[#0A1628]/80"
+                  className="w-full h-12 px-4 pr-12 rounded-xl bg-[#0A1628]/80 border border-white/20 text-white placeholder:text-[#94A3B8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/40 focus:bg-[#0A1628]/95"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-[#4ABFB5] transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/70 hover:text-[#4ABFB5] transition-colors"
                   aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -137,16 +137,16 @@ export default function LoginPage() {
             </button>
 
             <div className="text-center">
-              <a href="#" className="text-sm text-[#4ABFB5] hover:text-[#7AD9CF] transition-colors">
+              <a href="#" className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
                 ¿Olvidaste tu contraseña?
               </a>
             </div>
           </form>
 
           {/* Demo users hint */}
-          <div className="mt-6 p-3 rounded-xl bg-[#0A1628]/40 border border-white/5">
-            <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider mb-1.5">Usuarios demo</p>
-            <div className="text-[11px] text-white/60 space-y-0.5 leading-relaxed">
+          <div className="mt-6 p-3 rounded-xl bg-[#0A1628]/70 border border-white/15">
+            <p className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-1.5">Usuarios demo</p>
+            <div className="text-[12px] text-white/85 space-y-0.5 leading-relaxed">
               <p>carlos@procurement.cl · admin</p>
               <p>maria@procurement.cl · compras</p>
               <p>juan@procurement.cl · ingeniería</p>
@@ -154,8 +154,8 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <p className="mt-6 text-center text-[11px] text-white/30 tracking-wider">
-            Powered by <span className="text-white/50 font-medium">InHR</span>
+          <p className="mt-6 text-center text-[11px] text-white/60 tracking-wider">
+            Powered by <span className="text-white/90 font-semibold">InHR</span>
           </p>
         </div>
       </div>
