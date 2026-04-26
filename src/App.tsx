@@ -36,6 +36,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginRoute />} />
+            <Route path="/t/:tenantSlug/login" element={<LoginRoute />} />
             <Route element={<ProtectedRoutes />}>
               <Route path="/" element={<DashboardPage />} />
               <Route path="/pdcs" element={<PdcListPage />} />
