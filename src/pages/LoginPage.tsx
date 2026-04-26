@@ -39,7 +39,9 @@ export default function LoginPage() {
         aria-hidden
       />
       {/* Soft dark overlay for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628]/40 via-transparent to-[#1A3BB5]/30" aria-hidden />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628]/70 via-[#0A1628]/50 to-[#1A3BB5]/50" aria-hidden />
+      {/* Vignette to focus on the card */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(10,22,40,0.65)_100%)]" aria-hidden />
 
       {/* Floating glow orbs for extra depth */}
       <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-[#2255E8]/30 blur-[120px] animate-orb-1" aria-hidden />
@@ -62,7 +64,7 @@ export default function LoginPage() {
       {/* Login card */}
       <div className="relative w-full max-w-md">
         <div
-          className="relative rounded-[24px] border border-white/15 bg-white/[0.08] backdrop-blur-2xl p-8 sm:p-10 shadow-[0_20px_70px_-15px_rgba(26,59,181,0.6)] animate-fade-in-up"
+          className="relative rounded-[24px] border border-white/25 bg-[#0A1628]/75 backdrop-blur-2xl p-8 sm:p-10 shadow-[0_30px_80px_-15px_rgba(0,0,0,0.7),0_0_0_1px_rgba(74,191,181,0.15)] ring-1 ring-white/10 animate-fade-in-up"
         >
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-8">
