@@ -9,6 +9,7 @@ import { useTenant } from "@/config/tenants";
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const tenant = useTenant();
   const [email, setEmail] = useState("carlos@procurement.cl");
   const [password, setPassword] = useState("demo123");
   const [showPassword, setShowPassword] = useState(false);
