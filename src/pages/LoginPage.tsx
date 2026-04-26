@@ -17,8 +17,14 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (login(email, password)) {
-      navigate("/");
+    const result = login(email, password, tenant.slug);
+    if (result.ok) {
+      navigate(tenant.slug === "default" ? "/" : `/t/${tenant.slug}`);
+    } else if (result.reason === "wrong_tenant") {
+      const correct = result.expectedTenant ?? "default";
+      const target = correct === "default" ? "/login" : `/t/${correct}/login`;
+      setError(`Este usuario pertenece a otro tenant. Redirigiendo…`);
+      setTimeout(() => navigate(target), 1200);
     } else {
       setError("Credenciales inválidas. Use un email de la lista demo.");
     }
