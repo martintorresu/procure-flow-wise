@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Link2 } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
+import inhrLogo from "@/assets/inhr-logo.png";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -36,6 +37,19 @@ export default function LoginPage() {
       <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-[#2255E8]/30 blur-[120px] animate-orb-1" aria-hidden />
       <div className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full bg-[#E8934A]/20 blur-[140px] animate-orb-2" aria-hidden />
       <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] rounded-full bg-[#4ABFB5]/20 blur-[100px] animate-orb-3" aria-hidden />
+
+      {/* InHR logo top-right */}
+      <a
+        href="https://www.inovahr.com"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="absolute top-5 right-5 sm:top-6 sm:right-6 z-10 group"
+        aria-label="InovaHR"
+      >
+        <div className="rounded-xl bg-white/90 backdrop-blur-md px-3 py-2 shadow-lg border border-white/40 transition-all group-hover:bg-white group-hover:scale-105">
+          <img src={inhrLogo} alt="InHR — Powered by InovaHR" className="h-8 sm:h-10 w-auto object-contain" />
+        </div>
+      </a>
 
       {/* Login card */}
       <div className="relative w-full max-w-md">
