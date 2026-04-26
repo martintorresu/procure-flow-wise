@@ -31,7 +31,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4 sm:p-6">
       {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center scale-110 animate-bg-drift"
@@ -62,27 +62,27 @@ export default function LoginPage() {
       </a>
 
       {/* Login card */}
-      <div className="relative w-full max-w-md">
+      <div className="relative w-full max-w-[400px] sm:max-w-md">
         <div
-          className="relative rounded-[24px] border border-white/30 bg-[#0A1628]/85 backdrop-blur-2xl p-6 sm:p-10 shadow-[0_30px_80px_-15px_rgba(0,0,0,0.8),0_0_0_1px_rgba(74,191,181,0.18)] ring-1 ring-white/15 animate-fade-in-up"
+          className="relative rounded-2xl sm:rounded-[24px] border border-white/30 bg-[#0A1628]/85 backdrop-blur-2xl p-5 sm:p-8 md:p-10 shadow-[0_30px_80px_-15px_rgba(0,0,0,0.8),0_0_0_1px_rgba(74,191,181,0.18)] ring-1 ring-white/15 animate-fade-in-up"
         >
           {/* Logo */}
-          <div className="flex flex-col items-center text-center mb-7 sm:mb-8">
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2255E8] via-[#4ABFB5] to-[#E8934A] p-[1.5px] mb-5 shadow-[0_8px_24px_rgba(34,85,232,0.4)]">
+          <div className="flex flex-col items-center text-center mb-5 sm:mb-7">
+            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#2255E8] via-[#4ABFB5] to-[#E8934A] p-[1.5px] mb-3 sm:mb-4 shadow-[0_8px_24px_rgba(34,85,232,0.4)]">
               <div className="w-full h-full rounded-[14px] bg-[#0A1628]/80 backdrop-blur-md flex items-center justify-center">
-                <Link2 className="w-6 h-6 text-white" strokeWidth={2.2} />
+                <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.2} />
               </div>
             </div>
-            <h1 className="text-[26px] sm:text-[32px] font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+            <h1 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
               {tenant.name}
             </h1>
-            <p className="mt-2 text-[15px] sm:text-[16px] font-light text-[#7AD9CF]">
+            <p className="mt-1.5 text-[13px] sm:text-[15px] font-light text-[#7AD9CF]">
               by <span className="font-semibold text-white">InHR</span>
             </p>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
               <label htmlFor="email" className="text-xs font-semibold text-white/90 uppercase tracking-wider">
                 Correo
@@ -93,7 +93,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="tu@empresa.com"
-                className="w-full h-12 px-4 rounded-xl bg-[#0A1628]/80 border border-white/20 text-white placeholder:text-[#94A3B8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/40 focus:bg-[#0A1628]/95"
+                className="w-full h-11 sm:h-12 px-4 rounded-xl bg-[#0A1628]/80 border border-white/20 text-white text-[15px] sm:text-base placeholder:text-[#94A3B8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/40 focus:bg-[#0A1628]/95"
               />
             </div>
 
@@ -108,7 +108,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full h-12 px-4 pr-12 rounded-xl bg-[#0A1628]/80 border border-white/20 text-white placeholder:text-[#94A3B8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/40 focus:bg-[#0A1628]/95"
+                  className="w-full h-11 sm:h-12 px-4 pr-12 rounded-xl bg-[#0A1628]/80 border border-white/20 text-white text-[15px] sm:text-base placeholder:text-[#94A3B8] outline-none transition-all focus:border-[#4ABFB5] focus:ring-2 focus:ring-[#4ABFB5]/40 focus:bg-[#0A1628]/95"
                 />
                 <button
                   type="button"
@@ -130,7 +130,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="group relative w-full h-12 rounded-xl bg-gradient-to-r from-[#1A3BB5] to-[#2255E8] text-white font-bold text-sm tracking-wide overflow-hidden transition-all hover:shadow-[0_10px_30px_-5px_rgba(34,85,232,0.7)] hover:-translate-y-[1px] active:translate-y-0"
+              className="group relative w-full h-11 sm:h-12 mt-1 rounded-xl bg-gradient-to-r from-[#1A3BB5] to-[#2255E8] text-white font-bold text-sm tracking-wide overflow-hidden transition-all hover:shadow-[0_10px_30px_-5px_rgba(34,85,232,0.7)] hover:-translate-y-[1px] active:translate-y-0"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-[#2255E8] to-[#4ABFB5] opacity-0 group-hover:opacity-100 transition-opacity" />
               <span className="relative">Ingresar</span>
@@ -144,9 +144,9 @@ export default function LoginPage() {
           </form>
 
           {/* Demo users hint */}
-          <div className="mt-6 p-3 rounded-xl bg-[#0A1628]/70 border border-white/15">
+          <div className="mt-5 sm:mt-6 p-2.5 sm:p-3 rounded-xl bg-[#0A1628]/70 border border-white/15">
             <p className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-1.5">Usuarios demo</p>
-            <div className="text-[12px] text-white/85 space-y-0.5 leading-relaxed">
+            <div className="text-[11px] sm:text-[12px] text-white/85 space-y-0.5 leading-relaxed">
               <p>carlos@procurement.cl · admin</p>
               <p>maria@procurement.cl · compras</p>
               <p>juan@procurement.cl · ingeniería</p>
@@ -154,7 +154,7 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <p className="mt-6 text-center text-[11px] text-white/60 tracking-wider">
+          <p className="mt-4 sm:mt-6 text-center text-[10px] sm:text-[11px] text-white/60 tracking-wider">
             Powered by <span className="text-white/90 font-semibold">InHR</span>
           </p>
         </div>
