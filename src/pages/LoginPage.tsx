@@ -46,8 +46,8 @@ export default function LoginPage() {
         className="absolute top-5 right-5 sm:top-6 sm:right-6 z-10 group"
         aria-label="InovaHR"
       >
-        <div className="rounded-xl bg-white/90 backdrop-blur-md px-4 py-3 shadow-lg border border-white/40 transition-all group-hover:bg-white group-hover:scale-105">
-          <img src={inhrLogo} alt="InHR — Powered by InovaHR" className="h-[52px] sm:h-16 w-auto object-contain" />
+        <div className="rounded-xl bg-white/90 backdrop-blur-md px-2.5 py-1.5 sm:px-4 sm:py-3 shadow-lg border border-white/40 transition-all group-hover:bg-white group-hover:scale-105">
+          <img src={inhrLogo} alt="InHR — Powered by InovaHR" className="h-9 sm:h-16 w-auto object-contain" />
         </div>
       </a>
 
