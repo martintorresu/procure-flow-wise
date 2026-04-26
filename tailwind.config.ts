@@ -89,11 +89,36 @@ export default {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.6" },
         },
+        "bg-drift": {
+          "0%, 100%": { transform: "scale(1.1) rotate(0deg) translate(0,0)" },
+          "50%": { transform: "scale(1.15) rotate(3deg) translate(-1%, 1%)" },
+        },
+        "orb-1": {
+          "0%, 100%": { transform: "translate(0,0) scale(1)" },
+          "50%": { transform: "translate(40px,30px) scale(1.1)" },
+        },
+        "orb-2": {
+          "0%, 100%": { transform: "translate(0,0) scale(1)" },
+          "50%": { transform: "translate(-30px,-40px) scale(1.08)" },
+        },
+        "orb-3": {
+          "0%, 100%": { transform: "translate(0,0) scale(1)" },
+          "50%": { transform: "translate(-20px,30px) scale(1.12)" },
+        },
+        "fade-in-up": {
+          "0%": { opacity: "0", transform: "translateY(12px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "pulse-slow": "pulse-slow 2s ease-in-out infinite",
+        "bg-drift": "bg-drift 24s ease-in-out infinite",
+        "orb-1": "orb-1 18s ease-in-out infinite",
+        "orb-2": "orb-2 22s ease-in-out infinite",
+        "orb-3": "orb-3 20s ease-in-out infinite",
+        "fade-in-up": "fade-in-up 0.6s ease-out both",
       },
     },
   },
