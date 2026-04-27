@@ -13,11 +13,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History } from "lucide-react";
 import { useEtForm, SECTIONS } from "@/hooks/useEtForm";
 import { DynamicField } from "./DynamicField";
 import type { EtSectionKey } from "@/types/etForm";
 import { toast } from "sonner";
+import { exportEtFormToPdf } from "@/lib/etPdfExport";
 
 interface EtFormPanelProps {
   processId: string | null;
@@ -29,6 +30,9 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const {
     loading,
     exists,
+    pdcNumber,
+    status,
+    processStage,
     equipmentTypeCode,
     equipmentSchema,
     equipmentTypes,
@@ -38,9 +42,14 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     completionPct,
     isDirty,
     isReadOnly,
+    canEdit,
+    auditLog,
+    alertLevel,
+    alertMessage,
     setSection,
     setEquipmentType,
     saveNow,
+    submitForReview,
   } = useEtForm(demoMode ? null : processId);
 
   const [activeSection, setActiveSection] = useState<EtSectionKey>("section_1");
@@ -110,17 +119,122 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     if (saveStatus !== "error") toast.success("Formulario guardado");
   };
 
+  const handleSubmit = async () => {
+    if (isDirty) await saveNow();
+    const result = await submitForReview();
+    if (result.ok) {
+      toast.success("ET enviado a Programación");
+    } else if (result.missing && result.missing.length > 0) {
+      toast.error("Faltan campos obligatorios", {
+        description: result.missing.slice(0, 5).join(" · ") + (result.missing.length > 5 ? "…" : ""),
+      });
+    }
+  };
+
+  const handleExportPdf = () => {
+    const equipmentTypeName = equipmentTypes.find((t) => t.code === equipmentTypeCode)?.name ?? null;
+    exportEtFormToPdf({
+      pdcNumber,
+      status,
+      completionPct,
+      equipmentTypeName,
+      schema: equipmentSchema,
+      data,
+    });
+  };
+
+  const statusLabels: Record<string, string> = {
+    borrador: "Borrador",
+    incompleto: "Incompleto",
+    completo: "Completo",
+    en_revision: "En Revisión",
+    aprobado: "Aprobado",
+    rechazado: "Rechazado",
+    cerrado: "Cerrado",
+  };
+  const statusVariant = (s: string | null) => {
+    if (s === "aprobado" || s === "cerrado") return "default";
+    if (s === "rechazado") return "destructive";
+    return "outline";
+  };
+
   return (
     <div className="space-y-4">
+      {/* Alerta de inactividad */}
+      {alertLevel !== "none" && alertMessage && (
+        <div
+          className={`flex items-start gap-3 p-3 rounded border ${
+            alertLevel === "critical"
+              ? "bg-danger/10 border-danger/30 text-danger"
+              : alertLevel === "warning"
+                ? "bg-warning/10 border-warning/30 text-warning"
+                : "bg-muted/50 border-muted-foreground/20 text-muted-foreground"
+          }`}
+        >
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <p className="text-sm">{alertMessage}</p>
+        </div>
+      )}
+
+      {!canEdit && exists && (
+        <div className="flex items-start gap-3 p-3 rounded border bg-muted/30 text-sm">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <p>
+            Modo lectura. Tu rol no puede editar este ET en la etapa actual
+            ({processStage ?? "—"}).
+          </p>
+        </div>
+      )}
+
       {/* Header con progreso y estado de guardado */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-sm font-medium">Completitud</span>
               <span className="text-sm text-muted-foreground">{completionPct}%</span>
-              {exists && <Badge variant="outline" className="text-xs">Borrador</Badge>}
+              {exists && status && (
+                <Badge variant={statusVariant(status)} className="text-xs">
+                  {statusLabels[status] ?? status}
+                </Badge>
+              )}
             </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {saveStatus === "saving" && (
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="w-3 h-3 animate-spin" /> Guardando…
+                </span>
+              )}
+              {saveStatus === "saved" && !isDirty && (
+                <span className="text-xs text-success flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" /> Guardado
+                  {lastSavedAt && ` ${lastSavedAt.toLocaleTimeString()}`}
+                </span>
+              )}
+              {saveStatus === "error" && (
+                <span className="text-xs text-danger flex items-center gap-1">
+                  <AlertCircle className="w-3 h-3" /> Error al guardar
+                </span>
+              )}
+              {isDirty && saveStatus !== "saving" && (
+                <span className="text-xs text-warning">Cambios sin guardar</span>
+              )}
+              <Button size="sm" variant="outline" onClick={handleExportPdf} disabled={!exists}>
+                <FileDown className="w-3.5 h-3.5" /> PDF
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleSave} disabled={isReadOnly}>
+                <Save className="w-3.5 h-3.5" /> Guardar
+              </Button>
+              {canEdit && status !== "en_revision" && status !== "aprobado" && status !== "cerrado" && (
+                <Button size="sm" onClick={handleSubmit} disabled={completionPct < 100 && false}>
+                  <Send className="w-3.5 h-3.5" /> Enviar a Programación
+                </Button>
+              )}
+            </div>
+          </div>
+          <Progress value={completionPct} className="h-2" />
+        </CardContent>
+      </Card>
             <div className="flex items-center gap-2">
               {saveStatus === "saving" && (
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
