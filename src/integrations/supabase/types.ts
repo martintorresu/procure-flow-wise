@@ -333,6 +333,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      role_can_access_stage: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _stage: Database["public"]["Enums"]["process_stage"]
+        }
+        Returns: boolean
+      }
+      user_can_access_stage: {
+        Args: {
+          _stage: Database["public"]["Enums"]["process_stage"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
