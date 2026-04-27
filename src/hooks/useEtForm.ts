@@ -39,6 +39,7 @@ interface UseEtFormResult {
   isDirty: boolean;
   isReadOnly: boolean;
   canEdit: boolean;
+  canReview: boolean;
   auditLog: AuditEntry[];
   alertLevel: "none" | "info" | "warning" | "critical";
   alertMessage: string | null;
@@ -46,6 +47,8 @@ interface UseEtFormResult {
   setEquipmentType: (code: string) => Promise<void>;
   saveNow: () => Promise<void>;
   submitForReview: () => Promise<{ ok: boolean; missing?: string[] }>;
+  approve: () => Promise<{ ok: boolean; error?: string }>;
+  reject: (reason: string) => Promise<{ ok: boolean; error?: string }>;
 }
 
 const AUTO_SAVE_MS = 30_000;
