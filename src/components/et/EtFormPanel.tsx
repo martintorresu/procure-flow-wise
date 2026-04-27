@@ -530,6 +530,40 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Diálogo de rechazo */}
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rechazar formulario ET</DialogTitle>
+            <DialogDescription>
+              Indica el motivo. El ET volverá a estado "Borrador" y el responsable de Ingeniería podrá corregirlo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reject-reason">Motivo del rechazo *</Label>
+            <Textarea
+              id="reject-reason"
+              rows={4}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Ej. Faltan especificaciones de aislamiento del transformador…"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleReject}
+              disabled={rejectReason.trim().length < 5}
+              className="bg-danger hover:bg-danger/90 text-danger-foreground"
+            >
+              Confirmar rechazo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
