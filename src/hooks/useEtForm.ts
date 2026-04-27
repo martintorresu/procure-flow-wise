@@ -12,12 +12,22 @@ import type { EtFieldDef } from "@/types/etForm";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+export interface AuditEntry {
+  id: string;
+  action: string;
+  details: string | null;
+  user_name: string | null;
+  user_area: string | null;
+  created_at: string;
+}
+
 interface UseEtFormResult {
   loading: boolean;
   exists: boolean; // ¿hay registro real en BD?
   formId: string | null;
   processId: string | null;
   pdcNumber: string | null;
+  processStage: string | null;
   status: string | null;
   equipmentTypeCode: string | null;
   equipmentSchema: EtFieldDef[] | null;
@@ -28,9 +38,14 @@ interface UseEtFormResult {
   completionPct: number;
   isDirty: boolean;
   isReadOnly: boolean;
+  canEdit: boolean;
+  auditLog: AuditEntry[];
+  alertLevel: "none" | "info" | "warning" | "critical";
+  alertMessage: string | null;
   setSection: (key: EtSectionKey, value: unknown) => void;
   setEquipmentType: (code: string) => Promise<void>;
   saveNow: () => Promise<void>;
+  submitForReview: () => Promise<{ ok: boolean; missing?: string[] }>;
 }
 
 const AUTO_SAVE_MS = 30_000;
