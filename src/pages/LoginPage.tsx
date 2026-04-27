@@ -129,28 +129,19 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="group relative w-full h-11 sm:h-12 mt-1 rounded-xl bg-gradient-to-r from-[#1A3BB5] to-[#2255E8] text-white font-bold text-sm tracking-wide overflow-hidden transition-all hover:shadow-[0_10px_30px_-5px_rgba(34,85,232,0.7)] hover:-translate-y-[1px] active:translate-y-0"
+              disabled={submitting}
+              className="group relative w-full h-11 sm:h-12 mt-1 rounded-xl bg-gradient-to-r from-[#1A3BB5] to-[#2255E8] text-white font-bold text-sm tracking-wide overflow-hidden transition-all hover:shadow-[0_10px_30px_-5px_rgba(34,85,232,0.7)] hover:-translate-y-[1px] active:translate-y-0 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <span className="absolute inset-0 bg-gradient-to-r from-[#2255E8] to-[#4ABFB5] opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="relative">Ingresar</span>
+              <span className="relative">{submitting ? "Ingresando…" : "Ingresar"}</span>
             </button>
 
             <div className="text-center">
-              <a href="#" className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
-                ¿Olvidaste tu contraseña?
-              </a>
+              <Link to="/signup" className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
+                ¿No tienes cuenta? Regístrate
+              </Link>
             </div>
           </form>
-
-          {/* Demo users hint */}
-          <div className="mt-5 sm:mt-6 p-2.5 sm:p-3 rounded-xl bg-[#0A1628]/70 border border-white/15">
-            <p className="text-[10px] font-bold text-white/80 uppercase tracking-wider mb-1.5">Usuarios demo</p>
-            <div className="text-[11px] sm:text-[12px] text-white/85 space-y-0.5 leading-relaxed">
-              <p>carlos@procurement.cl · admin</p>
-              <p>maria@procurement.cl · compras</p>
-              <p>juan@procurement.cl · ingeniería</p>
-            </div>
-          </div>
 
           {/* Footer */}
           <p className="mt-4 sm:mt-6 text-center text-[10px] sm:text-[11px] text-white/60 tracking-wider">
