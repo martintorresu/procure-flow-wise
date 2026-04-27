@@ -156,6 +156,23 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     });
   };
 
+  const handleApprove = async () => {
+    const r = await approve();
+    if (r.ok) toast.success("ET aprobado");
+    else toast.error(r.error ?? "No se pudo aprobar");
+  };
+
+  const handleReject = async () => {
+    const r = await reject(rejectReason);
+    if (r.ok) {
+      toast.success("ET rechazado, vuelto a borrador");
+      setRejectOpen(false);
+      setRejectReason("");
+    } else {
+      toast.error(r.error ?? "No se pudo rechazar");
+    }
+  };
+
   const statusLabels: Record<string, string> = {
     borrador: "Borrador",
     incompleto: "Incompleto",
