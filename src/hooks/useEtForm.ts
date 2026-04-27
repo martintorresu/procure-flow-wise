@@ -12,12 +12,22 @@ import type { EtFieldDef } from "@/types/etForm";
 
 type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+export interface AuditEntry {
+  id: string;
+  action: string;
+  details: string | null;
+  user_name: string | null;
+  user_area: string | null;
+  created_at: string;
+}
+
 interface UseEtFormResult {
   loading: boolean;
   exists: boolean; // ¿hay registro real en BD?
   formId: string | null;
   processId: string | null;
   pdcNumber: string | null;
+  processStage: string | null;
   status: string | null;
   equipmentTypeCode: string | null;
   equipmentSchema: EtFieldDef[] | null;
@@ -28,9 +38,14 @@ interface UseEtFormResult {
   completionPct: number;
   isDirty: boolean;
   isReadOnly: boolean;
+  canEdit: boolean;
+  auditLog: AuditEntry[];
+  alertLevel: "none" | "info" | "warning" | "critical";
+  alertMessage: string | null;
   setSection: (key: EtSectionKey, value: unknown) => void;
   setEquipmentType: (code: string) => Promise<void>;
   saveNow: () => Promise<void>;
+  submitForReview: () => Promise<{ ok: boolean; missing?: string[] }>;
 }
 
 const AUTO_SAVE_MS = 30_000;
@@ -99,6 +114,8 @@ export function useEtForm(processId: string | null): UseEtFormResult {
   const [exists, setExists] = useState(false);
   const [formId, setFormId] = useState<string | null>(null);
   const [pdcNumber, setPdcNumber] = useState<string | null>(null);
+  const [processStage, setProcessStage] = useState<string | null>(null);
+  const [requestingArea, setRequestingArea] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [equipmentTypeCode, setEquipmentTypeCode] = useState<string | null>(null);
   const [equipmentSchema, setEquipmentSchema] = useState<EtFieldDef[] | null>(null);
@@ -109,9 +126,20 @@ export function useEtForm(processId: string | null): UseEtFormResult {
   const dirtyRef = useRef(false);
   const [isDirty, setIsDirty] = useState(false);
   const dataRef = useRef<EtFormState>(EMPTY_ET_FORM);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
 
-  // Sólo lectura si está enviado/aprobado/cerrado
-  const isReadOnly = status === "en_revision" || status === "aprobado" || status === "cerrado";
+  // Permisos: ingeniería puede editar solo en stage 'ingenieria'
+  const userRole = user?.role;
+  const canEdit =
+    !!user &&
+    (userRole === "admin" ||
+      (userRole === "ingenieria" && processStage === "ingenieria"));
+  // Sólo lectura si está enviado/aprobado/cerrado o sin permiso
+  const isReadOnly =
+    !canEdit ||
+    status === "en_revision" ||
+    status === "aprobado" ||
+    status === "cerrado";
 
   // ---- Carga inicial ----
   useEffect(() => {
@@ -140,10 +168,14 @@ export function useEtForm(processId: string | null): UseEtFormResult {
 
       const { data: process } = await supabase
         .from("purchase_processes")
-        .select("pdc_number")
+        .select("pdc_number, current_stage, requesting_area")
         .eq("id", processId)
         .maybeSingle();
-      if (!cancelled && process) setPdcNumber(process.pdc_number);
+      if (!cancelled && process) {
+        setPdcNumber(process.pdc_number);
+        setProcessStage(process.current_stage);
+        setRequestingArea(process.requesting_area);
+      }
 
       // 3. Buscar et_form existente
       const { data: form } = await supabase
@@ -190,6 +222,14 @@ export function useEtForm(processId: string | null): UseEtFormResult {
             setEquipmentSchema(schema.fields_schema as unknown as EtFieldDef[]);
           }
         }
+        // Cargar audit log
+        const { data: audits } = await supabase
+          .from("et_audit_log")
+          .select("id, action, details, user_name, user_area, created_at")
+          .eq("et_form_id", form.id)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!cancelled && audits) setAuditLog(audits as AuditEntry[]);
       }
       setLoading(false);
     }
@@ -198,6 +238,27 @@ export function useEtForm(processId: string | null): UseEtFormResult {
       cancelled = true;
     };
   }, [processId]);
+
+  // ---- Auditoría ----
+  const logAudit = useCallback(
+    async (etFormId: string, action: string, details?: string) => {
+      const entry = {
+        et_form_id: etFormId,
+        action,
+        details: details ?? null,
+        user_id: user?.id ?? null,
+        user_name: user?.name ?? null,
+        user_area: user?.role ?? null,
+      };
+      const { data: created } = await supabase
+        .from("et_audit_log")
+        .insert(entry)
+        .select("id, action, details, user_name, user_area, created_at")
+        .single();
+      if (created) setAuditLog((prev) => [created as AuditEntry, ...prev]);
+    },
+    [user],
+  );
 
   // ---- Helpers ----
   const setSection = useCallback((key: EtSectionKey, value: unknown) => {
@@ -224,11 +285,12 @@ export function useEtForm(processId: string | null): UseEtFormResult {
       // Si ya existe el form, persistir el cambio
       if (formId) {
         await supabase.from("et_forms").update({ equipment_type_code: code }).eq("id", formId);
+        void logAudit(formId, "tipo_equipo_cambiado", `Tipo: ${code}`);
       }
       dirtyRef.current = true;
       setIsDirty(true);
     },
-    [formId],
+    [formId, logAudit],
   );
 
   // Crea form + form_data si no existen aún
@@ -258,8 +320,9 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     setFormId(created.id);
     setExists(true);
     setStatus(created.status);
+    void logAudit(created.id, "creado", "Formulario ET inicializado");
     return created.id;
-  }, [formId, processId, user, equipmentTypeCode]);
+  }, [formId, processId, user, equipmentTypeCode, logAudit]);
 
   const saveNow = useCallback(async () => {
     if (isReadOnly) return;
@@ -322,12 +385,72 @@ export function useEtForm(processId: string | null): UseEtFormResult {
 
   const completionPct = calcCompletion(data, equipmentSchema);
 
+  // ---- submitForReview: borrador/completo → en_revision ----
+  const submitForReview = useCallback(async (): Promise<{ ok: boolean; missing?: string[] }> => {
+    if (!formId) return { ok: false, missing: ["Formulario no inicializado"] };
+    if (!canEdit) return { ok: false, missing: ["Sin permisos para enviar"] };
+
+    // Validar campos mínimos
+    const missing: string[] = [];
+    const s1 = dataRef.current.section_1 as Record<string, string>;
+    if (!s1.responsable) missing.push("Responsable Técnico");
+    if (!s1.fecha_solicitud) missing.push("Fecha Solicitud");
+    if (!s1.tag_equipo) missing.push("TAG / Identificador");
+    if (!s1.ubicacion) missing.push("Ubicación / Área");
+    const s2 = dataRef.current.section_2 as Record<string, string>;
+    if (!s2.objetivo) missing.push("Objetivo");
+    if (!s2.alcance) missing.push("Alcance del Suministro");
+    if (!equipmentTypeCode) missing.push("Tipo de Equipo");
+    const items = dataRef.current.section_3 as Record<string, unknown>[];
+    if (items.length === 0) missing.push("Al menos un equipo en sección 3");
+    if (equipmentSchema && items[0]) {
+      equipmentSchema.filter((f) => f.required).forEach((f) => {
+        const v = items[0][f.key];
+        if (v === undefined || v === null || String(v).trim() === "") {
+          missing.push(`Equipo: ${f.label}`);
+        }
+      });
+    }
+    if (missing.length > 0) return { ok: false, missing };
+
+    const { error } = await supabase
+      .from("et_forms")
+      .update({
+        status: "en_revision",
+        submitted_at: new Date().toISOString(),
+        submitted_by: user?.id ?? null,
+      })
+      .eq("id", formId);
+    if (error) return { ok: false, missing: [error.message] };
+    setStatus("en_revision");
+    await logAudit(formId, "enviado_a_programacion", "ET enviado para revisión");
+    return { ok: true };
+  }, [canEdit, equipmentSchema, equipmentTypeCode, formId, logAudit, user]);
+
+  // ---- Alertas: ET en borrador con tiempo sin guardar ----
+  let alertLevel: "none" | "info" | "warning" | "critical" = "none";
+  let alertMessage: string | null = null;
+  if (exists && status === "borrador" && lastSavedAt) {
+    const hoursSince = (Date.now() - lastSavedAt.getTime()) / 3_600_000;
+    if (hoursSince >= 120) {
+      alertLevel = "critical";
+      alertMessage = `ET sin actividad hace ${Math.floor(hoursSince / 24)} días. Acción urgente.`;
+    } else if (hoursSince >= 48) {
+      alertLevel = "warning";
+      alertMessage = `ET sin guardar hace ${Math.floor(hoursSince)} h. Riesgo de retraso.`;
+    } else if (hoursSince >= 24) {
+      alertLevel = "info";
+      alertMessage = `ET sin actividad hace ${Math.floor(hoursSince)} h.`;
+    }
+  }
+
   return {
     loading,
     exists,
     formId,
     processId,
     pdcNumber,
+    processStage,
     status,
     equipmentTypeCode,
     equipmentSchema,
@@ -338,9 +461,14 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     completionPct,
     isDirty,
     isReadOnly,
+    canEdit,
+    auditLog,
+    alertLevel,
+    alertMessage,
     setSection,
     setEquipmentType,
     saveNow,
+    submitForReview,
   };
 }
 
