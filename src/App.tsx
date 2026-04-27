@@ -86,6 +86,7 @@ const App = () => (
               <Route path="/pdcs/new" element={<CreatePdcPage />} />
               <Route path="/pdcs/:id" element={<PdcDetailPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
 
             {/* Rutas protegidas — por tenant */}
@@ -95,6 +96,7 @@ const App = () => (
               <Route path="pdcs/new" element={<CreatePdcPage />} />
               <Route path="pdcs/:id" element={<PdcDetailPage />} />
               <Route path="alerts" element={<AlertsPage />} />
+              <Route path="admin" element={<AdminPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
