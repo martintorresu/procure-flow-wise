@@ -32,21 +32,21 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4 sm:p-6">
-      {/* Background image */}
+      {/* Background image — brighter, more vivid */}
       <div
-        className="absolute inset-0 bg-cover bg-center scale-110 animate-bg-drift"
+        className="absolute inset-0 bg-cover bg-center scale-110 animate-bg-drift saturate-[1.35] brightness-[1.15] contrast-[1.05]"
         style={{ backgroundImage: `url(${loginBg})` }}
         aria-hidden
       />
-      {/* Soft dark overlay for legibility */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628]/70 via-[#0A1628]/50 to-[#1A3BB5]/50" aria-hidden />
-      {/* Vignette to focus on the card */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(10,22,40,0.65)_100%)]" aria-hidden />
+      {/* Subtle color tint instead of heavy dark overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#1A3BB5]/25 via-transparent to-[#4ABFB5]/20" aria-hidden />
+      {/* Light vignette only on edges to keep center vivid */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(10,22,40,0.45)_100%)]" aria-hidden />
 
-      {/* Floating glow orbs for extra depth */}
-      <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-[#2255E8]/30 blur-[120px] animate-orb-1" aria-hidden />
-      <div className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full bg-[#E8934A]/20 blur-[140px] animate-orb-2" aria-hidden />
-      <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] rounded-full bg-[#4ABFB5]/20 blur-[100px] animate-orb-3" aria-hidden />
+      {/* Floating glow orbs — more vivid */}
+      <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-[#2255E8]/55 blur-[120px] animate-orb-1" aria-hidden />
+      <div className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full bg-[#E8934A]/45 blur-[140px] animate-orb-2" aria-hidden />
+      <div className="absolute top-1/3 right-1/4 w-[300px] h-[300px] rounded-full bg-[#4ABFB5]/45 blur-[100px] animate-orb-3" aria-hidden />
 
       {/* InHR logo top-right */}
       <a
