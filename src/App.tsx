@@ -11,22 +11,21 @@ import PdcListPage from "@/pages/PdcListPage";
 import CreatePdcPage from "@/pages/CreatePdcPage";
 import PdcDetailPage from "@/pages/PdcDetailPage";
 import AlertsPage from "@/pages/AlertsPage";
+import SignUpPage from "@/pages/SignUpPage";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
 
 const queryClient = new QueryClient();
 
-/**
- * Protege rutas y valida que el tenant del URL coincida con el tenant del usuario.
- * - No autenticado → /login (o /t/<slug>/login si el URL trae tenant)
- * - Tenant del URL desconocido → redirige al login del tenant del usuario
- * - Tenant del URL ≠ tenant del usuario → redirige a su área correcta
- */
 function ProtectedRoutes() {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading } = useAuth();
   const params = useParams();
   const location = useLocation();
   const urlTenant = params.tenantSlug ?? "default";
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Cargando…</div>;
+  }
 
   if (!isAuthenticated || !user) {
     const loginPath = urlTenant === "default" ? "/login" : `/t/${urlTenant}/login`;
