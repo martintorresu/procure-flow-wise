@@ -73,8 +73,9 @@ const App = () => (
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            {/* Login: default + por tenant */}
+            {/* Login + Signup: default + por tenant */}
             <Route path="/login" element={<LoginRoute />} />
+            <Route path="/signup" element={<SignUpPage />} />
             <Route path="/t/:tenantSlug/login" element={<LoginRoute />} />
 
             {/* Rutas protegidas — tenant default */}
