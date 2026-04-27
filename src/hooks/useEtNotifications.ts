@@ -88,9 +88,28 @@ export function useEtNotifications() {
             oldRow.status === "en_revision" &&
             (role === "ingenieria" || role === "admin")
           ) {
-            toast.warning("ET rechazado", {
-              description: `${label} fue devuelto a borrador. Revisa el historial para ver el motivo.`,
-              duration: 10000,
+            // Buscar el motivo más reciente en el audit log
+            const { data: lastReject } = await supabase
+              .from("et_audit_log")
+              .select("details, user_name")
+              .eq("et_form_id", newRow.id)
+              .eq("action", "rechazado")
+              .order("created_at", { ascending: false })
+              .limit(1)
+              .maybeSingle();
+
+            // details viene como "Motivo: <texto>"
+            const rawMotivo = lastReject?.details ?? "";
+            const motivo = rawMotivo.replace(/^Motivo:\s*/i, "").trim();
+            const reviewer = lastReject?.user_name
+              ? ` (por ${lastReject.user_name})`
+              : "";
+
+            toast.warning(`ET rechazado: ${label}`, {
+              description: motivo
+                ? `Motivo${reviewer}: "${motivo}"`
+                : `Devuelto a borrador${reviewer}. Revisa el historial.`,
+              duration: 12000,
             });
           }
         },
