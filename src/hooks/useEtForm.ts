@@ -99,6 +99,8 @@ export function useEtForm(processId: string | null): UseEtFormResult {
   const [exists, setExists] = useState(false);
   const [formId, setFormId] = useState<string | null>(null);
   const [pdcNumber, setPdcNumber] = useState<string | null>(null);
+  const [processStage, setProcessStage] = useState<string | null>(null);
+  const [requestingArea, setRequestingArea] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [equipmentTypeCode, setEquipmentTypeCode] = useState<string | null>(null);
   const [equipmentSchema, setEquipmentSchema] = useState<EtFieldDef[] | null>(null);
@@ -110,8 +112,18 @@ export function useEtForm(processId: string | null): UseEtFormResult {
   const [isDirty, setIsDirty] = useState(false);
   const dataRef = useRef<EtFormState>(EMPTY_ET_FORM);
 
-  // Sólo lectura si está enviado/aprobado/cerrado
-  const isReadOnly = status === "en_revision" || status === "aprobado" || status === "cerrado";
+  // Permisos: ingeniería puede editar solo en stage 'ingenieria'
+  const userRole = user?.role;
+  const canEdit =
+    !!user &&
+    (userRole === "admin" ||
+      (userRole === "ingenieria" && processStage === "ingenieria"));
+  // Sólo lectura si está enviado/aprobado/cerrado o sin permiso
+  const isReadOnly =
+    !canEdit ||
+    status === "en_revision" ||
+    status === "aprobado" ||
+    status === "cerrado";
 
   // ---- Carga inicial ----
   useEffect(() => {
@@ -140,10 +152,14 @@ export function useEtForm(processId: string | null): UseEtFormResult {
 
       const { data: process } = await supabase
         .from("purchase_processes")
-        .select("pdc_number")
+        .select("pdc_number, current_stage, requesting_area")
         .eq("id", processId)
         .maybeSingle();
-      if (!cancelled && process) setPdcNumber(process.pdc_number);
+      if (!cancelled && process) {
+        setPdcNumber(process.pdc_number);
+        setProcessStage(process.current_stage);
+        setRequestingArea(process.requesting_area);
+      }
 
       // 3. Buscar et_form existente
       const { data: form } = await supabase
