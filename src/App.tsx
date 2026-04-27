@@ -12,6 +12,7 @@ import CreatePdcPage from "@/pages/CreatePdcPage";
 import PdcDetailPage from "@/pages/PdcDetailPage";
 import AlertsPage from "@/pages/AlertsPage";
 import SignUpPage from "@/pages/SignUpPage";
+import AdminPage from "@/pages/AdminPage";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
 
