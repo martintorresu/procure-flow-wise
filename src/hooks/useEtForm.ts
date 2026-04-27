@@ -285,11 +285,12 @@ export function useEtForm(processId: string | null): UseEtFormResult {
       // Si ya existe el form, persistir el cambio
       if (formId) {
         await supabase.from("et_forms").update({ equipment_type_code: code }).eq("id", formId);
+        void logAudit(formId, "tipo_equipo_cambiado", `Tipo: ${code}`);
       }
       dirtyRef.current = true;
       setIsDirty(true);
     },
-    [formId],
+    [formId, logAudit],
   );
 
   // Crea form + form_data si no existen aún
@@ -319,8 +320,9 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     setFormId(created.id);
     setExists(true);
     setStatus(created.status);
+    void logAudit(created.id, "creado", "Formulario ET inicializado");
     return created.id;
-  }, [formId, processId, user, equipmentTypeCode]);
+  }, [formId, processId, user, equipmentTypeCode, logAudit]);
 
   const saveNow = useCallback(async () => {
     if (isReadOnly) return;
@@ -383,12 +385,72 @@ export function useEtForm(processId: string | null): UseEtFormResult {
 
   const completionPct = calcCompletion(data, equipmentSchema);
 
+  // ---- submitForReview: borrador/completo → en_revision ----
+  const submitForReview = useCallback(async (): Promise<{ ok: boolean; missing?: string[] }> => {
+    if (!formId) return { ok: false, missing: ["Formulario no inicializado"] };
+    if (!canEdit) return { ok: false, missing: ["Sin permisos para enviar"] };
+
+    // Validar campos mínimos
+    const missing: string[] = [];
+    const s1 = dataRef.current.section_1 as Record<string, string>;
+    if (!s1.responsable) missing.push("Responsable Técnico");
+    if (!s1.fecha_solicitud) missing.push("Fecha Solicitud");
+    if (!s1.tag_equipo) missing.push("TAG / Identificador");
+    if (!s1.ubicacion) missing.push("Ubicación / Área");
+    const s2 = dataRef.current.section_2 as Record<string, string>;
+    if (!s2.objetivo) missing.push("Objetivo");
+    if (!s2.alcance) missing.push("Alcance del Suministro");
+    if (!equipmentTypeCode) missing.push("Tipo de Equipo");
+    const items = dataRef.current.section_3 as Record<string, unknown>[];
+    if (items.length === 0) missing.push("Al menos un equipo en sección 3");
+    if (equipmentSchema && items[0]) {
+      equipmentSchema.filter((f) => f.required).forEach((f) => {
+        const v = items[0][f.key];
+        if (v === undefined || v === null || String(v).trim() === "") {
+          missing.push(`Equipo: ${f.label}`);
+        }
+      });
+    }
+    if (missing.length > 0) return { ok: false, missing };
+
+    const { error } = await supabase
+      .from("et_forms")
+      .update({
+        status: "en_revision",
+        submitted_at: new Date().toISOString(),
+        submitted_by: user?.id ?? null,
+      })
+      .eq("id", formId);
+    if (error) return { ok: false, missing: [error.message] };
+    setStatus("en_revision");
+    await logAudit(formId, "enviado_a_programacion", "ET enviado para revisión");
+    return { ok: true };
+  }, [canEdit, equipmentSchema, equipmentTypeCode, formId, logAudit, user]);
+
+  // ---- Alertas: ET en borrador con tiempo sin guardar ----
+  let alertLevel: "none" | "info" | "warning" | "critical" = "none";
+  let alertMessage: string | null = null;
+  if (exists && status === "borrador" && lastSavedAt) {
+    const hoursSince = (Date.now() - lastSavedAt.getTime()) / 3_600_000;
+    if (hoursSince >= 120) {
+      alertLevel = "critical";
+      alertMessage = `ET sin actividad hace ${Math.floor(hoursSince / 24)} días. Acción urgente.`;
+    } else if (hoursSince >= 48) {
+      alertLevel = "warning";
+      alertMessage = `ET sin guardar hace ${Math.floor(hoursSince)} h. Riesgo de retraso.`;
+    } else if (hoursSince >= 24) {
+      alertLevel = "info";
+      alertMessage = `ET sin actividad hace ${Math.floor(hoursSince)} h.`;
+    }
+  }
+
   return {
     loading,
     exists,
     formId,
     processId,
     pdcNumber,
+    processStage,
     status,
     equipmentTypeCode,
     equipmentSchema,
@@ -399,9 +461,14 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     completionPct,
     isDirty,
     isReadOnly,
+    canEdit,
+    auditLog,
+    alertLevel,
+    alertMessage,
     setSection,
     setEquipmentType,
     saveNow,
+    submitForReview,
   };
 }
 
