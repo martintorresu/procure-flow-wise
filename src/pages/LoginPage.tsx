@@ -10,23 +10,22 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const tenant = useTenant();
-  const [email, setEmail] = useState("carlos@procurement.cl");
-  const [password, setPassword] = useState("demo123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = login(email, password, tenant.slug);
+    setError("");
+    setSubmitting(true);
+    const result = await login(email, password, tenant.slug);
+    setSubmitting(false);
     if (result.ok) {
       navigate(tenant.slug === "default" ? "/" : `/t/${tenant.slug}`);
-    } else if (result.reason === "wrong_tenant") {
-      const correct = result.expectedTenant ?? "default";
-      const target = correct === "default" ? "/login" : `/t/${correct}/login`;
-      setError(`Este usuario pertenece a otro tenant. Redirigiendo…`);
-      setTimeout(() => navigate(target), 1200);
     } else {
-      setError("Credenciales inválidas. Use un email de la lista demo.");
+      setError(result.message ?? "Credenciales inválidas.");
     }
   };
 
