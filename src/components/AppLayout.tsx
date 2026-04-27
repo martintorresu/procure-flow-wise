@@ -1,7 +1,9 @@
 import { Outlet } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
+import { useEtNotifications } from "@/hooks/useEtNotifications";
 
 export default function AppLayout() {
+  useEtNotifications();
   return (
     <div className="flex min-h-screen">
       <AppSidebar />
