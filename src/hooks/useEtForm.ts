@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   EMPTY_ET_FORM,
@@ -273,12 +274,12 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     const { error: dataErr } = await supabase
       .from("et_form_data")
       .update({
-        section_1: dataRef.current.section_1,
-        section_2: dataRef.current.section_2,
-        section_3: dataRef.current.section_3,
-        section_4: dataRef.current.section_4,
-        section_5: dataRef.current.section_5,
-        section_6: dataRef.current.section_6,
+        section_1: dataRef.current.section_1 as unknown as Json,
+        section_2: dataRef.current.section_2 as unknown as Json,
+        section_3: dataRef.current.section_3 as unknown as Json,
+        section_4: dataRef.current.section_4 as unknown as Json,
+        section_5: dataRef.current.section_5 as unknown as Json,
+        section_6: dataRef.current.section_6 as unknown as Json,
         last_saved_at: new Date().toISOString(),
         last_saved_by: user?.id ?? null,
       })
