@@ -1,42 +1,119 @@
-import React, { createContext, useContext, useState, type ReactNode } from "react";
+import React, { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 import type { User, UserRole } from "@/types/pdc";
-import { mockUsers } from "@/data/mockData";
 
 interface LoginResult {
   ok: boolean;
-  /** Código de error: "invalid_credentials" | "wrong_tenant" */
-  reason?: "invalid_credentials" | "wrong_tenant";
-  /** Slug correcto del tenant del usuario, útil para redirigirlo */
+  reason?: "invalid_credentials" | "wrong_tenant" | "unknown";
   expectedTenant?: string;
+  message?: string;
+}
+
+interface SignUpResult {
+  ok: boolean;
+  message?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  /** Si se pasa expectedTenant, se valida que el usuario pertenezca a ese tenant */
-  login: (email: string, password: string, expectedTenant?: string) => LoginResult;
-  logout: () => void;
+  session: Session | null;
+  loading: boolean;
+  login: (email: string, password: string, expectedTenant?: string) => Promise<LoginResult>;
+  signUp: (email: string, password: string, fullName: string, area?: string) => Promise<SignUpResult>;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+/** Construye el objeto User del dominio a partir de la sesión + profile + roles. */
+async function buildDomainUser(supaUser: SupabaseUser): Promise<User | null> {
+  const [{ data: profile }, { data: roles }] = await Promise.all([
+    supabase.from("profiles").select("*").eq("id", supaUser.id).maybeSingle(),
+    supabase.from("user_roles").select("role").eq("user_id", supaUser.id),
+  ]);
 
-  const login = (email: string, _password: string, expectedTenant?: string): LoginResult => {
-    const found = mockUsers.find((u) => u.email === email);
-    if (!found) return { ok: false, reason: "invalid_credentials" };
-    if (expectedTenant && found.tenantSlug !== expectedTenant) {
-      return { ok: false, reason: "wrong_tenant", expectedTenant: found.tenantSlug };
+  // Rol prioritario: admin > gerente > compras > ingenieria > planificacion > logistica
+  const priority: UserRole[] = ["admin", "gerente", "compras", "ingenieria", "planificacion", "logistica"];
+  const roleList = (roles ?? []).map((r) => r.role as UserRole);
+  const role = priority.find((p) => roleList.includes(p)) ?? "ingenieria";
+
+  return {
+    id: supaUser.id,
+    name: profile?.full_name ?? supaUser.email ?? "Usuario",
+    email: supaUser.email ?? "",
+    role,
+    tenantSlug: "default",
+  };
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // 1. Listener PRIMERO (síncrono, defer fetches con setTimeout)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      if (newSession?.user) {
+        setTimeout(() => {
+          buildDomainUser(newSession.user).then(setUser);
+        }, 0);
+      } else {
+        setUser(null);
+      }
+    });
+
+    // 2. Sesión existente DESPUÉS
+    supabase.auth.getSession().then(({ data: { session: existing } }) => {
+      setSession(existing);
+      if (existing?.user) {
+        buildDomainUser(existing.user).then((u) => {
+          setUser(u);
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string, _expectedTenant?: string): Promise<LoginResult> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) {
+      return { ok: false, reason: "invalid_credentials", message: error.message };
     }
-    setUser(found);
     return { ok: true };
   };
 
-  const logout = () => setUser(null);
+  const signUp = async (email: string, password: string, fullName: string, area?: string): Promise<SignUpResult> => {
+    const redirectUrl = `${window.location.origin}/`;
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: { full_name: fullName, area: area ?? "Ingeniería" },
+      },
+    });
+    if (error) return { ok: false, message: error.message };
+    return { ok: true };
+  };
+
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider
+      value={{ user, session, loading, login, signUp, logout, isAuthenticated: !!session }}
+    >
       {children}
     </AuthContext.Provider>
   );
