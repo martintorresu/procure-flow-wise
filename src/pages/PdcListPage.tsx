@@ -31,7 +31,10 @@ export default function PdcListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Procesos de Compra</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} procesos encontrados</p>
+          <p className="text-sm text-muted-foreground">
+            {loading ? "Cargando…" : `${filtered.length} procesos encontrados`}
+            {realPdcs.length > 0 && !loading && ` · ${realPdcs.length} reales`}
+          </p>
         </div>
         <Link to="/pdcs/new">
           <Button><Plus className="w-4 h-4 mr-2" />Crear PdC</Button>

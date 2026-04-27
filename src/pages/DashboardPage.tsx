@@ -1,4 +1,5 @@
 import { mockPdcs, mockAlerts, getTrafficLight } from "@/data/mockData";
+import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,9 +9,11 @@ import { Button } from "@/components/ui/button";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const activePdcs = mockPdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
-  const delayedPdcs = mockPdcs.filter((p) => getTrafficLight(p) === "red");
-  const criticalPdcs = mockPdcs.filter((p) => p.criticality === "high");
+  const { pdcs: realPdcs } = usePdcs();
+  const allPdcs = [...realPdcs, ...mockPdcs];
+  const activePdcs = allPdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
+  const delayedPdcs = allPdcs.filter((p) => getTrafficLight(p) === "red");
+  const criticalPdcs = allPdcs.filter((p) => p.criticality === "high");
   const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
 
   const stats = [

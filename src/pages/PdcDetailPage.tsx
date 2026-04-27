@@ -7,10 +7,16 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, DollarSign, User, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { EtFormPanel } from "@/components/et/EtFormPanel";
+import { usePdc } from "@/hooks/usePdcs";
 
 export default function PdcDetailPage() {
   const { id } = useParams();
-  const pdc = mockPdcs.find((p) => p.id === id);
+  const { pdc: realPdc, loading } = usePdc(id);
+  const pdc = realPdc ?? mockPdcs.find((p) => p.id === id);
+
+  if (loading) {
+    return <div className="text-center py-20 text-muted-foreground">Cargando PdC…</div>;
+  }
 
   if (!pdc) {
     return (
