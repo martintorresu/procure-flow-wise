@@ -256,9 +256,24 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 <Save className="w-3.5 h-3.5" /> Guardar
               </Button>
               {canEdit && status !== "en_revision" && status !== "aprobado" && status !== "cerrado" && (
-                <Button size="sm" onClick={handleSubmit} disabled={completionPct < 100 && false}>
+                <Button size="sm" onClick={handleSubmit}>
                   <Send className="w-3.5 h-3.5" /> Enviar a Programación
                 </Button>
+              )}
+              {canReview && status === "en_revision" && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setRejectOpen(true)}
+                    className="text-danger border-danger/40 hover:bg-danger/10 hover:text-danger"
+                  >
+                    <ThumbsDown className="w-3.5 h-3.5" /> Rechazar
+                  </Button>
+                  <Button size="sm" onClick={handleApprove} className="bg-success hover:bg-success/90">
+                    <ThumbsUp className="w-3.5 h-3.5" /> Aprobar
+                  </Button>
+                </>
               )}
             </div>
           </div>
