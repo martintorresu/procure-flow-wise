@@ -222,6 +222,14 @@ export function useEtForm(processId: string | null): UseEtFormResult {
             setEquipmentSchema(schema.fields_schema as unknown as EtFieldDef[]);
           }
         }
+        // Cargar audit log
+        const { data: audits } = await supabase
+          .from("et_audit_log")
+          .select("id, action, details, user_name, user_area, created_at")
+          .eq("et_form_id", form.id)
+          .order("created_at", { ascending: false })
+          .limit(50);
+        if (!cancelled && audits) setAuditLog(audits as AuditEntry[]);
       }
       setLoading(false);
     }
@@ -230,6 +238,27 @@ export function useEtForm(processId: string | null): UseEtFormResult {
       cancelled = true;
     };
   }, [processId]);
+
+  // ---- Auditoría ----
+  const logAudit = useCallback(
+    async (etFormId: string, action: string, details?: string) => {
+      const entry = {
+        et_form_id: etFormId,
+        action,
+        details: details ?? null,
+        user_id: user?.id ?? null,
+        user_name: user?.name ?? null,
+        user_area: user?.role ?? null,
+      };
+      const { data: created } = await supabase
+        .from("et_audit_log")
+        .insert(entry)
+        .select("id, action, details, user_name, user_area, created_at")
+        .single();
+      if (created) setAuditLog((prev) => [created as AuditEntry, ...prev]);
+    },
+    [user],
+  );
 
   // ---- Helpers ----
   const setSection = useCallback((key: EtSectionKey, value: unknown) => {
