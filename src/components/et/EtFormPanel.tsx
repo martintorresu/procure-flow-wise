@@ -235,34 +235,6 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
           <Progress value={completionPct} className="h-2" />
         </CardContent>
       </Card>
-            <div className="flex items-center gap-2">
-              {saveStatus === "saving" && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Loader2 className="w-3 h-3 animate-spin" /> Guardando…
-                </span>
-              )}
-              {saveStatus === "saved" && !isDirty && (
-                <span className="text-xs text-success flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Guardado
-                  {lastSavedAt && ` ${lastSavedAt.toLocaleTimeString()}`}
-                </span>
-              )}
-              {saveStatus === "error" && (
-                <span className="text-xs text-danger flex items-center gap-1">
-                  <AlertCircle className="w-3 h-3" /> Error al guardar
-                </span>
-              )}
-              {isDirty && saveStatus !== "saving" && (
-                <span className="text-xs text-warning">Cambios sin guardar</span>
-              )}
-              <Button size="sm" variant="outline" onClick={handleSave} disabled={isReadOnly}>
-                <Save className="w-3.5 h-3.5" /> Guardar
-              </Button>
-            </div>
-          </div>
-          <Progress value={completionPct} className="h-2" />
-        </CardContent>
-      </Card>
 
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4">
         {/* Sidebar de secciones */}
