@@ -41,15 +41,15 @@
     --danger: 0 72% 51%;
     --danger-foreground: 0 0% 100%;
 
-    --sidebar-background: 220 60% 15%;
-    --sidebar-foreground: 210 20% 90%;
-    --sidebar-primary: 199 80% 55%;
+    --sidebar-background: 222 75% 22%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-primary: 195 90% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 50% 22%;
-    --sidebar-accent-foreground: 210 20% 90%;
-    --sidebar-border: 220 40% 25%;
-    --sidebar-ring: 199 80% 55%;
-    --sidebar-muted: 220 30% 35%;
+    --sidebar-accent: 222 70% 32%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 60% 38%;
+    --sidebar-ring: 195 90% 60%;
+    --sidebar-muted: 215 40% 75%;
   }
 }
 
