@@ -13,7 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History } from "lucide-react";
+import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History, ThumbsUp, ThumbsDown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useEtForm, SECTIONS } from "@/hooks/useEtForm";
 import { DynamicField } from "./DynamicField";
 import type { EtSectionKey } from "@/types/etForm";
