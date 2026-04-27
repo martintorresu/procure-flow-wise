@@ -15,7 +15,7 @@ export type PdcStatus =
 
 export type Criticality = "low" | "medium" | "high";
 export type TrafficLight = "green" | "yellow" | "red";
-export type UserRole = "admin" | "compras" | "ingenieria" | "gerente" | "planificacion" | "logistica";
+export type UserRole = "admin" | "compras" | "ingenieria" | "programacion" | "gerente" | "planificacion" | "logistica";
 
 export interface Pdc {
   id: string;

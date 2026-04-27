@@ -13,7 +13,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History } from "lucide-react";
+import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History, ThumbsUp, ThumbsDown } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useEtForm, SECTIONS } from "@/hooks/useEtForm";
 import { DynamicField } from "./DynamicField";
 import type { EtSectionKey } from "@/types/etForm";
@@ -43,6 +51,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     isDirty,
     isReadOnly,
     canEdit,
+    canReview,
     auditLog,
     alertLevel,
     alertMessage,
@@ -50,9 +59,13 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     setEquipmentType,
     saveNow,
     submitForReview,
+    approve,
+    reject,
   } = useEtForm(demoMode ? null : processId);
 
   const [activeSection, setActiveSection] = useState<EtSectionKey>("section_1");
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   if (demoMode) {
     return (
@@ -143,6 +156,23 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     });
   };
 
+  const handleApprove = async () => {
+    const r = await approve();
+    if (r.ok) toast.success("ET aprobado");
+    else toast.error(r.error ?? "No se pudo aprobar");
+  };
+
+  const handleReject = async () => {
+    const r = await reject(rejectReason);
+    if (r.ok) {
+      toast.success("ET rechazado, vuelto a borrador");
+      setRejectOpen(false);
+      setRejectReason("");
+    } else {
+      toast.error(r.error ?? "No se pudo rechazar");
+    }
+  };
+
   const statusLabels: Record<string, string> = {
     borrador: "Borrador",
     incompleto: "Incompleto",
@@ -226,9 +256,24 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 <Save className="w-3.5 h-3.5" /> Guardar
               </Button>
               {canEdit && status !== "en_revision" && status !== "aprobado" && status !== "cerrado" && (
-                <Button size="sm" onClick={handleSubmit} disabled={completionPct < 100 && false}>
+                <Button size="sm" onClick={handleSubmit}>
                   <Send className="w-3.5 h-3.5" /> Enviar a Programación
                 </Button>
+              )}
+              {canReview && status === "en_revision" && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setRejectOpen(true)}
+                    className="text-danger border-danger/40 hover:bg-danger/10 hover:text-danger"
+                  >
+                    <ThumbsDown className="w-3.5 h-3.5" /> Rechazar
+                  </Button>
+                  <Button size="sm" onClick={handleApprove} className="bg-success hover:bg-success/90">
+                    <ThumbsUp className="w-3.5 h-3.5" /> Aprobar
+                  </Button>
+                </>
               )}
             </div>
           </div>
@@ -485,6 +530,40 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
           </CardContent>
         </Card>
       )}
+
+      {/* Diálogo de rechazo */}
+      <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Rechazar formulario ET</DialogTitle>
+            <DialogDescription>
+              Indica el motivo. El ET volverá a estado "Borrador" y el responsable de Ingeniería podrá corregirlo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="reject-reason">Motivo del rechazo *</Label>
+            <Textarea
+              id="reject-reason"
+              rows={4}
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="Ej. Faltan especificaciones de aislamiento del transformador…"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRejectOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleReject}
+              disabled={rejectReason.trim().length < 5}
+              className="bg-danger hover:bg-danger/90 text-danger-foreground"
+            >
+              Confirmar rechazo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
