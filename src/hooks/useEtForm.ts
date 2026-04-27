@@ -126,6 +126,7 @@ export function useEtForm(processId: string | null): UseEtFormResult {
   const dirtyRef = useRef(false);
   const [isDirty, setIsDirty] = useState(false);
   const dataRef = useRef<EtFormState>(EMPTY_ET_FORM);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
 
   // Permisos: ingeniería puede editar solo en stage 'ingenieria'
   const userRole = user?.role;
