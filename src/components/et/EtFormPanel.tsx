@@ -458,6 +458,33 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Historial de auditoría */}
+      {exists && auditLog.length > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 mb-2">
+              <History className="w-4 h-4 text-muted-foreground" />
+              <h3 className="font-medium text-sm">Historial</h3>
+              <span className="text-xs text-muted-foreground">({auditLog.length})</span>
+            </div>
+            <div className="space-y-1.5 max-h-64 overflow-y-auto">
+              {auditLog.map((entry) => (
+                <div key={entry.id} className="flex items-start gap-3 text-xs border-l-2 border-muted pl-3 py-1">
+                  <span className="text-muted-foreground shrink-0 w-32">
+                    {new Date(entry.created_at).toLocaleString()}
+                  </span>
+                  <span className="font-medium shrink-0">{entry.action}</span>
+                  <span className="text-muted-foreground">
+                    {entry.user_name ?? "—"}
+                    {entry.details && ` · ${entry.details}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
