@@ -43,6 +43,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     isDirty,
     isReadOnly,
     canEdit,
+    canReview,
     auditLog,
     alertLevel,
     alertMessage,
@@ -50,9 +51,13 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     setEquipmentType,
     saveNow,
     submitForReview,
+    approve,
+    reject,
   } = useEtForm(demoMode ? null : processId);
 
   const [activeSection, setActiveSection] = useState<EtSectionKey>("section_1");
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState("");
 
   if (demoMode) {
     return (
