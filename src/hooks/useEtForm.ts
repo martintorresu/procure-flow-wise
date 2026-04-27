@@ -433,6 +433,52 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     return { ok: true };
   }, [canEdit, equipmentSchema, equipmentTypeCode, formId, logAudit, user]);
 
+  // ---- Aprobar (Programación / Admin) ----
+  const approve = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    if (!formId) return { ok: false, error: "Formulario no inicializado" };
+    if (!canReview) return { ok: false, error: "Sin permisos para aprobar" };
+    if (status !== "en_revision") return { ok: false, error: "El ET no está en revisión" };
+
+    const { error } = await supabase
+      .from("et_forms")
+      .update({
+        status: "aprobado",
+        approved_at: new Date().toISOString(),
+        approved_by: user?.id ?? null,
+      })
+      .eq("id", formId);
+    if (error) return { ok: false, error: error.message };
+    setStatus("aprobado");
+    await logAudit(formId, "aprobado", "ET aprobado por Programación");
+    return { ok: true };
+  }, [canReview, formId, logAudit, status, user]);
+
+  // ---- Rechazar (vuelve a borrador) ----
+  const reject = useCallback(
+    async (reason: string): Promise<{ ok: boolean; error?: string }> => {
+      if (!formId) return { ok: false, error: "Formulario no inicializado" };
+      if (!canReview) return { ok: false, error: "Sin permisos para rechazar" };
+      if (status !== "en_revision") return { ok: false, error: "El ET no está en revisión" };
+      if (!reason || reason.trim().length < 5) {
+        return { ok: false, error: "Indica un motivo de al menos 5 caracteres" };
+      }
+
+      const { error } = await supabase
+        .from("et_forms")
+        .update({
+          status: "borrador",
+          submitted_at: null,
+          submitted_by: null,
+        })
+        .eq("id", formId);
+      if (error) return { ok: false, error: error.message };
+      setStatus("borrador");
+      await logAudit(formId, "rechazado", `Motivo: ${reason.trim()}`);
+      return { ok: true };
+    },
+    [canReview, formId, logAudit, status],
+  );
+
   // ---- Alertas: ET en borrador con tiempo sin guardar ----
   let alertLevel: "none" | "info" | "warning" | "critical" = "none";
   let alertMessage: string | null = null;
@@ -468,6 +514,7 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     isDirty,
     isReadOnly,
     canEdit,
+    canReview,
     auditLog,
     alertLevel,
     alertMessage,
@@ -475,6 +522,8 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     setEquipmentType,
     saveNow,
     submitForReview,
+    approve,
+    reject,
   };
 }
 
