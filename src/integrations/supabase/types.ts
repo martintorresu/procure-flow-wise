@@ -233,45 +233,60 @@ export type Database = {
       }
       purchase_processes: {
         Row: {
+          category: string | null
           created_at: string
           created_by: string
           criticality: Database["public"]["Enums"]["criticality"]
+          currency: string | null
           current_stage: Database["public"]["Enums"]["process_stage"]
+          description: string | null
           engineering_responsible: string | null
-          et_document_code: string
+          estimated_amount: number | null
+          et_document_code: string | null
           id: string
           name: string
           pdc_number: string
           project: string
-          requesting_area: string
+          requesting_area: string | null
+          required_on_site_date: string | null
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           created_by: string
           criticality?: Database["public"]["Enums"]["criticality"]
+          currency?: string | null
           current_stage?: Database["public"]["Enums"]["process_stage"]
+          description?: string | null
           engineering_responsible?: string | null
-          et_document_code: string
+          estimated_amount?: number | null
+          et_document_code?: string | null
           id?: string
           name: string
           pdc_number?: string
           project: string
-          requesting_area: string
+          requesting_area?: string | null
+          required_on_site_date?: string | null
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           created_by?: string
           criticality?: Database["public"]["Enums"]["criticality"]
+          currency?: string | null
           current_stage?: Database["public"]["Enums"]["process_stage"]
+          description?: string | null
           engineering_responsible?: string | null
-          et_document_code?: string
+          estimated_amount?: number | null
+          et_document_code?: string | null
           id?: string
           name?: string
           pdc_number?: string
           project?: string
-          requesting_area?: string
+          requesting_area?: string | null
+          required_on_site_date?: string | null
           updated_at?: string
         }
         Relationships: [
