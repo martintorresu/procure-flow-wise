@@ -4,6 +4,61 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 /**
+ * Extrae el motivo limpio desde el campo `details` del audit log.
+ * Soporta múltiples formatos:
+ *  - JSON: {"motivo": "..."} | {"reason": "..."} | {"razon": "..."} | {"message": "..."}
+ *  - Prefijos: "Motivo:", "Razón:", "Reason:", "Rechazado:", "Rechazo:", "-", "—"
+ *  - Comillas envolventes: "...", '...', «...», “...”
+ *  - Espacios y puntuación final redundante
+ */
+function parseRejectReason(raw: string | null | undefined): string {
+  if (!raw) return "";
+  let text = String(raw).trim();
+  if (!text) return "";
+
+  // 1) Intentar JSON
+  if (text.startsWith("{") || text.startsWith("[")) {
+    try {
+      const obj = JSON.parse(text);
+      const candidate =
+        obj?.motivo ?? obj?.razon ?? obj?.reason ?? obj?.message ?? obj?.detail;
+      if (typeof candidate === "string") text = candidate.trim();
+    } catch {
+      /* sigue como texto */
+    }
+  }
+
+  // 2) Quitar prefijos repetidos (puede venir "Motivo: Razón: ...")
+  const prefixRe =
+    /^(motivo|motivos|razón|razon|reason|rechazado|rechazo|detalle|details?|comentario|nota)\s*[:\-–—]\s*/i;
+  let prev = "";
+  while (prev !== text && prefixRe.test(text)) {
+    prev = text;
+    text = text.replace(prefixRe, "").trim();
+  }
+
+  // 3) Quitar comillas envolventes (rectas, tipográficas, angulares)
+  const quotePairs: Array<[string, string]> = [
+    ['"', '"'],
+    ["'", "'"],
+    ["“", "”"],
+    ["«", "»"],
+    ["‘", "’"],
+  ];
+  for (const [open, close] of quotePairs) {
+    if (text.startsWith(open) && text.endsWith(close) && text.length >= 2) {
+      text = text.slice(open.length, text.length - close.length).trim();
+      break;
+    }
+  }
+
+  // 4) Colapsar espacios internos y limpiar puntuación final redundante
+  text = text.replace(/\s+/g, " ").replace(/[\s.;,–—-]+$/u, "").trim();
+
+  return text;
+}
+
+/**
  * Suscripción Realtime a cambios de estado en et_forms.
  * Notifica:
  *  - A Programación / Admin cuando un ET pasa a "en_revision".
@@ -98,16 +153,14 @@ export function useEtNotifications() {
               .limit(1)
               .maybeSingle();
 
-            // details viene como "Motivo: <texto>"
-            const rawMotivo = lastReject?.details ?? "";
-            const motivo = rawMotivo.replace(/^Motivo:\s*/i, "").trim();
+            const motivo = parseRejectReason(lastReject?.details);
             const reviewer = lastReject?.user_name
               ? ` (por ${lastReject.user_name})`
               : "";
 
             toast.warning(`ET rechazado: ${label}`, {
               description: motivo
-                ? `Motivo${reviewer}: "${motivo}"`
+                ? `Motivo${reviewer}: ${motivo}`
                 : `Devuelto a borrador${reviewer}. Revisa el historial.`,
               duration: 12000,
             });
