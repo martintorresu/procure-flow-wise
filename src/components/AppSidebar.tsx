@@ -20,8 +20,8 @@ export default function AppSidebar() {
 
   return (
     <aside className={`flex flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}>
-      {/* Header */}
-      <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border">
+      {/* Header (fixed top) */}
+      <div className="flex items-center gap-3 px-4 h-16 border-b border-sidebar-border shrink-0">
         <Package className="w-7 h-7 text-sidebar-primary shrink-0" />
         {!collapsed && (
           <div className="overflow-hidden">
@@ -31,8 +31,8 @@ export default function AppSidebar() {
         )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 py-4 space-y-1 px-2">
+      {/* Nav (scrollable) */}
+      <nav className="flex-1 min-h-0 overflow-y-auto py-4 space-y-1 px-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
           return (
@@ -52,8 +52,8 @@ export default function AppSidebar() {
         })}
       </nav>
 
-      {/* User */}
-      <div className="border-t border-sidebar-border p-3">
+      {/* User (fixed bottom) */}
+      <div className="mt-auto shrink-0 border-t border-sidebar-border p-3 bg-sidebar">
         {!collapsed && user && (
           <div className="mb-2 px-2">
             <p className="text-xs font-medium truncate">{user.name}</p>
@@ -63,7 +63,7 @@ export default function AppSidebar() {
         <div className="flex items-center gap-2">
           <button onClick={logout} className="flex items-center gap-2 px-3 py-2 text-xs rounded-md hover:bg-sidebar-accent/50 text-sidebar-foreground w-full" title="Cerrar sesión">
             <LogOut className="w-4 h-4" />
-            {!collapsed && <span>Salir</span>}
+            {!collapsed && <span>Cerrar sesión</span>}
           </button>
         </div>
       </div>
