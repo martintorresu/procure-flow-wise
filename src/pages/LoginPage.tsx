@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, AlertCircle, Link2 } from "lucide-react";
 import loginBg from "@/assets/login-bg.jpg";
 import inhrLogo from "@/assets/inhr-logo.png";
