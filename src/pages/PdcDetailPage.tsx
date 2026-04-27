@@ -6,6 +6,7 @@ import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/componen
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, DollarSign, User, MapPin } from "lucide-react";
 import { toast } from "sonner";
+import { EtFormPanel } from "@/components/et/EtFormPanel";
 
 export default function PdcDetailPage() {
   const { id } = useParams();
@@ -155,28 +156,12 @@ export default function PdcDetailPage() {
           </Card>
         </TabsContent>
 
-        {/* Technical */}
+        {/* Technical — Formulario ET dinámico */}
         <TabsContent value="technical">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Especificación Técnica / HCTG</CardTitle></CardHeader>
-            <CardContent>
-              {techSpecs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin especificaciones técnicas</p>
-              ) : techSpecs.map((ts) => (
-                <div key={ts.id} className="space-y-3">
-                  <div><span className="text-sm text-muted-foreground">Descripción:</span><p className="text-sm mt-1">{ts.summary_description}</p></div>
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div><span className="text-muted-foreground">Estudios:</span> {ts.has_studies ? "Sí" : "No"}</div>
-                    <div><span className="text-muted-foreground">Validación:</span>
-                      <span className={`ml-1 ${ts.validation_status === "validated" ? "text-success" : ts.validation_status === "rejected" ? "text-danger" : "text-warning"}`}>
-                        {ts.validation_status === "validated" ? "Validado" : ts.validation_status === "rejected" ? "Rechazado" : "Pendiente"}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
+          <EtFormPanel
+            processId={pdc.id}
+            demoMode={!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pdc.id)}
+          />
         </TabsContent>
 
         {/* Quotations */}
