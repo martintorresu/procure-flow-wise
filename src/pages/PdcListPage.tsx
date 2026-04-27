@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { mockPdcs, getTrafficLight } from "@/data/mockData";
+import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
 import { Link } from "react-router-dom";
@@ -13,8 +14,12 @@ export default function PdcListPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
+  const { pdcs: realPdcs, loading } = usePdcs();
 
-  const filtered = mockPdcs.filter((pdc) => {
+  // Combinar PdCs reales (al inicio) con los mocks de demo
+  const allPdcs = [...realPdcs, ...mockPdcs];
+
+  const filtered = allPdcs.filter((pdc) => {
     if (statusFilter !== "all" && pdc.current_status !== statusFilter) return false;
     if (criticalityFilter !== "all" && pdc.criticality !== criticalityFilter) return false;
     if (search && !pdc.title.toLowerCase().includes(search.toLowerCase()) && !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())) return false;
