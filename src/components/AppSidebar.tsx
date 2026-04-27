@@ -2,11 +2,11 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
-  Settings, Package
+  Settings, Package, Shield
 } from "lucide-react";
 import { useState } from "react";
 
-const navItems = [
+const baseNavItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/pdcs", icon: FileText, label: "Procesos de Compra" },
   { to: "/pdcs/new", icon: Plus, label: "Crear PdC" },
@@ -17,6 +17,10 @@ export default function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+
+  const navItems = user?.role === "admin"
+    ? [...baseNavItems, { to: "/admin", icon: Shield, label: "Administración" }]
+    : baseNavItems;
 
   return (
     <aside className={`flex flex-col bg-sidebar text-sidebar-foreground h-screen sticky top-0 transition-all duration-300 ${collapsed ? "w-16" : "w-64"}`}>

@@ -12,6 +12,7 @@ import CreatePdcPage from "@/pages/CreatePdcPage";
 import PdcDetailPage from "@/pages/PdcDetailPage";
 import AlertsPage from "@/pages/AlertsPage";
 import SignUpPage from "@/pages/SignUpPage";
+import AdminPage from "@/pages/AdminPage";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
 
@@ -85,6 +86,7 @@ const App = () => (
               <Route path="/pdcs/new" element={<CreatePdcPage />} />
               <Route path="/pdcs/:id" element={<PdcDetailPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
 
             {/* Rutas protegidas — por tenant */}
@@ -94,6 +96,7 @@ const App = () => (
               <Route path="pdcs/new" element={<CreatePdcPage />} />
               <Route path="pdcs/:id" element={<PdcDetailPage />} />
               <Route path="alerts" element={<AlertsPage />} />
+              <Route path="admin" element={<AdminPage />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
