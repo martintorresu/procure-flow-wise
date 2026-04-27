@@ -137,6 +137,9 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     !!user &&
     (userRole === "admin" ||
       (userRole === "ingenieria" && processStage === "ingenieria"));
+  // Programación (o admin) revisa cuando el ET está en_revision
+  const canReview =
+    !!user && (userRole === "admin" || userRole === "programacion");
   // Sólo lectura si está enviado/aprobado/cerrado o sin permiso
   const isReadOnly =
     !canEdit ||
