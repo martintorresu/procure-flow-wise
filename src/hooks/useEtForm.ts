@@ -205,13 +205,16 @@ export function useEtForm(processId: string | null): UseEtFormResult {
           .maybeSingle();
         if (cancelled) return;
         if (fdata) {
+          const f = fdata as unknown as Record<string, unknown>;
           const loaded: EtFormState = {
-            section_1: (fdata.section_1 as Record<string, unknown>) ?? {},
-            section_2: (fdata.section_2 as Record<string, unknown>) ?? {},
-            section_3: (fdata.section_3 as Record<string, unknown>[]) ?? [],
-            section_4: (fdata.section_4 as Record<string, unknown>) ?? {},
-            section_5: (fdata.section_5 as Record<string, unknown>[]) ?? [],
-            section_6: (fdata.section_6 as Record<string, unknown>) ?? {},
+            section_1: (f.section_1 as Record<string, unknown>) ?? {},
+            section_2: (f.section_2 as Record<string, unknown>) ?? {},
+            section_3: (f.section_3 as Record<string, unknown>[]) ?? [],
+            section_4: (f.section_4 as Record<string, unknown>) ?? {},
+            section_5: (f.section_5 as Record<string, unknown>[]) ?? [],
+            section_6: (f.section_6 as Record<string, unknown>) ?? {},
+            section_7: (f.section_7 as Record<string, unknown>[]) ?? [],
+            section_8: (f.section_8 as Record<string, unknown>) ?? {},
           };
           setData(loaded);
           dataRef.current = loaded;
