@@ -25,6 +25,8 @@ import {
 import { useEtForm, SECTIONS } from "@/hooks/useEtForm";
 import { DynamicField } from "./DynamicField";
 import type { EtSectionKey } from "@/types/etForm";
+import { CRITICALITY_OPTIONS, FAT_TEST_OPTIONS, PAYMENT_TERMS_OPTIONS, INCOTERM_OPTIONS } from "@/types/etForm";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { exportEtFormToPdf } from "@/lib/etPdfExport";
 
@@ -100,12 +102,14 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const s1 = data.section_1 as Record<string, string>;
   const s2 = data.section_2 as Record<string, string>;
   const s4 = data.section_4 as Record<string, string>;
-  const s6 = data.section_6 as Record<string, string>;
+  const s6 = data.section_6 as Record<string, unknown>;
+  const s8 = data.section_8 as Record<string, string>;
 
   const updateS1 = (k: string, v: unknown) => setSection("section_1", { ...s1, [k]: v });
   const updateS2 = (k: string, v: unknown) => setSection("section_2", { ...s2, [k]: v });
   const updateS4 = (k: string, v: unknown) => setSection("section_4", { ...s4, [k]: v });
   const updateS6 = (k: string, v: unknown) => setSection("section_6", { ...s6, [k]: v });
+  const updateS8 = (k: string, v: unknown) => setSection("section_8", { ...s8, [k]: v });
 
   // Sección 3 — items técnicos
   const items = data.section_3 as Record<string, unknown>[];
@@ -125,6 +129,23 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const updateDoc = (i: number, k: string, v: unknown) => {
     const next = docs.map((d, idx) => (idx === i ? { ...d, [k]: v } : d));
     setSection("section_5", next);
+  };
+
+  // Sección 7 — accesorios y repuestos
+  const accs = data.section_7 as Record<string, unknown>[];
+  const addAcc = () => setSection("section_7", [...accs, { nombre: "", cantidad: 1, tipo: "accesorio" }]);
+  const removeAcc = (i: number) =>
+    setSection("section_7", accs.filter((_, idx) => idx !== i));
+  const updateAcc = (i: number, k: string, v: unknown) => {
+    const next = accs.map((a, idx) => (idx === i ? { ...a, [k]: v } : a));
+    setSection("section_7", next);
+  };
+
+  // Sección 6 — pruebas FAT (multi-select almacenado como array)
+  const fatTests = (s6.pruebas_seleccionadas as string[] | undefined) ?? [];
+  const toggleFatTest = (test: string) => {
+    const next = fatTests.includes(test) ? fatTests.filter((t) => t !== test) : [...fatTests, test];
+    updateS6("pruebas_seleccionadas", next);
   };
 
   const handleSave = async () => {
@@ -310,7 +331,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
               <>
                 <div>
                   <h3 className="font-semibold">1. Identificación</h3>
-                  <p className="text-sm text-muted-foreground">Datos generales del proceso</p>
+                  <p className="text-sm text-muted-foreground">Datos generales y descripción del proceso</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -330,26 +351,63 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     <Input value={s1.ubicacion ?? ""} onChange={(e) => updateS1("ubicacion", e.target.value)} disabled={isReadOnly} />
                   </div>
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Objetivo *</Label>
+                  <Textarea rows={3} value={s1.objetivo ?? ""} onChange={(e) => updateS1("objetivo", e.target.value)} disabled={isReadOnly} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Alcance del Suministro *</Label>
+                  <Textarea rows={4} value={s1.alcance ?? ""} onChange={(e) => updateS1("alcance", e.target.value)} disabled={isReadOnly} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Exclusiones</Label>
+                  <Textarea rows={2} value={s1.exclusiones ?? ""} onChange={(e) => updateS1("exclusiones", e.target.value)} disabled={isReadOnly} />
+                </div>
               </>
             )}
 
             {activeSection === "section_2" && (
               <>
                 <div>
-                  <h3 className="font-semibold">2. Descripción y Alcance</h3>
-                  <p className="text-sm text-muted-foreground">Qué se necesita comprar y su propósito</p>
+                  <h3 className="font-semibold">2. Datos de Gestión de Compra</h3>
+                  <p className="text-sm text-muted-foreground">Criticidad, plazo y lugar de entrega</p>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Objetivo *</Label>
-                  <Textarea rows={3} value={s2.objetivo ?? ""} onChange={(e) => updateS2("objetivo", e.target.value)} disabled={isReadOnly} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Alcance del Suministro *</Label>
-                  <Textarea rows={4} value={s2.alcance ?? ""} onChange={(e) => updateS2("alcance", e.target.value)} disabled={isReadOnly} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Exclusiones</Label>
-                  <Textarea rows={2} value={s2.exclusiones ?? ""} onChange={(e) => updateS2("exclusiones", e.target.value)} disabled={isReadOnly} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Criticidad *</Label>
+                    <Select value={s2.criticidad ?? ""} onValueChange={(v) => updateS2("criticidad", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona criticidad…" /></SelectTrigger>
+                      <SelectContent>
+                        {CRITICALITY_OPTIONS.map((c) => (
+                          <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Área Solicitante *</Label>
+                    <Input value={s2.area_solicitante ?? ""} placeholder="ej. Mantenimiento" onChange={(e) => updateS2("area_solicitante", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Plazo de Entrega Requerido *</Label>
+                    <Input type="date" value={s2.plazo_entrega ?? ""} onChange={(e) => updateS2("plazo_entrega", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Lugar de Entrega *</Label>
+                    <Input value={s2.lugar_entrega ?? ""} placeholder="ej. Planta Norte, Bodega 3" onChange={(e) => updateS2("lugar_entrega", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Centro de Costo</Label>
+                    <Input value={s2.centro_costo ?? ""} onChange={(e) => updateS2("centro_costo", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Presupuesto Estimado (USD)</Label>
+                    <Input type="number" value={s2.presupuesto ?? ""} onChange={(e) => updateS2("presupuesto", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Justificación / Notas para Compras</Label>
+                    <Textarea rows={3} value={s2.justificacion ?? ""} onChange={(e) => updateS2("justificacion", e.target.value)} disabled={isReadOnly} />
+                  </div>
                 </div>
               </>
             )}
@@ -487,16 +545,193 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
             {activeSection === "section_6" && (
               <>
                 <div>
-                  <h3 className="font-semibold">6. Observaciones</h3>
-                  <p className="text-sm text-muted-foreground">Notas finales y aprobación</p>
+                  <h3 className="font-semibold">6. Protocolo FAT</h3>
+                  <p className="text-sm text-muted-foreground">Pruebas en fábrica antes del despacho</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Pruebas a Realizar *</Label>
+                  <p className="text-xs text-muted-foreground">Marca todas las pruebas que el proveedor debe ejecutar.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                    {FAT_TEST_OPTIONS.map((test) => (
+                      <label key={test} className="flex items-start gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted/50">
+                        <Checkbox
+                          checked={fatTests.includes(test)}
+                          onCheckedChange={() => toggleFatTest(test)}
+                          disabled={isReadOnly}
+                          className="mt-0.5"
+                        />
+                        <span>{test}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {fatTests.length > 0 && (
+                    <p className="text-xs text-muted-foreground pt-1">{fatTests.length} prueba(s) seleccionada(s)</p>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Lugar de FAT *</Label>
+                    <Input value={(s6.lugar_fat as string) ?? ""} placeholder="ej. Fábrica del proveedor" onChange={(e) => updateS6("lugar_fat", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Asistencia del Cliente</Label>
+                    <Select value={(s6.asistencia_cliente as string) ?? ""} onValueChange={(v) => updateS6("asistencia_cliente", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="presencial">Presencial</SelectItem>
+                        <SelectItem value="remota">Remota</SelectItem>
+                        <SelectItem value="no_requerida">No requerida</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Criterios de Aceptación</Label>
+                    <Textarea
+                      rows={3}
+                      value={(s6.criterios_aceptacion as string) ?? ""}
+                      onChange={(e) => updateS6("criterios_aceptacion", e.target.value)}
+                      placeholder="Tolerancias, normas aplicables, etc."
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Observaciones FAT</Label>
+                    <Textarea
+                      rows={2}
+                      value={(s6.observaciones_fat as string) ?? ""}
+                      onChange={(e) => updateS6("observaciones_fat", e.target.value)}
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeSection === "section_7" && (
+              <>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold">7. Accesorios y Repuestos</h3>
+                    <p className="text-sm text-muted-foreground">Componentes mínimos a incluir con el suministro</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={addAcc} disabled={isReadOnly}>
+                    <Plus className="w-3.5 h-3.5" /> Agregar ítem
+                  </Button>
+                </div>
+                {accs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin accesorios ni repuestos cargados.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+                      <div className="col-span-5">Descripción</div>
+                      <div className="col-span-2">Tipo</div>
+                      <div className="col-span-2">Cantidad</div>
+                      <div className="col-span-2">Unidad</div>
+                      <div className="col-span-1"></div>
+                    </div>
+                    {accs.map((a, idx) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                        <Input
+                          className="col-span-5"
+                          placeholder="ej. Bushing de repuesto 36 kV"
+                          value={(a.nombre as string) ?? ""}
+                          onChange={(e) => updateAcc(idx, "nombre", e.target.value)}
+                          disabled={isReadOnly}
+                        />
+                        <Select value={(a.tipo as string) ?? "accesorio"} onValueChange={(v) => updateAcc(idx, "tipo", v)} disabled={isReadOnly}>
+                          <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="accesorio">Accesorio</SelectItem>
+                            <SelectItem value="repuesto">Repuesto</SelectItem>
+                            <SelectItem value="herramienta">Herramienta</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          className="col-span-2"
+                          type="number"
+                          min={1}
+                          value={(a.cantidad as number | string) ?? 1}
+                          onChange={(e) => updateAcc(idx, "cantidad", Number(e.target.value))}
+                          disabled={isReadOnly}
+                        />
+                        <Input
+                          className="col-span-2"
+                          placeholder="ud / kg / m"
+                          value={(a.unidad as string) ?? ""}
+                          onChange={(e) => updateAcc(idx, "unidad", e.target.value)}
+                          disabled={isReadOnly}
+                        />
+                        <Button variant="ghost" size="sm" className="col-span-1" onClick={() => removeAcc(idx)} disabled={isReadOnly}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeSection === "section_8" && (
+              <>
+                <div>
+                  <h3 className="font-semibold">8. Condiciones Comerciales</h3>
+                  <p className="text-sm text-muted-foreground">Garantía, pago, plazos y observaciones finales</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Garantía (meses) *</Label>
+                    <Input type="number" min={0} value={s8.garantia_meses ?? ""} placeholder="ej. 24" onChange={(e) => updateS8("garantia_meses", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Plazo de Validez de Oferta *</Label>
+                    <Input value={s8.plazo_validez_oferta ?? ""} placeholder="ej. 30 días" onChange={(e) => updateS8("plazo_validez_oferta", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Forma de Pago *</Label>
+                    <Select value={s8.forma_pago ?? ""} onValueChange={(v) => updateS8("forma_pago", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_TERMS_OPTIONS.map((p) => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Incoterm *</Label>
+                    <Select value={s8.incoterm ?? ""} onValueChange={(v) => updateS8("incoterm", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                      <SelectContent>
+                        {INCOTERM_OPTIONS.map((i) => (
+                          <SelectItem key={i} value={i}>{i}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Multa por Atraso</Label>
+                    <Input value={s8.multa_atraso ?? ""} placeholder="ej. 0.5% por día, máx 10%" onChange={(e) => updateS8("multa_atraso", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Moneda</Label>
+                    <Select value={s8.moneda ?? "USD"} onValueChange={(v) => updateS8("moneda", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="CLP">CLP</SelectItem>
+                        <SelectItem value="PEN">PEN</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Observaciones generales</Label>
-                  <Textarea rows={5} value={s6.observaciones ?? ""} onChange={(e) => updateS6("observaciones", e.target.value)} disabled={isReadOnly} />
+                  <Label>Observaciones Generales</Label>
+                  <Textarea rows={4} value={s8.observaciones ?? ""} onChange={(e) => updateS8("observaciones", e.target.value)} disabled={isReadOnly} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Riesgos identificados</Label>
-                  <Textarea rows={3} value={s6.riesgos ?? ""} onChange={(e) => updateS6("riesgos", e.target.value)} disabled={isReadOnly} />
+                  <Label>Riesgos Identificados</Label>
+                  <Textarea rows={3} value={s8.riesgos ?? ""} onChange={(e) => updateS8("riesgos", e.target.value)} disabled={isReadOnly} />
                 </div>
               </>
             )}

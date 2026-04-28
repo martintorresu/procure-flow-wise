@@ -53,9 +53,16 @@ interface UseEtFormResult {
 
 const AUTO_SAVE_MS = 30_000;
 
+/** ¿Está "rellenado" un valor? Booleans cuentan, arrays vacíos no, strings vacíos no. */
+function isFilled(v: unknown): boolean {
+  if (v === undefined || v === null) return false;
+  if (typeof v === "boolean") return true;
+  if (Array.isArray(v)) return v.length > 0;
+  return String(v).trim() !== "";
+}
+
 /**
- * Calcula % de completitud del formulario sumando claves no vacías
- * sobre un total estimado (10 obligatorios mínimos por defecto).
+ * % de completitud sumando obligatorios de TODAS las secciones (1..8).
  */
 function calcCompletion(
   data: EtFormState,
@@ -64,44 +71,42 @@ function calcCompletion(
   let totalRequired = 0;
   let filledRequired = 0;
 
-  // Sección 1 — campos base
-  const baseRequired = [
-    "responsable",
-    "fecha_solicitud",
-    "tag_equipo",
-    "ubicacion",
-  ];
-  baseRequired.forEach((k) => {
-    totalRequired++;
-    const v = (data.section_1 as Record<string, unknown>)[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") filledRequired++;
-  });
+  const check = (section: Record<string, unknown>, keys: string[]) => {
+    keys.forEach((k) => {
+      totalRequired++;
+      if (isFilled(section[k])) filledRequired++;
+    });
+  };
 
-  // Sección 2 — alcance
-  ["objetivo", "alcance"].forEach((k) => {
-    totalRequired++;
-    const v = (data.section_2 as Record<string, unknown>)[k];
-    if (v && String(v).trim() !== "") filledRequired++;
-  });
-
-  // Sección 3 — campos del equipment_type_schema
+  // 1 — Identificación + descripción
+  check(data.section_1, ["responsable", "fecha_solicitud", "tag_equipo", "ubicacion", "objetivo", "alcance"]);
+  // 2 — Gestión de Compra
+  check(data.section_2, ["criticidad", "plazo_entrega", "lugar_entrega", "area_solicitante"]);
+  // 3 — Equipos (schema dinámico)
   if (schema && schema.length > 0) {
     const reqs = schema.filter((f) => f.required);
+    const items = data.section_3;
     reqs.forEach((f) => {
       totalRequired++;
-      const items = data.section_3 as Record<string, unknown>[];
       const first = items[0] ?? {};
-      const v = first[f.key];
-      if (v !== undefined && v !== null && String(v).trim() !== "") filledRequired++;
+      if (isFilled(first[f.key])) filledRequired++;
     });
-  }
-
-  // Sección 4 — sitio
-  ["temperatura_ambiente", "altitud"].forEach((k) => {
+  } else {
     totalRequired++;
-    const v = (data.section_4 as Record<string, unknown>)[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") filledRequired++;
-  });
+    if (data.section_3.length > 0) filledRequired++;
+  }
+  // 4 — Sitio
+  check(data.section_4, ["temperatura_ambiente", "altitud"]);
+  // 5 — Documentación: ≥1 documento
+  totalRequired++;
+  if (data.section_5.length > 0) filledRequired++;
+  // 6 — FAT
+  check(data.section_6, ["pruebas_seleccionadas", "lugar_fat"]);
+  // 7 — Accesorios y repuestos: ≥1 ítem
+  totalRequired++;
+  if (data.section_7.length > 0) filledRequired++;
+  // 8 — Comerciales
+  check(data.section_8, ["garantia_meses", "forma_pago", "incoterm", "plazo_validez_oferta"]);
 
   if (totalRequired === 0) return 0;
   return Math.round((filledRequired / totalRequired) * 100);
@@ -205,13 +210,16 @@ export function useEtForm(processId: string | null): UseEtFormResult {
           .maybeSingle();
         if (cancelled) return;
         if (fdata) {
+          const f = fdata as unknown as Record<string, unknown>;
           const loaded: EtFormState = {
-            section_1: (fdata.section_1 as Record<string, unknown>) ?? {},
-            section_2: (fdata.section_2 as Record<string, unknown>) ?? {},
-            section_3: (fdata.section_3 as Record<string, unknown>[]) ?? [],
-            section_4: (fdata.section_4 as Record<string, unknown>) ?? {},
-            section_5: (fdata.section_5 as Record<string, unknown>[]) ?? [],
-            section_6: (fdata.section_6 as Record<string, unknown>) ?? {},
+            section_1: (f.section_1 as Record<string, unknown>) ?? {},
+            section_2: (f.section_2 as Record<string, unknown>) ?? {},
+            section_3: (f.section_3 as Record<string, unknown>[]) ?? [],
+            section_4: (f.section_4 as Record<string, unknown>) ?? {},
+            section_5: (f.section_5 as Record<string, unknown>[]) ?? [],
+            section_6: (f.section_6 as Record<string, unknown>) ?? {},
+            section_7: (f.section_7 as Record<string, unknown>[]) ?? [],
+            section_8: (f.section_8 as Record<string, unknown>) ?? {},
           };
           setData(loaded);
           dataRef.current = loaded;
@@ -349,6 +357,8 @@ export function useEtForm(processId: string | null): UseEtFormResult {
         section_4: dataRef.current.section_4 as unknown as Json,
         section_5: dataRef.current.section_5 as unknown as Json,
         section_6: dataRef.current.section_6 as unknown as Json,
+        section_7: dataRef.current.section_7 as unknown as Json,
+        section_8: dataRef.current.section_8 as unknown as Json,
         last_saved_at: new Date().toISOString(),
         last_saved_by: user?.id ?? null,
       })
@@ -396,27 +406,49 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     if (!formId) return { ok: false, missing: ["Formulario no inicializado"] };
     if (!canEdit) return { ok: false, missing: ["Sin permisos para enviar"] };
 
-    // Validar campos mínimos
+    // Validar campos mínimos de TODAS las secciones
     const missing: string[] = [];
-    const s1 = dataRef.current.section_1 as Record<string, string>;
-    if (!s1.responsable) missing.push("Responsable Técnico");
-    if (!s1.fecha_solicitud) missing.push("Fecha Solicitud");
-    if (!s1.tag_equipo) missing.push("TAG / Identificador");
-    if (!s1.ubicacion) missing.push("Ubicación / Área");
-    const s2 = dataRef.current.section_2 as Record<string, string>;
-    if (!s2.objetivo) missing.push("Objetivo");
-    if (!s2.alcance) missing.push("Alcance del Suministro");
+    const s1 = dataRef.current.section_1 as Record<string, unknown>;
+    if (!isFilled(s1.responsable)) missing.push("Responsable Técnico");
+    if (!isFilled(s1.fecha_solicitud)) missing.push("Fecha Solicitud");
+    if (!isFilled(s1.tag_equipo)) missing.push("TAG / Identificador");
+    if (!isFilled(s1.ubicacion)) missing.push("Ubicación / Área");
+    if (!isFilled(s1.objetivo)) missing.push("Objetivo");
+    if (!isFilled(s1.alcance)) missing.push("Alcance del Suministro");
+
+    const s2 = dataRef.current.section_2 as Record<string, unknown>;
+    if (!isFilled(s2.criticidad)) missing.push("Criticidad (sec. 2)");
+    if (!isFilled(s2.plazo_entrega)) missing.push("Plazo de entrega (sec. 2)");
+    if (!isFilled(s2.lugar_entrega)) missing.push("Lugar de entrega (sec. 2)");
+    if (!isFilled(s2.area_solicitante)) missing.push("Área solicitante (sec. 2)");
+
     if (!equipmentTypeCode) missing.push("Tipo de Equipo");
-    const items = dataRef.current.section_3 as Record<string, unknown>[];
+    const items = dataRef.current.section_3;
     if (items.length === 0) missing.push("Al menos un equipo en sección 3");
     if (equipmentSchema && items[0]) {
       equipmentSchema.filter((f) => f.required).forEach((f) => {
-        const v = items[0][f.key];
-        if (v === undefined || v === null || String(v).trim() === "") {
-          missing.push(`Equipo: ${f.label}`);
-        }
+        if (!isFilled(items[0][f.key])) missing.push(`Equipo: ${f.label}`);
       });
     }
+
+    const s4 = dataRef.current.section_4 as Record<string, unknown>;
+    if (!isFilled(s4.temperatura_ambiente)) missing.push("Temperatura ambiente (sec. 4)");
+    if (!isFilled(s4.altitud)) missing.push("Altitud (sec. 4)");
+
+    if (dataRef.current.section_5.length === 0) missing.push("Al menos un documento (sec. 5)");
+
+    const s6 = dataRef.current.section_6 as Record<string, unknown>;
+    if (!isFilled(s6.pruebas_seleccionadas)) missing.push("Pruebas FAT (sec. 6)");
+    if (!isFilled(s6.lugar_fat)) missing.push("Lugar de FAT (sec. 6)");
+
+    if (dataRef.current.section_7.length === 0) missing.push("Al menos un accesorio/repuesto (sec. 7)");
+
+    const s8 = dataRef.current.section_8 as Record<string, unknown>;
+    if (!isFilled(s8.garantia_meses)) missing.push("Garantía en meses (sec. 8)");
+    if (!isFilled(s8.forma_pago)) missing.push("Forma de pago (sec. 8)");
+    if (!isFilled(s8.incoterm)) missing.push("Incoterm (sec. 8)");
+    if (!isFilled(s8.plazo_validez_oferta)) missing.push("Plazo de validez de oferta (sec. 8)");
+
     if (missing.length > 0) return { ok: false, missing };
 
     const { error } = await supabase
