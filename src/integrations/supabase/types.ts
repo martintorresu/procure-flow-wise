@@ -103,6 +103,8 @@ export type Database = {
           section_4: Json
           section_5: Json
           section_6: Json
+          section_7: Json
+          section_8: Json
           updated_at: string
         }
         Insert: {
@@ -116,6 +118,8 @@ export type Database = {
           section_4?: Json
           section_5?: Json
           section_6?: Json
+          section_7?: Json
+          section_8?: Json
           updated_at?: string
         }
         Update: {
@@ -129,6 +133,8 @@ export type Database = {
           section_4?: Json
           section_5?: Json
           section_6?: Json
+          section_7?: Json
+          section_8?: Json
           updated_at?: string
         }
         Relationships: [
