@@ -25,6 +25,8 @@ import {
 import { useEtForm, SECTIONS } from "@/hooks/useEtForm";
 import { DynamicField } from "./DynamicField";
 import type { EtSectionKey } from "@/types/etForm";
+import { CRITICALITY_OPTIONS, FAT_TEST_OPTIONS, PAYMENT_TERMS_OPTIONS, INCOTERM_OPTIONS } from "@/types/etForm";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { exportEtFormToPdf } from "@/lib/etPdfExport";
 
