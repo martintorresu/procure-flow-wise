@@ -357,6 +357,8 @@ export function useEtForm(processId: string | null): UseEtFormResult {
         section_4: dataRef.current.section_4 as unknown as Json,
         section_5: dataRef.current.section_5 as unknown as Json,
         section_6: dataRef.current.section_6 as unknown as Json,
+        section_7: dataRef.current.section_7 as unknown as Json,
+        section_8: dataRef.current.section_8 as unknown as Json,
         last_saved_at: new Date().toISOString(),
         last_saved_by: user?.id ?? null,
       })
@@ -404,27 +406,49 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     if (!formId) return { ok: false, missing: ["Formulario no inicializado"] };
     if (!canEdit) return { ok: false, missing: ["Sin permisos para enviar"] };
 
-    // Validar campos mínimos
+    // Validar campos mínimos de TODAS las secciones
     const missing: string[] = [];
-    const s1 = dataRef.current.section_1 as Record<string, string>;
-    if (!s1.responsable) missing.push("Responsable Técnico");
-    if (!s1.fecha_solicitud) missing.push("Fecha Solicitud");
-    if (!s1.tag_equipo) missing.push("TAG / Identificador");
-    if (!s1.ubicacion) missing.push("Ubicación / Área");
-    const s2 = dataRef.current.section_2 as Record<string, string>;
-    if (!s2.objetivo) missing.push("Objetivo");
-    if (!s2.alcance) missing.push("Alcance del Suministro");
+    const s1 = dataRef.current.section_1 as Record<string, unknown>;
+    if (!isFilled(s1.responsable)) missing.push("Responsable Técnico");
+    if (!isFilled(s1.fecha_solicitud)) missing.push("Fecha Solicitud");
+    if (!isFilled(s1.tag_equipo)) missing.push("TAG / Identificador");
+    if (!isFilled(s1.ubicacion)) missing.push("Ubicación / Área");
+    if (!isFilled(s1.objetivo)) missing.push("Objetivo");
+    if (!isFilled(s1.alcance)) missing.push("Alcance del Suministro");
+
+    const s2 = dataRef.current.section_2 as Record<string, unknown>;
+    if (!isFilled(s2.criticidad)) missing.push("Criticidad (sec. 2)");
+    if (!isFilled(s2.plazo_entrega)) missing.push("Plazo de entrega (sec. 2)");
+    if (!isFilled(s2.lugar_entrega)) missing.push("Lugar de entrega (sec. 2)");
+    if (!isFilled(s2.area_solicitante)) missing.push("Área solicitante (sec. 2)");
+
     if (!equipmentTypeCode) missing.push("Tipo de Equipo");
-    const items = dataRef.current.section_3 as Record<string, unknown>[];
+    const items = dataRef.current.section_3;
     if (items.length === 0) missing.push("Al menos un equipo en sección 3");
     if (equipmentSchema && items[0]) {
       equipmentSchema.filter((f) => f.required).forEach((f) => {
-        const v = items[0][f.key];
-        if (v === undefined || v === null || String(v).trim() === "") {
-          missing.push(`Equipo: ${f.label}`);
-        }
+        if (!isFilled(items[0][f.key])) missing.push(`Equipo: ${f.label}`);
       });
     }
+
+    const s4 = dataRef.current.section_4 as Record<string, unknown>;
+    if (!isFilled(s4.temperatura_ambiente)) missing.push("Temperatura ambiente (sec. 4)");
+    if (!isFilled(s4.altitud)) missing.push("Altitud (sec. 4)");
+
+    if (dataRef.current.section_5.length === 0) missing.push("Al menos un documento (sec. 5)");
+
+    const s6 = dataRef.current.section_6 as Record<string, unknown>;
+    if (!isFilled(s6.pruebas_seleccionadas)) missing.push("Pruebas FAT (sec. 6)");
+    if (!isFilled(s6.lugar_fat)) missing.push("Lugar de FAT (sec. 6)");
+
+    if (dataRef.current.section_7.length === 0) missing.push("Al menos un accesorio/repuesto (sec. 7)");
+
+    const s8 = dataRef.current.section_8 as Record<string, unknown>;
+    if (!isFilled(s8.garantia_meses)) missing.push("Garantía en meses (sec. 8)");
+    if (!isFilled(s8.forma_pago)) missing.push("Forma de pago (sec. 8)");
+    if (!isFilled(s8.incoterm)) missing.push("Incoterm (sec. 8)");
+    if (!isFilled(s8.plazo_validez_oferta)) missing.push("Plazo de validez de oferta (sec. 8)");
+
     if (missing.length > 0) return { ok: false, missing };
 
     const { error } = await supabase
