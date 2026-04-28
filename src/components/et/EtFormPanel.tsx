@@ -102,12 +102,14 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const s1 = data.section_1 as Record<string, string>;
   const s2 = data.section_2 as Record<string, string>;
   const s4 = data.section_4 as Record<string, string>;
-  const s6 = data.section_6 as Record<string, string>;
+  const s6 = data.section_6 as Record<string, unknown>;
+  const s8 = data.section_8 as Record<string, string>;
 
   const updateS1 = (k: string, v: unknown) => setSection("section_1", { ...s1, [k]: v });
   const updateS2 = (k: string, v: unknown) => setSection("section_2", { ...s2, [k]: v });
   const updateS4 = (k: string, v: unknown) => setSection("section_4", { ...s4, [k]: v });
   const updateS6 = (k: string, v: unknown) => setSection("section_6", { ...s6, [k]: v });
+  const updateS8 = (k: string, v: unknown) => setSection("section_8", { ...s8, [k]: v });
 
   // Sección 3 — items técnicos
   const items = data.section_3 as Record<string, unknown>[];
@@ -127,6 +129,23 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const updateDoc = (i: number, k: string, v: unknown) => {
     const next = docs.map((d, idx) => (idx === i ? { ...d, [k]: v } : d));
     setSection("section_5", next);
+  };
+
+  // Sección 7 — accesorios y repuestos
+  const accs = data.section_7 as Record<string, unknown>[];
+  const addAcc = () => setSection("section_7", [...accs, { nombre: "", cantidad: 1, tipo: "accesorio" }]);
+  const removeAcc = (i: number) =>
+    setSection("section_7", accs.filter((_, idx) => idx !== i));
+  const updateAcc = (i: number, k: string, v: unknown) => {
+    const next = accs.map((a, idx) => (idx === i ? { ...a, [k]: v } : a));
+    setSection("section_7", next);
+  };
+
+  // Sección 6 — pruebas FAT (multi-select almacenado como array)
+  const fatTests = (s6.pruebas_seleccionadas as string[] | undefined) ?? [];
+  const toggleFatTest = (test: string) => {
+    const next = fatTests.includes(test) ? fatTests.filter((t) => t !== test) : [...fatTests, test];
+    updateS6("pruebas_seleccionadas", next);
   };
 
   const handleSave = async () => {
