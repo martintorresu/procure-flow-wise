@@ -53,9 +53,16 @@ interface UseEtFormResult {
 
 const AUTO_SAVE_MS = 30_000;
 
+/** ¿Está "rellenado" un valor? Booleans cuentan, arrays vacíos no, strings vacíos no. */
+function isFilled(v: unknown): boolean {
+  if (v === undefined || v === null) return false;
+  if (typeof v === "boolean") return true;
+  if (Array.isArray(v)) return v.length > 0;
+  return String(v).trim() !== "";
+}
+
 /**
- * Calcula % de completitud del formulario sumando claves no vacías
- * sobre un total estimado (10 obligatorios mínimos por defecto).
+ * % de completitud sumando obligatorios de TODAS las secciones (1..8).
  */
 function calcCompletion(
   data: EtFormState,
@@ -64,44 +71,42 @@ function calcCompletion(
   let totalRequired = 0;
   let filledRequired = 0;
 
-  // Sección 1 — campos base
-  const baseRequired = [
-    "responsable",
-    "fecha_solicitud",
-    "tag_equipo",
-    "ubicacion",
-  ];
-  baseRequired.forEach((k) => {
-    totalRequired++;
-    const v = (data.section_1 as Record<string, unknown>)[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") filledRequired++;
-  });
+  const check = (section: Record<string, unknown>, keys: string[]) => {
+    keys.forEach((k) => {
+      totalRequired++;
+      if (isFilled(section[k])) filledRequired++;
+    });
+  };
 
-  // Sección 2 — alcance
-  ["objetivo", "alcance"].forEach((k) => {
-    totalRequired++;
-    const v = (data.section_2 as Record<string, unknown>)[k];
-    if (v && String(v).trim() !== "") filledRequired++;
-  });
-
-  // Sección 3 — campos del equipment_type_schema
+  // 1 — Identificación + descripción
+  check(data.section_1, ["responsable", "fecha_solicitud", "tag_equipo", "ubicacion", "objetivo", "alcance"]);
+  // 2 — Gestión de Compra
+  check(data.section_2, ["criticidad", "plazo_entrega", "lugar_entrega", "area_solicitante"]);
+  // 3 — Equipos (schema dinámico)
   if (schema && schema.length > 0) {
     const reqs = schema.filter((f) => f.required);
+    const items = data.section_3;
     reqs.forEach((f) => {
       totalRequired++;
-      const items = data.section_3 as Record<string, unknown>[];
       const first = items[0] ?? {};
-      const v = first[f.key];
-      if (v !== undefined && v !== null && String(v).trim() !== "") filledRequired++;
+      if (isFilled(first[f.key])) filledRequired++;
     });
-  }
-
-  // Sección 4 — sitio
-  ["temperatura_ambiente", "altitud"].forEach((k) => {
+  } else {
     totalRequired++;
-    const v = (data.section_4 as Record<string, unknown>)[k];
-    if (v !== undefined && v !== null && String(v).trim() !== "") filledRequired++;
-  });
+    if (data.section_3.length > 0) filledRequired++;
+  }
+  // 4 — Sitio
+  check(data.section_4, ["temperatura_ambiente", "altitud"]);
+  // 5 — Documentación: ≥1 documento
+  totalRequired++;
+  if (data.section_5.length > 0) filledRequired++;
+  // 6 — FAT
+  check(data.section_6, ["pruebas_seleccionadas", "lugar_fat"]);
+  // 7 — Accesorios y repuestos: ≥1 ítem
+  totalRequired++;
+  if (data.section_7.length > 0) filledRequired++;
+  // 8 — Comerciales
+  check(data.section_8, ["garantia_meses", "forma_pago", "incoterm", "plazo_validez_oferta"]);
 
   if (totalRequired === 0) return 0;
   return Math.round((filledRequired / totalRequired) * 100);
