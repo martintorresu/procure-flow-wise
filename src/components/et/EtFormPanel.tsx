@@ -331,7 +331,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
               <>
                 <div>
                   <h3 className="font-semibold">1. Identificación</h3>
-                  <p className="text-sm text-muted-foreground">Datos generales del proceso</p>
+                  <p className="text-sm text-muted-foreground">Datos generales y descripción del proceso</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
@@ -351,26 +351,63 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     <Input value={s1.ubicacion ?? ""} onChange={(e) => updateS1("ubicacion", e.target.value)} disabled={isReadOnly} />
                   </div>
                 </div>
+                <div className="space-y-1.5">
+                  <Label>Objetivo *</Label>
+                  <Textarea rows={3} value={s1.objetivo ?? ""} onChange={(e) => updateS1("objetivo", e.target.value)} disabled={isReadOnly} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Alcance del Suministro *</Label>
+                  <Textarea rows={4} value={s1.alcance ?? ""} onChange={(e) => updateS1("alcance", e.target.value)} disabled={isReadOnly} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Exclusiones</Label>
+                  <Textarea rows={2} value={s1.exclusiones ?? ""} onChange={(e) => updateS1("exclusiones", e.target.value)} disabled={isReadOnly} />
+                </div>
               </>
             )}
 
             {activeSection === "section_2" && (
               <>
                 <div>
-                  <h3 className="font-semibold">2. Descripción y Alcance</h3>
-                  <p className="text-sm text-muted-foreground">Qué se necesita comprar y su propósito</p>
+                  <h3 className="font-semibold">2. Datos de Gestión de Compra</h3>
+                  <p className="text-sm text-muted-foreground">Criticidad, plazo y lugar de entrega</p>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Objetivo *</Label>
-                  <Textarea rows={3} value={s2.objetivo ?? ""} onChange={(e) => updateS2("objetivo", e.target.value)} disabled={isReadOnly} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Alcance del Suministro *</Label>
-                  <Textarea rows={4} value={s2.alcance ?? ""} onChange={(e) => updateS2("alcance", e.target.value)} disabled={isReadOnly} />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Exclusiones</Label>
-                  <Textarea rows={2} value={s2.exclusiones ?? ""} onChange={(e) => updateS2("exclusiones", e.target.value)} disabled={isReadOnly} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Criticidad *</Label>
+                    <Select value={s2.criticidad ?? ""} onValueChange={(v) => updateS2("criticidad", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona criticidad…" /></SelectTrigger>
+                      <SelectContent>
+                        {CRITICALITY_OPTIONS.map((c) => (
+                          <SelectItem key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Área Solicitante *</Label>
+                    <Input value={s2.area_solicitante ?? ""} placeholder="ej. Mantenimiento" onChange={(e) => updateS2("area_solicitante", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Plazo de Entrega Requerido *</Label>
+                    <Input type="date" value={s2.plazo_entrega ?? ""} onChange={(e) => updateS2("plazo_entrega", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Lugar de Entrega *</Label>
+                    <Input value={s2.lugar_entrega ?? ""} placeholder="ej. Planta Norte, Bodega 3" onChange={(e) => updateS2("lugar_entrega", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Centro de Costo</Label>
+                    <Input value={s2.centro_costo ?? ""} onChange={(e) => updateS2("centro_costo", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Presupuesto Estimado (USD)</Label>
+                    <Input type="number" value={s2.presupuesto ?? ""} onChange={(e) => updateS2("presupuesto", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Justificación / Notas para Compras</Label>
+                    <Textarea rows={3} value={s2.justificacion ?? ""} onChange={(e) => updateS2("justificacion", e.target.value)} disabled={isReadOnly} />
+                  </div>
                 </div>
               </>
             )}
