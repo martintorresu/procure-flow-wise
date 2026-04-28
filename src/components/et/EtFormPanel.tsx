@@ -545,16 +545,193 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
             {activeSection === "section_6" && (
               <>
                 <div>
-                  <h3 className="font-semibold">6. Observaciones</h3>
-                  <p className="text-sm text-muted-foreground">Notas finales y aprobación</p>
+                  <h3 className="font-semibold">6. Protocolo FAT</h3>
+                  <p className="text-sm text-muted-foreground">Pruebas en fábrica antes del despacho</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Pruebas a Realizar *</Label>
+                  <p className="text-xs text-muted-foreground">Marca todas las pruebas que el proveedor debe ejecutar.</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-1">
+                    {FAT_TEST_OPTIONS.map((test) => (
+                      <label key={test} className="flex items-start gap-2 text-sm cursor-pointer p-2 rounded hover:bg-muted/50">
+                        <Checkbox
+                          checked={fatTests.includes(test)}
+                          onCheckedChange={() => toggleFatTest(test)}
+                          disabled={isReadOnly}
+                          className="mt-0.5"
+                        />
+                        <span>{test}</span>
+                      </label>
+                    ))}
+                  </div>
+                  {fatTests.length > 0 && (
+                    <p className="text-xs text-muted-foreground pt-1">{fatTests.length} prueba(s) seleccionada(s)</p>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Lugar de FAT *</Label>
+                    <Input value={(s6.lugar_fat as string) ?? ""} placeholder="ej. Fábrica del proveedor" onChange={(e) => updateS6("lugar_fat", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Asistencia del Cliente</Label>
+                    <Select value={(s6.asistencia_cliente as string) ?? ""} onValueChange={(v) => updateS6("asistencia_cliente", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="presencial">Presencial</SelectItem>
+                        <SelectItem value="remota">Remota</SelectItem>
+                        <SelectItem value="no_requerida">No requerida</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Criterios de Aceptación</Label>
+                    <Textarea
+                      rows={3}
+                      value={(s6.criterios_aceptacion as string) ?? ""}
+                      onChange={(e) => updateS6("criterios_aceptacion", e.target.value)}
+                      placeholder="Tolerancias, normas aplicables, etc."
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label>Observaciones FAT</Label>
+                    <Textarea
+                      rows={2}
+                      value={(s6.observaciones_fat as string) ?? ""}
+                      onChange={(e) => updateS6("observaciones_fat", e.target.value)}
+                      disabled={isReadOnly}
+                    />
+                  </div>
+                </div>
+              </>
+            )}
+
+            {activeSection === "section_7" && (
+              <>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h3 className="font-semibold">7. Accesorios y Repuestos</h3>
+                    <p className="text-sm text-muted-foreground">Componentes mínimos a incluir con el suministro</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={addAcc} disabled={isReadOnly}>
+                    <Plus className="w-3.5 h-3.5" /> Agregar ítem
+                  </Button>
+                </div>
+                {accs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Sin accesorios ni repuestos cargados.</p>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+                      <div className="col-span-5">Descripción</div>
+                      <div className="col-span-2">Tipo</div>
+                      <div className="col-span-2">Cantidad</div>
+                      <div className="col-span-2">Unidad</div>
+                      <div className="col-span-1"></div>
+                    </div>
+                    {accs.map((a, idx) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
+                        <Input
+                          className="col-span-5"
+                          placeholder="ej. Bushing de repuesto 36 kV"
+                          value={(a.nombre as string) ?? ""}
+                          onChange={(e) => updateAcc(idx, "nombre", e.target.value)}
+                          disabled={isReadOnly}
+                        />
+                        <Select value={(a.tipo as string) ?? "accesorio"} onValueChange={(v) => updateAcc(idx, "tipo", v)} disabled={isReadOnly}>
+                          <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="accesorio">Accesorio</SelectItem>
+                            <SelectItem value="repuesto">Repuesto</SelectItem>
+                            <SelectItem value="herramienta">Herramienta</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Input
+                          className="col-span-2"
+                          type="number"
+                          min={1}
+                          value={(a.cantidad as number | string) ?? 1}
+                          onChange={(e) => updateAcc(idx, "cantidad", Number(e.target.value))}
+                          disabled={isReadOnly}
+                        />
+                        <Input
+                          className="col-span-2"
+                          placeholder="ud / kg / m"
+                          value={(a.unidad as string) ?? ""}
+                          onChange={(e) => updateAcc(idx, "unidad", e.target.value)}
+                          disabled={isReadOnly}
+                        />
+                        <Button variant="ghost" size="sm" className="col-span-1" onClick={() => removeAcc(idx)} disabled={isReadOnly}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeSection === "section_8" && (
+              <>
+                <div>
+                  <h3 className="font-semibold">8. Condiciones Comerciales</h3>
+                  <p className="text-sm text-muted-foreground">Garantía, pago, plazos y observaciones finales</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Garantía (meses) *</Label>
+                    <Input type="number" min={0} value={s8.garantia_meses ?? ""} placeholder="ej. 24" onChange={(e) => updateS8("garantia_meses", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Plazo de Validez de Oferta *</Label>
+                    <Input value={s8.plazo_validez_oferta ?? ""} placeholder="ej. 30 días" onChange={(e) => updateS8("plazo_validez_oferta", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Forma de Pago *</Label>
+                    <Select value={s8.forma_pago ?? ""} onValueChange={(v) => updateS8("forma_pago", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                      <SelectContent>
+                        {PAYMENT_TERMS_OPTIONS.map((p) => (
+                          <SelectItem key={p} value={p}>{p}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Incoterm *</Label>
+                    <Select value={s8.incoterm ?? ""} onValueChange={(v) => updateS8("incoterm", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+                      <SelectContent>
+                        {INCOTERM_OPTIONS.map((i) => (
+                          <SelectItem key={i} value={i}>{i}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Multa por Atraso</Label>
+                    <Input value={s8.multa_atraso ?? ""} placeholder="ej. 0.5% por día, máx 10%" onChange={(e) => updateS8("multa_atraso", e.target.value)} disabled={isReadOnly} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Moneda</Label>
+                    <Select value={s8.moneda ?? "USD"} onValueChange={(v) => updateS8("moneda", v)} disabled={isReadOnly}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="USD">USD</SelectItem>
+                        <SelectItem value="EUR">EUR</SelectItem>
+                        <SelectItem value="CLP">CLP</SelectItem>
+                        <SelectItem value="PEN">PEN</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Observaciones generales</Label>
-                  <Textarea rows={5} value={s6.observaciones ?? ""} onChange={(e) => updateS6("observaciones", e.target.value)} disabled={isReadOnly} />
+                  <Label>Observaciones Generales</Label>
+                  <Textarea rows={4} value={s8.observaciones ?? ""} onChange={(e) => updateS8("observaciones", e.target.value)} disabled={isReadOnly} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Riesgos identificados</Label>
-                  <Textarea rows={3} value={s6.riesgos ?? ""} onChange={(e) => updateS6("riesgos", e.target.value)} disabled={isReadOnly} />
+                  <Label>Riesgos Identificados</Label>
+                  <Textarea rows={3} value={s8.riesgos ?? ""} onChange={(e) => updateS8("riesgos", e.target.value)} disabled={isReadOnly} />
                 </div>
               </>
             )}
