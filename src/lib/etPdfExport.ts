@@ -68,13 +68,20 @@ export function exportEtFormToPdf(args: ExportArgs): void {
   kv("Fecha Solicitud", s1.fecha_solicitud);
   kv("TAG / Identificador", s1.tag_equipo);
   kv("Ubicación / Área", s1.ubicacion);
+  kv("Objetivo", s1.objetivo);
+  kv("Alcance del Suministro", s1.alcance);
+  kv("Exclusiones", s1.exclusiones);
 
-  // Sección 2
-  sectionHeader("2. Descripción y Alcance");
+  // Sección 2 — Gestión de compra
+  sectionHeader("2. Datos de Gestión de Compra");
   const s2 = data.section_2 as Record<string, unknown>;
-  kv("Objetivo", s2.objetivo);
-  kv("Alcance del Suministro", s2.alcance);
-  kv("Exclusiones", s2.exclusiones);
+  kv("Criticidad", s2.criticidad);
+  kv("Área Solicitante", s2.area_solicitante);
+  kv("Plazo de Entrega", s2.plazo_entrega);
+  kv("Lugar de Entrega", s2.lugar_entrega);
+  kv("Centro de Costo", s2.centro_costo);
+  kv("Presupuesto Estimado (USD)", s2.presupuesto);
+  kv("Justificación", s2.justificacion);
 
   // Sección 3
   sectionHeader("3. Especificaciones Técnicas");
@@ -105,11 +112,37 @@ export function exportEtFormToPdf(args: ExportArgs): void {
   if (docs.length === 0) writeLine("(sin documentos)");
   docs.forEach((d, idx) => writeLine(`${idx + 1}. ${d.nombre ?? ""}`));
 
-  // Sección 6
-  sectionHeader("6. Observaciones");
+  // Sección 6 — FAT
+  sectionHeader("6. Protocolo FAT");
   const s6 = data.section_6 as Record<string, unknown>;
-  kv("Observaciones generales", s6.observaciones);
-  kv("Riesgos identificados", s6.riesgos);
+  const tests = (s6.pruebas_seleccionadas as string[] | undefined) ?? [];
+  kv("Pruebas seleccionadas", tests.length > 0 ? tests.join(", ") : null);
+  kv("Lugar de FAT", s6.lugar_fat);
+  kv("Asistencia del Cliente", s6.asistencia_cliente);
+  kv("Criterios de Aceptación", s6.criterios_aceptacion);
+  kv("Observaciones FAT", s6.observaciones_fat);
+
+  // Sección 7 — Accesorios y repuestos
+  sectionHeader("7. Accesorios y Repuestos");
+  const accs = data.section_7 as Record<string, unknown>[];
+  if (accs.length === 0) writeLine("(sin ítems)");
+  accs.forEach((a, idx) =>
+    writeLine(
+      `${idx + 1}. [${a.tipo ?? "—"}] ${a.nombre ?? ""} — ${a.cantidad ?? ""} ${a.unidad ?? ""}`.trim(),
+    ),
+  );
+
+  // Sección 8 — Condiciones comerciales
+  sectionHeader("8. Condiciones Comerciales");
+  const s8 = data.section_8 as Record<string, unknown>;
+  kv("Garantía (meses)", s8.garantia_meses);
+  kv("Plazo de Validez de Oferta", s8.plazo_validez_oferta);
+  kv("Forma de Pago", s8.forma_pago);
+  kv("Incoterm", s8.incoterm);
+  kv("Multa por Atraso", s8.multa_atraso);
+  kv("Moneda", s8.moneda);
+  kv("Observaciones Generales", s8.observaciones);
+  kv("Riesgos Identificados", s8.riesgos);
 
   doc.save(`ET_${pdcNumber ?? "form"}.pdf`);
 }
