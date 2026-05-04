@@ -77,6 +77,63 @@ export default function PdcDetailPage() {
         ))}
       </div>
 
+      {/* Progress stepper */}
+      {(() => {
+        const steps = [
+          { key: "draft", label: "Borrador", icon: FileText },
+          { key: "technical_definition", label: "Técnica", icon: Wrench },
+          { key: "planning", label: "Planificación", icon: ClipboardList },
+          { key: "quotation", label: "Cotización", icon: FileSearch },
+          { key: "awarded", label: "Adjudicación", icon: Award },
+          { key: "po_issued", label: "OC / Vendor", icon: Truck },
+          { key: "fat", label: "Prueba de Fábrica", icon: FlaskConical },
+          { key: "shipping", label: "Logística", icon: Ship },
+          { key: "closed", label: "Cerrado", icon: Check },
+        ];
+        const order = ["draft","technical_definition","planning","quotation","evaluation","awarded","po_issued","drawings","fat","shipping","arrived","closed","closed_with_incident"];
+        const currentIdx = order.indexOf(pdc.current_status);
+        const activeStepIdx = steps.findIndex((s, i) => {
+          const nextKey = steps[i + 1]?.key;
+          const nextIdx = nextKey ? order.indexOf(nextKey) : order.length;
+          return currentIdx >= order.indexOf(s.key) && currentIdx < nextIdx;
+        });
+        const progressPct = activeStepIdx >= 0 ? (activeStepIdx / (steps.length - 1)) * 100 : 0;
+
+        return (
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-medium">Avance del proceso</h3>
+                <span className="text-xs text-muted-foreground">Etapa actual: <span className="font-medium text-foreground">{steps[activeStepIdx]?.label ?? "—"}</span></span>
+              </div>
+              <div className="relative pt-4 pb-2">
+                <div className="absolute left-0 right-0 top-9 h-1 bg-muted rounded-full" />
+                <div className="absolute left-0 top-9 h-1 bg-primary rounded-full transition-all" style={{ width: `${progressPct}%` }} />
+                <div className="relative grid" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+                  {steps.map((s, i) => {
+                    const Icon = s.icon;
+                    const completed = i < activeStepIdx;
+                    const active = i === activeStepIdx;
+                    return (
+                      <div key={s.key} className="flex flex-col items-center gap-2">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 transition-colors ${
+                          completed ? "bg-primary border-primary text-primary-foreground" :
+                          active ? "bg-background border-primary text-primary ring-4 ring-primary/15" :
+                          "bg-background border-muted text-muted-foreground"
+                        }`}>
+                          <Icon className="w-4 h-4" />
+                        </div>
+                        <span className={`text-[11px] text-center leading-tight ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })()}
+
       {/* Tabs */}
       <Tabs defaultValue="summary">
         <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
