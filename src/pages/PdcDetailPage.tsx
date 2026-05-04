@@ -172,15 +172,16 @@ export default function PdcDetailPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="summary">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-9 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
-          <TabsTrigger value="planning">Planificación</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
-          <TabsTrigger value="quotations">Cotizaciones</TabsTrigger>
+          <TabsTrigger value="planning">Planificación</TabsTrigger>
+          <TabsTrigger value="quotations">Cotización</TabsTrigger>
           <TabsTrigger value="award">Adjudicación</TabsTrigger>
-          <TabsTrigger value="vendor">Vendor</TabsTrigger>
+          <TabsTrigger value="vendor">OC / Vendor</TabsTrigger>
           <TabsTrigger value="fat">Prueba de Fábrica</TabsTrigger>
           <TabsTrigger value="logistics">Logística</TabsTrigger>
+          <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
 
         {/* Summary */}
@@ -413,6 +414,28 @@ export default function PdcDetailPage() {
                   </div>
                 </div>
               ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Closed */}
+        <TabsContent value="closed">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Cierre del Proceso</CardTitle></CardHeader>
+            <CardContent>
+              {pdc.current_status === "closed" || pdc.current_status === "closed_with_incident" ? (
+                <div className="space-y-3 text-sm">
+                  <div className={`p-4 rounded-lg border ${pdc.current_status === "closed" ? "bg-success/10 border-success/20" : "bg-warning/10 border-warning/20"}`}>
+                    <p className="text-muted-foreground">Estado de cierre</p>
+                    <p className={`text-lg font-bold ${pdc.current_status === "closed" ? "text-success" : "text-warning"}`}>
+                      {pdc.current_status === "closed" ? "Cerrado satisfactoriamente" : "Cerrado con incidente"}
+                    </p>
+                  </div>
+                  <div><span className="text-muted-foreground">Última actualización:</span> {pdc.updated_at}</div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">El proceso aún no se encuentra cerrado.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
