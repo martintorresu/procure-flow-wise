@@ -39,10 +39,10 @@ export default function DashboardPage() {
   );
 
   const stats = [
-    { label: "PdCs Activos", value: activePdcs.length, icon: FileText, color: "text-accent" },
-    { label: "Atrasados", value: delayedPdcs.length, icon: Clock, color: "text-danger" },
-    { label: "Críticos", value: criticalPdcs.length, icon: AlertTriangle, color: "text-warning" },
-    { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-primary" },
+    { label: "PdCs Activos", value: activePdcs.length, icon: FileText, color: "text-accent", to: "/pdcs" },
+    { label: "Atrasados", value: delayedPdcs.length, icon: Clock, color: "text-danger", to: "/alerts" },
+    { label: "Críticos", value: criticalPdcs.length, icon: AlertTriangle, color: "text-warning", to: "/alerts" },
+    { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-primary", to: "/alerts" },
   ];
 
   return (
@@ -54,19 +54,26 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => (
-          <Card key={s.label}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{s.label}</p>
-                  <p className="text-3xl font-bold mt-1">{s.value}</p>
+        {stats.map((s) => {
+          const CardInner = (
+            <Card className={s.to ? "transition-colors hover:bg-muted/40 hover:border-primary/40 cursor-pointer" : ""}>
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{s.label}</p>
+                    <p className="text-3xl font-bold mt-1">{s.value}</p>
+                  </div>
+                  <s.icon className={`w-10 h-10 ${s.color} opacity-20`} />
                 </div>
-                <s.icon className={`w-10 h-10 ${s.color} opacity-20`} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          );
+          return s.to ? (
+            <Link key={s.label} to={s.to} aria-label={`Ver ${s.label}`}>{CardInner}</Link>
+          ) : (
+            <div key={s.label}>{CardInner}</div>
+          );
+        })}
       </div>
 
       {/* Table */}
