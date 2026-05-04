@@ -172,15 +172,16 @@ export default function PdcDetailPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="summary">
-        <TabsList className="grid grid-cols-4 lg:grid-cols-8 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-9 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
-          <TabsTrigger value="planning">Planificación</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
-          <TabsTrigger value="quotations">Cotizaciones</TabsTrigger>
+          <TabsTrigger value="planning">Planificación</TabsTrigger>
+          <TabsTrigger value="quotations">Cotización</TabsTrigger>
           <TabsTrigger value="award">Adjudicación</TabsTrigger>
-          <TabsTrigger value="vendor">Vendor</TabsTrigger>
+          <TabsTrigger value="vendor">OC / Vendor</TabsTrigger>
           <TabsTrigger value="fat">Prueba de Fábrica</TabsTrigger>
           <TabsTrigger value="logistics">Logística</TabsTrigger>
+          <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
 
         {/* Summary */}
