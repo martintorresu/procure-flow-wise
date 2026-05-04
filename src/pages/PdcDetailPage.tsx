@@ -417,6 +417,28 @@ export default function PdcDetailPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        {/* Closed */}
+        <TabsContent value="closed">
+          <Card>
+            <CardHeader><CardTitle className="text-base">Cierre del Proceso</CardTitle></CardHeader>
+            <CardContent>
+              {pdc.current_status === "closed" || pdc.current_status === "closed_with_incident" ? (
+                <div className="space-y-3 text-sm">
+                  <div className={`p-4 rounded-lg border ${pdc.current_status === "closed" ? "bg-success/10 border-success/20" : "bg-warning/10 border-warning/20"}`}>
+                    <p className="text-muted-foreground">Estado de cierre</p>
+                    <p className={`text-lg font-bold ${pdc.current_status === "closed" ? "text-success" : "text-warning"}`}>
+                      {pdc.current_status === "closed" ? "Cerrado satisfactoriamente" : "Cerrado con incidente"}
+                    </p>
+                  </div>
+                  <div><span className="text-muted-foreground">Última actualización:</span> {pdc.updated_at}</div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">El proceso aún no se encuentra cerrado.</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );
