@@ -86,7 +86,7 @@ export default function PdcDetailPage() {
           <TabsTrigger value="quotations">Cotizaciones</TabsTrigger>
           <TabsTrigger value="award">Adjudicación</TabsTrigger>
           <TabsTrigger value="vendor">Vendor</TabsTrigger>
-          <TabsTrigger value="fat">FAT</TabsTrigger>
+          <TabsTrigger value="fat">Prueba de Fábrica</TabsTrigger>
           <TabsTrigger value="logistics">Logística</TabsTrigger>
         </TabsList>
 
@@ -267,10 +267,10 @@ export default function PdcDetailPage() {
         {/* FAT */}
         <TabsContent value="fat">
           <Card>
-            <CardHeader><CardTitle className="text-base">Factory Acceptance Test</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base">Prueba de Fábrica</CardTitle></CardHeader>
             <CardContent>
               {fatEvents.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Sin eventos FAT registrados</p>
+                <p className="text-sm text-muted-foreground">Sin eventos de Prueba de Fábrica registrados</p>
               ) : fatEvents.map((f) => (
                 <div key={f.id} className="grid grid-cols-2 gap-3 text-sm">
                   <div><span className="text-muted-foreground">Programado:</span> {f.scheduled_date}</div>

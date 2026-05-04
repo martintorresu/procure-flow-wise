@@ -545,7 +545,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
             {activeSection === "section_6" && (
               <>
                 <div>
-                  <h3 className="font-semibold">6. Protocolo FAT</h3>
+                  <h3 className="font-semibold">6. Protocolo Prueba de Fábrica</h3>
                   <p className="text-sm text-muted-foreground">Pruebas en fábrica antes del despacho</p>
                 </div>
                 <div className="space-y-2">
@@ -570,7 +570,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label>Lugar de FAT *</Label>
+                    <Label>Lugar de Prueba de Fábrica *</Label>
                     <Input value={(s6.lugar_fat as string) ?? ""} placeholder="ej. Fábrica del proveedor" onChange={(e) => updateS6("lugar_fat", e.target.value)} disabled={isReadOnly} />
                   </div>
                   <div className="space-y-1.5">
@@ -595,7 +595,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     />
                   </div>
                   <div className="space-y-1.5 md:col-span-2">
-                    <Label>Observaciones FAT</Label>
+                    <Label>Observaciones Prueba de Fábrica</Label>
                     <Textarea
                       rows={2}
                       value={(s6.observaciones_fat as string) ?? ""}
