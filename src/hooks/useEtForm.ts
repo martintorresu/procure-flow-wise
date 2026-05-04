@@ -438,8 +438,8 @@ export function useEtForm(processId: string | null): UseEtFormResult {
     if (dataRef.current.section_5.length === 0) missing.push("Al menos un documento (sec. 5)");
 
     const s6 = dataRef.current.section_6 as Record<string, unknown>;
-    if (!isFilled(s6.pruebas_seleccionadas)) missing.push("Pruebas FAT (sec. 6)");
-    if (!isFilled(s6.lugar_fat)) missing.push("Lugar de FAT (sec. 6)");
+    if (!isFilled(s6.pruebas_seleccionadas)) missing.push("Pruebas de Fábrica (sec. 6)");
+    if (!isFilled(s6.lugar_fat)) missing.push("Lugar de Prueba de Fábrica (sec. 6)");
 
     if (dataRef.current.section_7.length === 0) missing.push("Al menos un accesorio/repuesto (sec. 7)");
 

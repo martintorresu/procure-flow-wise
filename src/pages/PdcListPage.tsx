@@ -57,7 +57,7 @@ export default function PdcListPage() {
                 <SelectItem value="technical_definition">Def. Técnica</SelectItem>
                 <SelectItem value="quotation">Cotización</SelectItem>
                 <SelectItem value="po_issued">OC Emitida</SelectItem>
-                <SelectItem value="fat">FAT</SelectItem>
+                <SelectItem value="fat">Prueba de Fábrica</SelectItem>
                 <SelectItem value="shipping">En Tránsito</SelectItem>
               </SelectContent>
             </Select>

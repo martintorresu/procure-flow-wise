@@ -113,14 +113,14 @@ export function exportEtFormToPdf(args: ExportArgs): void {
   docs.forEach((d, idx) => writeLine(`${idx + 1}. ${d.nombre ?? ""}`));
 
   // Sección 6 — FAT
-  sectionHeader("6. Protocolo FAT");
+  sectionHeader("6. Protocolo Prueba de Fábrica");
   const s6 = data.section_6 as Record<string, unknown>;
   const tests = (s6.pruebas_seleccionadas as string[] | undefined) ?? [];
   kv("Pruebas seleccionadas", tests.length > 0 ? tests.join(", ") : null);
-  kv("Lugar de FAT", s6.lugar_fat);
+  kv("Lugar de Prueba de Fábrica", s6.lugar_fat);
   kv("Asistencia del Cliente", s6.asistencia_cliente);
   kv("Criterios de Aceptación", s6.criterios_aceptacion);
-  kv("Observaciones FAT", s6.observaciones_fat);
+  kv("Observaciones Prueba de Fábrica", s6.observaciones_fat);
 
   // Sección 7 — Accesorios y repuestos
   sectionHeader("7. Accesorios y Repuestos");
