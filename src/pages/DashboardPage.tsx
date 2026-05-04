@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { mockPdcs, mockAlerts, getTrafficLight } from "@/data/mockData";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -15,6 +18,25 @@ export default function DashboardPage() {
   const delayedPdcs = allPdcs.filter((p) => getTrafficLight(p) === "red");
   const criticalPdcs = allPdcs.filter((p) => p.criticality === "high");
   const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
+
+  const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<PdcStatus | "all">("all");
+
+  const ownerOptions = useMemo(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_owner).filter(Boolean))).sort(),
+    [activePdcs]
+  );
+  const statusOptions = useMemo(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_status))),
+    [activePdcs]
+  );
+
+  const filteredPdcs = activePdcs.filter((p) =>
+    (criticalityFilter === "all" || p.criticality === criticalityFilter) &&
+    (ownerFilter === "all" || p.current_owner === ownerFilter) &&
+    (statusFilter === "all" || p.current_status === statusFilter)
+  );
 
   const stats = [
     { label: "PdCs Activos", value: activePdcs.length, icon: FileText, color: "text-accent" },
@@ -61,18 +83,57 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left">
+                <tr className="border-b text-left align-bottom">
                   <th className="py-3 px-2 font-medium text-muted-foreground">Semáforo</th>
                   <th className="py-3 px-2 font-medium text-muted-foreground">N° PdC</th>
                   <th className="py-3 px-2 font-medium text-muted-foreground">Título</th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">Estado</th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">Responsable</th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">Criticidad</th>
+                  <th className="py-3 px-2 font-medium text-muted-foreground">
+                    <div className="space-y-1">
+                      <div>Estado</div>
+                      <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as PdcStatus | "all")}>
+                        <SelectTrigger className="h-7 text-xs font-normal w-[140px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {statusOptions.map((s) => (
+                            <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </th>
+                  <th className="py-3 px-2 font-medium text-muted-foreground">
+                    <div className="space-y-1">
+                      <div>Responsable</div>
+                      <Select value={ownerFilter} onValueChange={setOwnerFilter}>
+                        <SelectTrigger className="h-7 text-xs font-normal w-[160px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todos</SelectItem>
+                          {ownerOptions.map((o) => (
+                            <SelectItem key={o} value={o}>{o}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </th>
+                  <th className="py-3 px-2 font-medium text-muted-foreground">
+                    <div className="space-y-1">
+                      <div>Criticidad</div>
+                      <Select value={criticalityFilter} onValueChange={(v) => setCriticalityFilter(v as Criticality | "all")}>
+                        <SelectTrigger className="h-7 text-xs font-normal w-[110px]"><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          <SelectItem value="high">{CRITICALITY_LABELS.high}</SelectItem>
+                          <SelectItem value="medium">{CRITICALITY_LABELS.medium}</SelectItem>
+                          <SelectItem value="low">{CRITICALITY_LABELS.low}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </th>
                   <th className="py-3 px-2 font-medium text-muted-foreground">Acción</th>
                 </tr>
               </thead>
               <tbody>
-                {activePdcs.map((pdc) => (
+                {filteredPdcs.map((pdc) => (
                   <tr key={pdc.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                     <td className="py-3 px-2"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
                     <td className="py-3 px-2 font-mono text-xs">{pdc.pdc_number}</td>
@@ -87,6 +148,13 @@ export default function DashboardPage() {
                     </td>
                   </tr>
                 ))}
+                {filteredPdcs.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
+                      No hay PdCs que coincidan con los filtros.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
