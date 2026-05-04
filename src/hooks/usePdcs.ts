@@ -36,6 +36,7 @@ export interface PdcRow {
   requesting_area: string | null;
   et_document_code: string | null;
   engineering_responsible: string | null;
+  responsible_name: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -54,7 +55,7 @@ export function rowToPdc(r: PdcRow): Pdc {
     currency: r.currency ?? "USD",
     required_on_site_date: r.required_on_site_date ?? "",
     current_status: STAGE_TO_STATUS[r.current_stage] ?? "draft",
-    current_owner: "—",
+    current_owner: r.responsible_name ?? "—",
     created_at: r.created_at,
     updated_at: r.updated_at,
   };
