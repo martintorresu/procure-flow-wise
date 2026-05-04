@@ -21,6 +21,7 @@ export default function CreatePdcPage() {
     estimated_amount: "", currency: "USD",
     required_on_site_date: "",
     requesting_area: "",
+    responsible_name: "",
   });
 
   const update = (field: string, value: string) =>
@@ -50,6 +51,7 @@ export default function CreatePdcPage() {
         currency: form.currency,
         required_on_site_date: form.required_on_site_date,
         requesting_area: form.requesting_area || "Sin especificar",
+        responsible_name: form.responsible_name || null,
         et_document_code: null,
         created_by: user.id,
       })
@@ -106,9 +108,15 @@ export default function CreatePdcPage() {
               <Textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descripción técnica detallada" rows={3} />
             </div>
 
-            <div className="space-y-2">
-              <Label>Área Solicitante</Label>
-              <Input value={form.requesting_area} onChange={(e) => update("requesting_area", e.target.value)} placeholder="Ej: Operaciones, Mantenimiento" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Área Solicitante</Label>
+                <Input value={form.requesting_area} onChange={(e) => update("requesting_area", e.target.value)} placeholder="Ej: Operaciones, Mantenimiento" />
+              </div>
+              <div className="space-y-2">
+                <Label>Responsable</Label>
+                <Input value={form.responsible_name} onChange={(e) => update("responsible_name", e.target.value)} placeholder="Nombre del responsable" />
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
