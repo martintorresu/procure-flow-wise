@@ -4,15 +4,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, DollarSign, User, MapPin, FileText, ClipboardList, Wrench, FileSearch, Award, Truck, FlaskConical, Ship, Check } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, User, MapPin, FileText, ClipboardList, Wrench, FileSearch, Award, Truck, FlaskConical, Ship, Check, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { EtFormPanel } from "@/components/et/EtFormPanel";
 import { usePdc } from "@/hooks/usePdcs";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function PdcDetailPage() {
   const { id } = useParams();
+  const { user } = useAuth();
   const { pdc: realPdc, loading } = usePdc(id);
   const pdc = realPdc ?? mockPdcs.find((p) => p.id === id);
+  const isAdmin = user?.role === "admin";
 
   if (loading) {
     return <div className="text-center py-20 text-muted-foreground">Cargando PdC…</div>;
@@ -55,6 +58,13 @@ export default function PdcDetailPage() {
             <p className="text-sm text-muted-foreground">{pdc.project}</p>
           </div>
         </div>
+        {isAdmin && realPdc && (
+          <Link to={`/pdcs/${pdc.id}/edit`}>
+            <Button variant="outline" size="sm" className="gap-2">
+              <Pencil className="w-4 h-4" /> Editar PdC
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Key info cards */}
