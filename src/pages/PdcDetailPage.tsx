@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, DollarSign, User, MapPin } from "lucide-react";
+import { ArrowLeft, Calendar, DollarSign, User, MapPin, FileText, ClipboardList, Wrench, FileSearch, Award, Truck, FlaskConical, Ship, Check } from "lucide-react";
 import { toast } from "sonner";
 import { EtFormPanel } from "@/components/et/EtFormPanel";
 import { usePdc } from "@/hooks/usePdcs";
