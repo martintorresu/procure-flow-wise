@@ -9,6 +9,7 @@ import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
 import PdcListPage from "@/pages/PdcListPage";
 import CreatePdcPage from "@/pages/CreatePdcPage";
+import EditPdcPage from "@/pages/EditPdcPage";
 import PdcDetailPage from "@/pages/PdcDetailPage";
 import AlertsPage from "@/pages/AlertsPage";
 import SignUpPage from "@/pages/SignUpPage";
@@ -84,6 +85,7 @@ const App = () => (
               <Route path="/" element={<DashboardPage />} />
               <Route path="/pdcs" element={<PdcListPage />} />
               <Route path="/pdcs/new" element={<CreatePdcPage />} />
+              <Route path="/pdcs/:id/edit" element={<EditPdcPage />} />
               <Route path="/pdcs/:id" element={<PdcDetailPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/admin" element={<AdminPage />} />
@@ -94,6 +96,7 @@ const App = () => (
               <Route index element={<DashboardPage />} />
               <Route path="pdcs" element={<PdcListPage />} />
               <Route path="pdcs/new" element={<CreatePdcPage />} />
+              <Route path="pdcs/:id/edit" element={<EditPdcPage />} />
               <Route path="pdcs/:id" element={<PdcDetailPage />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="admin" element={<AdminPage />} />
