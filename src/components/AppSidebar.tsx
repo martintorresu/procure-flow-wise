@@ -7,7 +7,7 @@ import {
 import { useState } from "react";
 
 const baseNavItems = [
-  { to: "/", icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/", icon: LayoutDashboard, label: "Panel de Control" },
   { to: "/pdcs", icon: FileText, label: "Procesos de Compra" },
   { to: "/pdcs/new", icon: Plus, label: "Crear PdC" },
   { to: "/alerts", icon: Bell, label: "Alertas" },
