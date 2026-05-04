@@ -82,14 +82,14 @@ export default function AppSidebar() {
               {user.name?.charAt(0).toUpperCase()}
             </div>
             <div className="overflow-hidden">
-              <p className="text-xs font-medium truncate text-sidebar-foreground">{user.name}</p>
-              <p className="text-[10px] text-sidebar-primary capitalize font-semibold tracking-wide">{user.role}</p>
+              <p className="text-sm font-bold truncate text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">{user.name}</p>
+              <p className="text-[11px] uppercase tracking-wider font-bold text-cyan-300 drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]">{user.role}</p>
             </div>
           </div>
         )}
         <button
           onClick={logout}
-          className="flex items-center gap-2 px-3 py-2 text-xs rounded-lg hover:bg-sidebar-accent/50 text-sidebar-foreground/90 hover:text-sidebar-foreground w-full transition-colors"
+          className="flex items-center gap-2 px-3 py-2 text-sm font-semibold rounded-lg bg-white/5 hover:bg-sidebar-accent text-white hover:text-white w-full transition-colors drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]"
           title="Cerrar sesión"
         >
           <LogOut className="w-4 h-4" />
