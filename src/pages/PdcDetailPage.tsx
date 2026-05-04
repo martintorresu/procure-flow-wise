@@ -107,23 +107,59 @@ export default function PdcDetailPage() {
                 <span className="text-xs text-muted-foreground">Etapa actual: <span className="font-medium text-foreground">{steps[activeStepIdx]?.label ?? "—"}</span></span>
               </div>
               <div className="relative pt-4 pb-2">
-                <div className="absolute left-0 right-0 top-9 h-1 bg-muted rounded-full" />
-                <div className="absolute left-0 top-9 h-1 bg-primary rounded-full transition-all" style={{ width: `${progressPct}%` }} />
-                <div className="relative grid" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+                <div className="relative grid items-start" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
                   {steps.map((s, i) => {
                     const Icon = s.icon;
+                    const isDraft = s.key === "draft";
                     const completed = i < activeStepIdx;
                     const active = i === activeStepIdx;
+                    // Segment to the right of this circle (connection to next)
+                    const nextCompleted = i + 1 <= activeStepIdx; // green if reached next or beyond
+                    const showSegment = i < steps.length - 1;
+
+                    // Color states
+                    let circleClass = "";
+                    let circleStyle: React.CSSProperties = {};
+                    if (isDraft && !completed && !active) {
+                      // Neutral
+                      circleClass = "bg-muted border-muted-foreground/30 text-muted-foreground";
+                    } else if (completed || active) {
+                      // Green neon with glow
+                      circleClass = "text-black";
+                      circleStyle = {
+                        backgroundColor: "#39FF14",
+                        borderColor: "#39FF14",
+                        boxShadow: "0 0 12px #39FF14, 0 0 24px rgba(57,255,20,0.6)",
+                      };
+                    } else {
+                      // Light blue pending
+                      circleClass = "text-sky-700";
+                      circleStyle = {
+                        backgroundColor: "rgba(125,211,252,0.25)",
+                        borderColor: "#7DD3FC",
+                        boxShadow: "0 0 8px rgba(125,211,252,0.6)",
+                      };
+                    }
+
+                    const segmentStyle: React.CSSProperties = nextCompleted
+                      ? { backgroundColor: "#39FF14", boxShadow: "0 0 8px #39FF14" }
+                      : { backgroundColor: "#7DD3FC", boxShadow: "0 0 6px rgba(125,211,252,0.6)" };
+
                     return (
-                      <div key={s.key} className="flex flex-col items-center gap-2">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 transition-colors ${
-                          completed ? "bg-primary border-primary text-primary-foreground" :
-                          active ? "bg-background border-primary text-primary ring-4 ring-primary/15" :
-                          "bg-background border-muted text-muted-foreground"
-                        }`}>
+                      <div key={s.key} className="flex flex-col items-center gap-2 relative">
+                        {showSegment && (
+                          <div
+                            className="absolute top-5 h-1 rounded-full"
+                            style={{ left: "50%", right: `calc(-50% + 0px)`, width: "100%", ...segmentStyle }}
+                          />
+                        )}
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center border-2 z-10 transition-all ${circleClass} ${active ? "ring-4 ring-[#39FF14]/30" : ""}`}
+                          style={circleStyle}
+                        >
                           <Icon className="w-4 h-4" />
                         </div>
-                        <span className={`text-[11px] text-center leading-tight ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
+                        <span className={`text-[11px] text-center leading-tight z-10 ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}>{s.label}</span>
                       </div>
                     );
                   })}
