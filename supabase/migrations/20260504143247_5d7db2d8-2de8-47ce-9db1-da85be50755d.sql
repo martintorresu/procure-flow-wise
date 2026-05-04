@@ -1,0 +1,1 @@
+ALTER TABLE public.purchase_processes ADD COLUMN IF NOT EXISTS responsible_name text;
