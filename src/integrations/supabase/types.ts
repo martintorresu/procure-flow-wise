@@ -255,6 +255,7 @@ export type Database = {
           project: string
           requesting_area: string | null
           required_on_site_date: string | null
+          responsible_name: string | null
           updated_at: string
         }
         Insert: {
@@ -274,6 +275,7 @@ export type Database = {
           project: string
           requesting_area?: string | null
           required_on_site_date?: string | null
+          responsible_name?: string | null
           updated_at?: string
         }
         Update: {
@@ -293,6 +295,7 @@ export type Database = {
           project?: string
           requesting_area?: string | null
           required_on_site_date?: string | null
+          responsible_name?: string | null
           updated_at?: string
         }
         Relationships: [
