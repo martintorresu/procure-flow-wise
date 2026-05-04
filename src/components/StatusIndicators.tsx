@@ -29,7 +29,7 @@ export function StatusBadge({ status }: { status: PdcStatus }) {
   const labels: Record<PdcStatus, string> = {
     draft: "Borrador", technical_definition: "Def. Técnica", planning: "Planificación",
     quotation: "Cotización", evaluation: "Evaluación", awarded: "Adjudicado",
-    po_issued: "OC Emitida", drawings: "Planos", fat: "FAT", shipping: "En Tránsito",
+    po_issued: "OC Emitida", drawings: "Planos", fat: "Prueba de Fábrica", shipping: "En Tránsito",
     arrived: "Arribado", closed: "Cerrado", closed_with_incident: "Cerrado c/Inc.",
   };
 

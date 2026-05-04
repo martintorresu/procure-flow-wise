@@ -50,7 +50,7 @@ export const SECTIONS: { key: EtSectionKey; label: string; description: string }
   { key: "section_3", label: "3. Especificaciones Técnicas", description: "Lista de equipos con campos técnicos" },
   { key: "section_4", label: "4. Condiciones de Sitio", description: "Ambiente, instalación y operación" },
   { key: "section_5", label: "5. Documentación Requerida", description: "Planos, manuales y certificaciones" },
-  { key: "section_6", label: "6. Protocolo FAT", description: "Pruebas en fábrica antes del despacho" },
+  { key: "section_6", label: "6. Protocolo Prueba de Fábrica", description: "Pruebas en fábrica antes del despacho" },
   { key: "section_7", label: "7. Accesorios y Repuestos", description: "Componentes mínimos a incluir" },
   { key: "section_8", label: "8. Condiciones Comerciales", description: "Garantía, pago, plazos y observaciones" },
 ];

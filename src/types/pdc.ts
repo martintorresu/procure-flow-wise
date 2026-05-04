@@ -137,7 +137,7 @@ export const STATUS_LABELS: Record<PdcStatus, string> = {
   awarded: "Adjudicado",
   po_issued: "OC Emitida",
   drawings: "Planos",
-  fat: "FAT",
+  fat: "Prueba de Fábrica",
   shipping: "En Tránsito",
   arrived: "Arribado",
   closed: "Cerrado",
