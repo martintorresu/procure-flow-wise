@@ -1,3 +1,4 @@
+import { useMemo, useState } from "react";
 import { mockPdcs, mockAlerts, getTrafficLight } from "@/data/mockData";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -15,6 +18,25 @@ export default function DashboardPage() {
   const delayedPdcs = allPdcs.filter((p) => getTrafficLight(p) === "red");
   const criticalPdcs = allPdcs.filter((p) => p.criticality === "high");
   const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
+
+  const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
+  const [ownerFilter, setOwnerFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<PdcStatus | "all">("all");
+
+  const ownerOptions = useMemo(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_owner).filter(Boolean))).sort(),
+    [activePdcs]
+  );
+  const statusOptions = useMemo(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_status))),
+    [activePdcs]
+  );
+
+  const filteredPdcs = activePdcs.filter((p) =>
+    (criticalityFilter === "all" || p.criticality === criticalityFilter) &&
+    (ownerFilter === "all" || p.current_owner === ownerFilter) &&
+    (statusFilter === "all" || p.current_status === statusFilter)
+  );
 
   const stats = [
     { label: "PdCs Activos", value: activePdcs.length, icon: FileText, color: "text-accent" },
