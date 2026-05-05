@@ -136,7 +136,10 @@ export default function LoginPage() {
               <span className="relative">{submitting ? "Ingresando…" : "Ingresar"}</span>
             </button>
 
-            <div className="text-center">
+            <div className="flex flex-col items-center gap-2">
+              <Link to="/forgot-password" className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
+                ¿Olvidaste tu contraseña?
+              </Link>
               <Link to="/signup" className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
                 ¿No tienes cuenta? Regístrate
               </Link>

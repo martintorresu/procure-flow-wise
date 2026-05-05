@@ -13,6 +13,8 @@ import EditPdcPage from "@/pages/EditPdcPage";
 import PdcDetailPage from "@/pages/PdcDetailPage";
 import AlertsPage from "@/pages/AlertsPage";
 import SignUpPage from "@/pages/SignUpPage";
+import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AdminPage from "@/pages/AdminPage";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
@@ -78,6 +80,8 @@ const App = () => (
             {/* Login + Signup: default + por tenant */}
             <Route path="/login" element={<LoginRoute />} />
             <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/t/:tenantSlug/login" element={<LoginRoute />} />
 
             {/* Rutas protegidas — tenant default */}
