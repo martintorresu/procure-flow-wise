@@ -86,6 +86,22 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const [customErrors, setCustomErrors] = useState<Record<number, Record<string, string>>>({});
   // Errores de campos custom por ítem en secciones 5 y 7: {5|7: {itemIdx: {field_key: msg}}}
   const [itemErrors, setItemErrors] = useState<Record<number, Record<number, Record<string, string>>>>({});
+  const [flashItem, setFlashItem] = useState<string | null>(null);
+
+  /** Cambia a la sección, hace scroll al ítem y aplica un flash visual breve. */
+  const jumpToItem = (section: 5 | 7, idx: number) => {
+    const key = `section_${section}` as EtSectionKey;
+    setActiveSection(key);
+    const elementId = `et-item-${section}-${idx}`;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setFlashItem(elementId);
+        window.setTimeout(() => setFlashItem((curr) => (curr === elementId ? null : curr)), 1800);
+      }
+    });
+  };
 
   if (demoMode) {
     return (
