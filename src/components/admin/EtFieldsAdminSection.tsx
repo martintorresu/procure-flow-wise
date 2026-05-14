@@ -13,13 +13,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowDown, ArrowUp, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, GripVertical, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   useAllEtFieldSchemas, useCreateEtField, useUpdateEtField, useToggleEtField, useReorderEtFields,
 } from "@/hooks/useEtFieldSchemas";
 import { slugifyKey } from "@/lib/etSchemaBuilder";
 import type { EtFieldSchema, EtFieldType } from "@/types/etForm";
+import {
+  DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const SECTION_LABELS: Record<number, string> = {
   1: "1. Identificación",
