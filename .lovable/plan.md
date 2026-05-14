@@ -1,96 +1,87 @@
-# Plan: Multi-tenancy real con aislamiento por tenant_id
+## Sprint de Configurabilidad — Plan de ejecución
 
-## Contexto y problema
+Voy a ejecutar los 3 bloques en orden, con verificación al final de cada uno antes de seguir. Algunas decisiones que tomé y necesito confirmar antes de tocar código:
 
-Actualmente el "multi-tenant" de Procurement by InHR es **cosmético**:
-- `src/config/tenants.ts` resuelve un slug desde URL/subdominio
-- Los usuarios en `mockUsers` tienen `tenantSlug`, pero la BD **no tiene ningún concepto de tenant**
-- No hay tabla `tenants`, no hay `tenant_id` en `profiles`, ni en `purchase_processes`
-- RLS actual sólo filtra por `created_by = auth.uid()` o por rol/etapa — un usuario "acme" puede ver PdCs de "codelco" si tiene el rol adecuado
+---
 
-Además, la mayoría de tablas de negocio que el frontend referencia (`rfqs`, `purchase_orders`, `fat_events`, `logistics_events`, `alerts`, `milestones`, `technical_specs`, `drawings`, `rfq_suppliers`) **no existen en la BD** — viven en `src/data/mockData.ts`.
+### Decisiones / supuestos que necesito validar
 
-## Alcance de esta entrega
+1. **Roles en `approval_matrix`**: el enum `app_role` actual de la BD es `('admin','compras','ingenieria','programacion','gerente','planificacion','logistica')` (en español). El prompt pide guardar `'manager'`, `'engineering'`, etc. (en inglés). **Voy a usar el enum existente en español** (`gerente`, `compras`, …) para no romper `has_role()` ni introducir un mapping paralelo. Si prefieres el inglés, lo cambio antes de migrar.
 
-### 1. Fundación de tenancy
-- Crear tabla `public.tenants` (id, slug único, name, created_at)
-- Sembrar tenants base: `default`, `acme`, `codelco`, `bhp`, `antofagasta` (para alinear con `src/config/tenants.ts`)
-- Añadir `tenant_id uuid NOT NULL REFERENCES tenants(id)` a `public.profiles`
-- Función `SECURITY DEFINER public.get_user_tenant_id(_user_id uuid) RETURNS uuid` (evita recursión RLS)
-- Backfill: todos los profiles existentes → tenant `default`
-- Actualizar trigger `handle_new_user` para asignar `tenant_id` desde `raw_user_meta_data->>'tenant_slug'` (fallback `default`)
+2. **Estado `pending_approval`**: el enum `process_stage` actual no tiene este valor. En lugar de agregarlo (rompería RLS y la tabla de etapas), voy a:
+   - Agregar columna `purchase_processes.approval_status text` con valores `null | 'pending' | 'approved' | 'rejected'` y `approval_required_role app_role`.
+   - El PdC permanece en su etapa actual; el avance se bloquea desde `useAdvanceStage` mientras `approval_status = 'pending'`.
+   - El badge en el Stepper lee `approval_status`.
 
-### 2. tenant_id en tablas existentes
-Añadir `tenant_id uuid NOT NULL` (con backfill desde `created_by → profile.tenant_id`) a:
-- `purchase_processes`
-- `et_forms`
-- `et_form_data` (vía `et_form_id`)
-- `et_audit_log`
+3. **"Notificar al rol requerido"**: la tabla `alerts` no tiene columna `owner_role`. Voy a agregarla (`owner_role app_role nullable`) y filtrar el dashboard del Gerente por `owner_role = 'gerente' OR has_role(auth.uid(),'gerente')`.
 
-Reescribir todas sus políticas RLS para combinar reglas actuales **AND** `tenant_id = get_user_tenant_id(auth.uid())`.
+4. **Lógica de evaluación de alertas server-side**: hoy las alertas se crean a mano (no hay job de evaluación). Voy a dejar la tabla `alert_rules` lista + el hook + UI, pero **no** voy a implementar un cron/edge function que recorra PdCs y emita alertas según las reglas (eso es trabajo aparte y no está en el alcance explícito). Las reglas quedan disponibles para que cualquier código que cree alertas las consulte.
 
-### 3. Tablas nuevas de negocio (con tenant_id + RLS desde el día 1)
-Migrar de mock a producción:
-- `purchase_milestones` (pdc_id, milestone_type, planned_date, actual_date, deviation_days, status)
-- `technical_specs` (pdc_id, summary_description, has_studies, studies_available_date, validation_status)
-- `rfqs` (pdc_id, sent_date, close_date)
-- `rfq_suppliers` (rfq_id, supplier_name, quoted_amount, lead_time_days, technical_score, commercial_score, total_score)
-- `purchase_orders` (pdc_id, po_number, issue_date, accepted_date, amount)
-- `drawings` (pdc_id, requested_date, received_date, approved)
-- `fat_events` (pdc_id, scheduled_date, executed_date, result, report_received)
-- `logistics_events` (pdc_id, exwork_date, shipped_date, chile_arrival_date, port_arrival_date, damages_reported)
-- `alerts` (pdc_id, type, severity, message, due_date, resolved)
+5. **`useAdvanceStage`**: hoy no existe como mutación. Lo creo desde cero como parte del Bloque 2.
 
-Patrón RLS uniforme para cada tabla:
-- SELECT: `tenant_id = get_user_tenant_id(auth.uid())` AND (`creator OR has_role(admin) OR user_can_access_stage(...)`)
-- INSERT: `tenant_id = get_user_tenant_id(auth.uid())` (no se puede insertar en otro tenant)
-- UPDATE/DELETE: equivalente con guardas de rol
+---
 
-Trigger `set_tenant_id_from_user()` para auto-completar `tenant_id` en INSERT desde el tenant del usuario, evitando que el cliente pueda forzar otro valor.
+### Bloque 1 — Reglas de alerta configurables
 
-### 4. Test de aislamiento cross-tenant (entregable visible)
-Script ejecutado al final que:
-1. Crea (vía service role) usuario `acme-tester@test.local` en tenant `acme`
-2. Crea (vía service role) usuario `codelco-tester@test.local` en tenant `codelco`
-3. Login como acme → inserta `purchase_processes` con tenant=acme → guarda el id
-4. Logout. Login como codelco → `SELECT * FROM purchase_processes WHERE id = <id_acme>`
-5. Repite el SELECT sobre `alerts`, `rfqs`, `purchase_orders` con registros de prueba
-6. **Imprime tabla de resultados**:
-   ```
-   Tabla              | acme insertó | codelco lee | ✅/❌
-   purchase_processes | 1 fila       | 0 filas     | ✅
-   alerts             | 1 fila       | 0 filas     | ✅
-   ...
-   ```
-7. Limpia los usuarios y datos de prueba
+**Migración**:
+- Tabla `alert_rules` con esquema del prompt + RLS (`SELECT` para authenticated del tenant; `INSERT/UPDATE/DELETE` solo admin).
+- Seed de las 7 reglas por defecto para cada tenant existente.
 
-El resultado de ese test se incluye **literal** en la respuesta. Si alguna fila da ❌, no declaro la tarea cerrada.
+**Frontend**:
+- `src/lib/queryKeys.ts` (creado en Bloque 2, pero reutilizo aquí la key `["alert_rules"]`).
+- `src/hooks/useAlertRules.ts` con `useAlertRules()` y `useUpdateAlertRule()`.
+- `src/pages/AdminPage.tsx`: nueva sección "Reglas de Alerta" (tabla editable, solo visible para admin).
 
-### 5. Lo que NO entra en este sprint
-- Migrar el frontend de `mockData.ts` a las nuevas tablas (siguiente sprint — requiere hooks `useAlerts`, `useRfqs`, etc., y refactor de `PdcDetailPage`). Las tablas quedan creadas y con RLS, pero la UI seguirá mostrando mocks hasta el próximo paso.
-- UI para cambio/asignación de tenant por admin
-- Rate limiting de edge functions
+**Verificación**: cambio `fat_unscheduled → 21 días` en tenant `default` vía la UI y leo `alert_rules` con `read_query`.
 
-## Detalles técnicos
+---
 
-```text
-auth.users ──┐
-             │ id
-profiles ────┤── tenant_id ──► tenants.id
-             │
-             └─► get_user_tenant_id(uid) (SECURITY DEFINER)
-                         │
-                         ▼
-       Toda RLS: tenant_id = get_user_tenant_id(auth.uid())
-```
+### Bloque 2 — `usePdcs` a TanStack Query
 
-- `get_user_tenant_id` es SECURITY DEFINER → no entra en recursión RLS contra `profiles`
-- `set_tenant_id_from_user()` BEFORE INSERT → previene tenant spoofing
-- Índice compuesto `(tenant_id, <fk_principal>)` en cada tabla nueva para performance
+**Archivos**:
+- Nuevo `src/lib/queryKeys.ts` con todas las keys.
+- Refactor `src/hooks/usePdcs.ts`: `usePdcs(filters?)`, `usePdc(id)`, `useCreatePdc()`, `useUpdatePdc()`, `useAdvanceStage()`.
+- Actualizar los 7 hooks existentes (`useAlerts`, `useMilestones`, `useRfqs`, `usePurchaseOrders`, `useDrawings`, `useFatEvents`, `useLogisticsEvents`) para importar de `queryKeys`.
+- Actualizar consumidores de `usePdcs`/`usePdc` (`DashboardPage`, `PdcListPage`, `PdcDetailPage`, `EditPdcPage`, `CreatePdcPage`).
+- `DashboardPage`: `queryClient.prefetchQuery(queryKeys.pdcs())` en `useEffect`.
 
-## Riesgo
+**Filtros**: proyecto (text), criticidad (low/medium/high), etapa (process_stage), semáforo (calculado client-side, no en query).
 
-- Migración añade NOT NULL a tablas existentes con datos. Backfill se ejecuta antes del NOT NULL para no romper. Si algún profile no tiene `created_by` resoluble, va a `default`.
-- Si confirmas, ejecuto las migraciones en una sola transacción y luego corro el test.
+**Verificación**: crear PdC y avanzar etapa, confirmar refetch automático; `bunx tsc --noEmit`.
 
-¿Procedo?
+---
+
+### Bloque 3 — Matriz de aprobación
+
+**Migración**:
+- Tabla `approval_matrix` con esquema del prompt (uso enum `app_role` español; ver supuesto #1).
+- Columnas nuevas en `purchase_processes`: `approval_status text`, `approval_required_role app_role`.
+- Columna nueva en `alerts`: `owner_role app_role`.
+- RLS: `SELECT` para authenticated del tenant; `INSERT/UPDATE/DELETE` solo admin.
+- Seed: 2 reglas por defecto por tenant (OC > 100k → gerente; criticidad alta en adjudicación → gerente).
+
+**Lógica**:
+- `useAdvanceStage()` consulta `approval_matrix` antes del avance. Si aplica regla activa → set `approval_status='pending'` + insert en `alerts` con `owner_role`. Si no → avanza.
+- `useApprovePdc()` → set `approval_status='approved'`, avanza etapa, resuelve alerta.
+
+**Hook**: `src/hooks/useApprovalMatrix.ts` con `useApprovalMatrix()`, `useUpdateApprovalRule()`, `useApprovePdc()`.
+
+**UI**:
+- Stepper en `PdcDetailPage`: badge "Esperando aprobación de {rol}" si `approval_status='pending'`.
+- `DashboardPage` (gerente): sección "Pendientes de aprobación".
+- `AdminPage`: tabla de reglas de aprobación.
+
+**Verificación**: crear PdC con monto > 100k → bloqueo; aprobar como gerente → avance; PdC < 100k → avance directo. `bunx tsc --noEmit`.
+
+---
+
+### Entregables al cierre
+
+- Resumen de tablas nuevas (`alert_rules`, `approval_matrix`) + columnas agregadas.
+- Mapa de hooks → query keys.
+- Output de `bunx tsc --noEmit`.
+- Lista de vistas de Admin modificadas.
+
+---
+
+**¿Confirmas las 4 decisiones de la sección "Decisiones / supuestos" y arranco con la migración del Bloque 1?**
