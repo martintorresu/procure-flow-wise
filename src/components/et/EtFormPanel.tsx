@@ -72,6 +72,11 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
 
   // Schema dinámico de Sección 3 del tenant (incluye base is_system + custom)
   const { data: tenantSection3 = [] } = useEtFieldSchema(3);
+  // Custom fields por ítem (secciones 5 y 7) — sólo is_system=false
+  const { data: tenantSection5 = [] } = useEtFieldSchema(5);
+  const { data: tenantSection7 = [] } = useEtFieldSchema(7);
+  const customSection5 = tenantSection5.filter((f) => !f.is_system);
+  const customSection7 = tenantSection7.filter((f) => !f.is_system);
   // Todos los campos custom por sección, para validación Zod en submit
   const { data: allSchemas = {} } = useAllEtFieldSchemas();
 
@@ -79,6 +84,8 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [customErrors, setCustomErrors] = useState<Record<number, Record<string, string>>>({});
+  // Errores de campos custom por ítem en secciones 5 y 7: {5|7: {itemIdx: {field_key: msg}}}
+  const [itemErrors, setItemErrors] = useState<Record<number, Record<number, Record<string, string>>>>({});
 
   if (demoMode) {
     return (
