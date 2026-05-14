@@ -96,32 +96,30 @@ export default function EditPdcPage() {
       toast.error("Complete los campos obligatorios");
       return;
     }
-    setSubmitting(true);
-    const { error } = await supabase
-      .from("purchase_processes")
-      .update({
-        name: form.name,
-        project: form.project,
-        description: form.description || null,
-        category: form.category || null,
-        criticality: CRIT_FE_TO_DB[form.criticality],
-        estimated_amount: form.estimated_amount ? Number(form.estimated_amount) : null,
-        currency: form.currency,
-        required_on_site_date: form.required_on_site_date,
-        requesting_area: form.requesting_area || "Sin especificar",
-        responsible_name: form.responsible_name || null,
-        current_stage: form.current_stage as
-          | "ingenieria" | "programacion" | "compras" | "licitacion"
-          | "evaluacion" | "orden_compra" | "seguimiento" | "recepcion",
-      })
-      .eq("id", id!);
-    setSubmitting(false);
-    if (error) {
-      toast.error(`Error al guardar: ${error.message}`);
-      return;
+    try {
+      await updatePdc.mutateAsync({
+        id: id!,
+        patch: {
+          name: form.name,
+          project: form.project,
+          description: form.description || null,
+          category: form.category || null,
+          criticality: form.criticality,
+          estimated_amount: form.estimated_amount ? Number(form.estimated_amount) : null,
+          currency: form.currency,
+          required_on_site_date: form.required_on_site_date,
+          requesting_area: form.requesting_area || "Sin especificar",
+          responsible_name: form.responsible_name || null,
+          current_stage: form.current_stage as
+            | "ingenieria" | "programacion" | "compras" | "licitacion"
+            | "evaluacion" | "orden_compra" | "seguimiento" | "recepcion",
+        },
+      });
+      toast.success("PdC actualizado correctamente");
+      navigate(`/pdcs/${id}`);
+    } catch (err) {
+      toast.error(`Error al guardar: ${(err as Error).message}`);
     }
-    toast.success("PdC actualizado correctamente");
-    navigate(`/pdcs/${id}`);
   };
 
   return (
