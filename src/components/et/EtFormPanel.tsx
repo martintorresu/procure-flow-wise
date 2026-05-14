@@ -165,6 +165,48 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   };
 
   const handleSubmit = async () => {
+    // Validación Zod dinámica de campos custom (is_system=false) por sección
+    // Sólo secciones no-array: 1, 2, 4, 6, 8 (3, 5, 7 son arrays repetibles).
+    const sectionValueMap: Record<number, Record<string, unknown>> = {
+      1: s1, 2: s2, 4: s4, 6: s6, 8: s8,
+    };
+    const newErrors: Record<number, Record<string, string>> = {};
+    let firstErrorSection: EtSectionKey | null = null;
+    for (const sectionNumber of [1, 2, 4, 6, 8] as const) {
+      const fields = (allSchemas[sectionNumber] ?? []).filter(
+        (f: EtFieldSchema) => f.active && !f.is_system,
+      );
+      if (fields.length === 0) continue;
+      const schema = buildZodSchema(fields);
+      const values = sectionValueMap[sectionNumber] ?? {};
+      // Sólo pasar las claves que el schema espera
+      const subset: Record<string, unknown> = {};
+      fields.forEach((f) => {
+        subset[f.field_key] = values[f.field_key];
+      });
+      const res = schema.safeParse(subset);
+      if (!res.success) {
+        const errs: Record<string, string> = {};
+        (res.error as ZodError).issues.forEach((iss) => {
+          const key = String(iss.path[0] ?? "");
+          if (key && !errs[key]) errs[key] = iss.message;
+        });
+        newErrors[sectionNumber] = errs;
+        if (!firstErrorSection) {
+          firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
+        }
+      }
+    }
+    setCustomErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      const total = Object.values(newErrors).reduce((acc, e) => acc + Object.keys(e).length, 0);
+      toast.error(`Hay ${total} campo(s) adicional(es) con errores`, {
+        description: "Revisa los campos del tenant marcados en rojo.",
+      });
+      if (firstErrorSection) setActiveSection(firstErrorSection);
+      return;
+    }
+
     if (isDirty) await saveNow();
     const result = await submitForReview();
     if (result.ok) {
