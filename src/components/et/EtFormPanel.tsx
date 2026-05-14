@@ -806,7 +806,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   <Label>Riesgos Identificados</Label>
                   <Textarea rows={3} value={s8.riesgos ?? ""} onChange={(e) => updateS8("riesgos", e.target.value)} disabled={isReadOnly} />
                 </div>
-                <CustomFieldsBlock sectionNumber={8} values={s8} onChange={updateS8} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={8} values={s8} onChange={updateS8} disabled={isReadOnly} errors={customErrors[8]} />
               </>
             )}
           </CardContent>
