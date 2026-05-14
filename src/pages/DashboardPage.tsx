@@ -1,37 +1,54 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { useAlerts } from "@/hooks/useAlerts";
-import { usePdcs } from "@/hooks/usePdcs";
+import { usePdcs, useApprovePdc } from "@/hooks/usePdcs";
+import { useApprovePdc as _legacyUnused } from "@/hooks/useApprovalMatrix";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell } from "lucide-react";
+import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
 import { SEO } from "@/components/SEO";
+import { queryKeys } from "@/lib/queryKeys";
+import { toast } from "sonner";
+
+// (import unused workaround eliminado — usamos useApprovePdc desde useApprovalMatrix)
+void _legacyUnused;
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { pdcs, loading: pdcsLoading } = usePdcs();
+  const qc = useQueryClient();
+  const { data: pdcs = [], isLoading: pdcsLoading } = usePdcs();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
+  const approveMutation = useApprovePdc();
+
+  // Prefetch para acelerar navegación a /pdcs (misma key, ya cacheada en realidad)
+  useEffect(() => {
+    qc.prefetchQuery({ queryKey: queryKeys.pdcs() });
+  }, [qc]);
+
   const activePdcs = pdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
   const delayedPdcs = pdcs.filter((p) => getTrafficLight(p) === "red");
   const criticalPdcs = pdcs.filter((p) => p.criticality === "high");
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
+  const pendingApprovals = pdcs.filter((p) => p.approval_status === "pending");
+  const isManagerOrAdmin = user?.role === "gerente" || user?.role === "admin";
 
   const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<PdcStatus | "all">("all");
 
-  const ownerOptions = useMemo(
-    () => Array.from(new Set(activePdcs.map((p) => p.current_owner).filter(Boolean))).sort(),
+  const ownerOptions = useMemo<string[]>(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_owner).filter(Boolean) as string[])).sort(),
     [activePdcs]
   );
-  const statusOptions = useMemo(
-    () => Array.from(new Set(activePdcs.map((p) => p.current_status))),
+  const statusOptions = useMemo<PdcStatus[]>(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_status))) as PdcStatus[],
     [activePdcs]
   );
 
@@ -40,6 +57,14 @@ export default function DashboardPage() {
     (ownerFilter === "all" || p.current_owner === ownerFilter) &&
     (statusFilter === "all" || p.current_status === statusFilter)
   );
+
+  const handleApprove = (pdcId: string) => {
+    approveMutation.mutate(pdcId, {
+      onSuccess: () => toast.success("PdC aprobado y avanzado a la siguiente etapa"),
+      onError: (e) => toast.error(`Error al aprobar: ${(e as Error).message}`),
+    });
+  };
+
 
   const stats = [
     { label: "PdCs Activos", value: activePdcs.length, icon: FileText, color: "text-accent", to: "/pdcs" },
