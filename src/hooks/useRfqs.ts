@@ -1,6 +1,7 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Rfq, RfqSupplier } from "@/types/pdc";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface RfqsResult {
   rfqs: Rfq[];
@@ -10,7 +11,7 @@ export interface RfqsResult {
 /** RFQs de un PdC + sus suppliers asociados. RLS filtra por tenant_id. */
 export function useRfqs(pdcId: string | undefined): UseQueryResult<RfqsResult, Error> {
   return useQuery({
-    queryKey: ["rfqs", pdcId],
+    queryKey: pdcId ? queryKeys.rfqs(pdcId) : ["rfqs", "none"],
     enabled: !!pdcId,
     queryFn: async (): Promise<RfqsResult> => {
       const { data: rfqs, error: rfqErr } = await supabase

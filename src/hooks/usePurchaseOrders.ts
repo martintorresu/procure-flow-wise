@@ -1,11 +1,12 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { PurchaseOrder } from "@/types/pdc";
+import { queryKeys } from "@/lib/queryKeys";
 
 /** Órdenes de compra de un PdC. RLS filtra por tenant_id. */
 export function usePurchaseOrders(pdcId: string | undefined): UseQueryResult<PurchaseOrder[], Error> {
   return useQuery({
-    queryKey: ["purchase_orders", pdcId],
+    queryKey: pdcId ? queryKeys.purchaseOrders(pdcId) : ["purchase_orders", "none"],
     enabled: !!pdcId,
     queryFn: async (): Promise<PurchaseOrder[]> => {
       const { data, error } = await supabase

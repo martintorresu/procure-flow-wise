@@ -180,9 +180,14 @@ export function useUpdatePdc() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: UpdatePdcInput) => {
-      const dbPatch: Record<string, unknown> = { ...patch };
-      if (patch.criticality) dbPatch.criticality = CRIT_FE_TO_DB[patch.criticality];
-      const { error } = await supabase.from("purchase_processes").update(dbPatch).eq("id", id);
+      const { criticality, ...rest } = patch;
+      const { error } = await supabase
+        .from("purchase_processes")
+        .update({
+          ...rest,
+          ...(criticality !== undefined ? { criticality: CRIT_FE_TO_DB[criticality] } : {}),
+        })
+        .eq("id", id);
       if (error) throw new Error(error.message);
     },
     onSuccess: (_d, vars) => {
