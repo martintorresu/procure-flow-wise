@@ -39,34 +39,25 @@ export default function CreatePdcPage() {
       return;
     }
 
-    setSubmitting(true);
-    const { data, error } = await supabase
-      .from("purchase_processes")
-      .insert({
+    try {
+      const data = await createPdc.mutateAsync({
         name: form.title,
         project: form.project,
         description: form.description || null,
         category: form.category || null,
-        criticality: CRIT_FE_TO_DB[form.criticality],
+        criticality: form.criticality,
         estimated_amount: form.estimated_amount ? Number(form.estimated_amount) : null,
         currency: form.currency,
         required_on_site_date: form.required_on_site_date,
         requesting_area: form.requesting_area || "Sin especificar",
         responsible_name: form.responsible_name || null,
-        et_document_code: null,
         created_by: user.id,
-        tenant_id: "", // overridden server-side by set_tenant_id_from_user trigger
-      })
-      .select("id, pdc_number")
-      .single();
-    setSubmitting(false);
-
-    if (error) {
-      toast.error(`Error al crear PdC: ${error.message}`);
-      return;
+      });
+      toast.success(`PdC ${data.pdc_number} creado exitosamente`);
+      navigate(`/pdcs/${data.id}`);
+    } catch (err) {
+      toast.error(`Error al crear PdC: ${(err as Error).message}`);
     }
-    toast.success(`PdC ${data.pdc_number} creado exitosamente`);
-    navigate(`/pdcs/${data.id}`);
   };
 
   return (
