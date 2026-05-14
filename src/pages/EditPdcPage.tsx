@@ -29,7 +29,8 @@ export default function EditPdcPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const updatePdc = useUpdatePdc();
+  const submitting = updatePdc.isPending;
   const [pdcNumber, setPdcNumber] = useState<string>("");
   const [form, setForm] = useState({
     project: "", name: "", description: "", category: "",
