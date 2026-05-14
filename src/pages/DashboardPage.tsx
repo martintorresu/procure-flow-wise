@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { mockPdcs, mockAlerts, getTrafficLight } from "@/data/mockData";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
+import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
 import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight } from "lucide-react";
@@ -49,9 +49,12 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       <SEO title="Panel de control" description="KPIs de procesos de compra activos, semáforos de criticidad y alertas pendientes." path="/" />
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Bienvenido, {user?.name}</h1>
-        <p className="text-sm text-muted-foreground">Resumen de procesos de compra</p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Bienvenido, {user?.name}</h1>
+          <p className="text-sm text-muted-foreground">Resumen de procesos de compra</p>
+        </div>
+        <TrafficLightLegend />
       </div>
 
       {/* Stats */}
