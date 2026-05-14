@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      alerts: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          id: string
+          message: string
+          pdc_id: string | null
+          resolved: boolean
+          severity: string
+          tenant_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          message: string
+          pdc_id?: string | null
+          resolved?: boolean
+          severity?: string
+          tenant_id: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          message?: string
+          pdc_id?: string | null
+          resolved?: boolean
+          severity?: string
+          tenant_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      drawings: {
+        Row: {
+          approved: boolean
+          created_at: string
+          created_by: string
+          id: string
+          pdc_id: string
+          received_date: string | null
+          requested_date: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          approved?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          pdc_id: string
+          received_date?: string | null
+          requested_date?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          approved?: boolean
+          created_at?: string
+          created_by?: string
+          id?: string
+          pdc_id?: string
+          received_date?: string | null
+          requested_date?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "drawings_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "drawings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       equipment_type_schemas: {
         Row: {
           code: string
@@ -55,6 +163,7 @@ export type Database = {
           et_form_id: string
           id: string
           metadata: Json | null
+          tenant_id: string
           user_area: string | null
           user_id: string | null
           user_name: string | null
@@ -66,6 +175,7 @@ export type Database = {
           et_form_id: string
           id?: string
           metadata?: Json | null
+          tenant_id: string
           user_area?: string | null
           user_id?: string | null
           user_name?: string | null
@@ -77,6 +187,7 @@ export type Database = {
           et_form_id?: string
           id?: string
           metadata?: Json | null
+          tenant_id?: string
           user_area?: string | null
           user_id?: string | null
           user_name?: string | null
@@ -87,6 +198,13 @@ export type Database = {
             columns: ["et_form_id"]
             isOneToOne: false
             referencedRelation: "et_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "et_audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -105,6 +223,7 @@ export type Database = {
           section_6: Json
           section_7: Json
           section_8: Json
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -120,6 +239,7 @@ export type Database = {
           section_6?: Json
           section_7?: Json
           section_8?: Json
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -135,6 +255,7 @@ export type Database = {
           section_6?: Json
           section_7?: Json
           section_8?: Json
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -143,6 +264,13 @@ export type Database = {
             columns: ["et_form_id"]
             isOneToOne: true
             referencedRelation: "et_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "et_form_data_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -160,6 +288,7 @@ export type Database = {
           status: Database["public"]["Enums"]["et_status"]
           submitted_at: string | null
           submitted_by: string | null
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -174,6 +303,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["et_status"]
           submitted_at?: string | null
           submitted_by?: string | null
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -188,6 +318,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["et_status"]
           submitted_at?: string | null
           submitted_by?: string | null
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -205,6 +336,124 @@ export type Database = {
             referencedRelation: "purchase_processes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "et_forms_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fat_events: {
+        Row: {
+          created_at: string
+          created_by: string
+          executed_date: string | null
+          id: string
+          pdc_id: string
+          report_received: boolean
+          result: string | null
+          scheduled_date: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          executed_date?: string | null
+          id?: string
+          pdc_id: string
+          report_received?: boolean
+          result?: string | null
+          scheduled_date?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          executed_date?: string | null
+          id?: string
+          pdc_id?: string
+          report_received?: boolean
+          result?: string | null
+          scheduled_date?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fat_events_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fat_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      logistics_events: {
+        Row: {
+          chile_arrival_date: string | null
+          created_at: string
+          created_by: string
+          damages_reported: boolean
+          exwork_date: string | null
+          id: string
+          pdc_id: string
+          port_arrival_date: string | null
+          shipped_date: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          chile_arrival_date?: string | null
+          created_at?: string
+          created_by?: string
+          damages_reported?: boolean
+          exwork_date?: string | null
+          id?: string
+          pdc_id: string
+          port_arrival_date?: string | null
+          shipped_date?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          chile_arrival_date?: string | null
+          created_at?: string
+          created_by?: string
+          damages_reported?: boolean
+          exwork_date?: string | null
+          id?: string
+          pdc_id?: string
+          port_arrival_date?: string | null
+          shipped_date?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logistics_events_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logistics_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -215,6 +464,7 @@ export type Database = {
           full_name: string | null
           id: string
           position: string | null
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -224,6 +474,7 @@ export type Database = {
           full_name?: string | null
           id: string
           position?: string | null
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -233,9 +484,129 @@ export type Database = {
           full_name?: string | null
           id?: string
           position?: string | null
+          tenant_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_milestones: {
+        Row: {
+          actual_date: string | null
+          created_at: string
+          created_by: string
+          deviation_days: number
+          id: string
+          milestone_type: string
+          pdc_id: string
+          planned_date: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          actual_date?: string | null
+          created_at?: string
+          created_by?: string
+          deviation_days?: number
+          id?: string
+          milestone_type: string
+          pdc_id: string
+          planned_date: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          actual_date?: string | null
+          created_at?: string
+          created_by?: string
+          deviation_days?: number
+          id?: string
+          milestone_type?: string
+          pdc_id?: string
+          planned_date?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_milestones_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_milestones_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      purchase_orders: {
+        Row: {
+          accepted_date: string | null
+          amount: number | null
+          created_at: string
+          created_by: string
+          id: string
+          issue_date: string | null
+          pdc_id: string
+          po_number: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          accepted_date?: string | null
+          amount?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          issue_date?: string | null
+          pdc_id: string
+          po_number: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          accepted_date?: string | null
+          amount?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          issue_date?: string | null
+          pdc_id?: string
+          po_number?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchase_orders_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_orders_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       purchase_processes: {
         Row: {
@@ -256,6 +627,7 @@ export type Database = {
           requesting_area: string | null
           required_on_site_date: string | null
           responsible_name: string | null
+          tenant_id: string
           updated_at: string
         }
         Insert: {
@@ -276,6 +648,7 @@ export type Database = {
           requesting_area?: string | null
           required_on_site_date?: string | null
           responsible_name?: string | null
+          tenant_id: string
           updated_at?: string
         }
         Update: {
@@ -296,6 +669,7 @@ export type Database = {
           requesting_area?: string | null
           required_on_site_date?: string | null
           responsible_name?: string | null
+          tenant_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -306,7 +680,197 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "purchase_processes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      rfq_suppliers: {
+        Row: {
+          commercial_score: number | null
+          created_at: string
+          created_by: string
+          id: string
+          lead_time_days: number | null
+          quoted_amount: number | null
+          rfq_id: string
+          supplier_name: string
+          technical_score: number | null
+          tenant_id: string
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          commercial_score?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_time_days?: number | null
+          quoted_amount?: number | null
+          rfq_id: string
+          supplier_name: string
+          technical_score?: number | null
+          tenant_id: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          commercial_score?: number | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          lead_time_days?: number | null
+          quoted_amount?: number | null
+          rfq_id?: string
+          supplier_name?: string
+          technical_score?: number | null
+          tenant_id?: string
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfq_suppliers_rfq_id_fkey"
+            columns: ["rfq_id"]
+            isOneToOne: false
+            referencedRelation: "rfqs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfq_suppliers_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rfqs: {
+        Row: {
+          close_date: string | null
+          created_at: string
+          created_by: string
+          id: string
+          pdc_id: string
+          sent_date: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          close_date?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          pdc_id: string
+          sent_date?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          close_date?: string | null
+          created_at?: string
+          created_by?: string
+          id?: string
+          pdc_id?: string
+          sent_date?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rfqs_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rfqs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_specs: {
+        Row: {
+          created_at: string
+          created_by: string
+          has_studies: boolean
+          id: string
+          pdc_id: string
+          studies_available_date: string | null
+          summary_description: string
+          tenant_id: string
+          updated_at: string
+          validation_status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          has_studies?: boolean
+          id?: string
+          pdc_id: string
+          studies_available_date?: string | null
+          summary_description: string
+          tenant_id: string
+          updated_at?: string
+          validation_status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          has_studies?: boolean
+          id?: string
+          pdc_id?: string
+          studies_available_date?: string | null
+          summary_description?: string
+          tenant_id?: string
+          updated_at?: string
+          validation_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_specs_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_specs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
@@ -335,6 +899,7 @@ export type Database = {
     }
     Functions: {
       generate_pdc_number: { Args: never; Returns: string }
+      get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

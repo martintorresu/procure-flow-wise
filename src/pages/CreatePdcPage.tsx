@@ -55,6 +55,7 @@ export default function CreatePdcPage() {
         responsible_name: form.responsible_name || null,
         et_document_code: null,
         created_by: user.id,
+        tenant_id: "", // overridden server-side by set_tenant_id_from_user trigger
       })
       .select("id, pdc_number")
       .single();
