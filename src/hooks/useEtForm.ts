@@ -263,6 +263,7 @@ export function useEtForm(processId: string | null): UseEtFormResult {
         user_id: user?.id ?? null,
         user_name: user?.name ?? null,
         user_area: user?.role ?? null,
+        tenant_id: "", // overridden by set_tenant_id_from_user trigger
       };
       const { data: created } = await supabase
         .from("et_audit_log")
