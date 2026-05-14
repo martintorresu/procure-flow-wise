@@ -774,51 +774,73 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 {accs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin accesorios ni repuestos cargados.</p>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
-                      <div className="col-span-5">Descripción</div>
-                      <div className="col-span-2">Tipo</div>
-                      <div className="col-span-2">Cantidad</div>
-                      <div className="col-span-2">Unidad</div>
-                      <div className="col-span-1"></div>
-                    </div>
-                    {accs.map((a, idx) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                        <Input
-                          className="col-span-5"
-                          placeholder="ej. Bushing de repuesto 36 kV"
-                          value={(a.nombre as string) ?? ""}
-                          onChange={(e) => updateAcc(idx, "nombre", e.target.value)}
-                          disabled={isReadOnly}
-                        />
-                        <Select value={(a.tipo as string) ?? "accesorio"} onValueChange={(v) => updateAcc(idx, "tipo", v)} disabled={isReadOnly}>
-                          <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="accesorio">Accesorio</SelectItem>
-                            <SelectItem value="repuesto">Repuesto</SelectItem>
-                            <SelectItem value="herramienta">Herramienta</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          className="col-span-2"
-                          type="number"
-                          min={1}
-                          value={(a.cantidad as number | string) ?? 1}
-                          onChange={(e) => updateAcc(idx, "cantidad", Number(e.target.value))}
-                          disabled={isReadOnly}
-                        />
-                        <Input
-                          className="col-span-2"
-                          placeholder="ud / kg / m"
-                          value={(a.unidad as string) ?? ""}
-                          onChange={(e) => updateAcc(idx, "unidad", e.target.value)}
-                          disabled={isReadOnly}
-                        />
-                        <Button variant="ghost" size="sm" className="col-span-1" onClick={() => removeAcc(idx)} disabled={isReadOnly}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                  <div className="space-y-3">
+                    {customSection7.length === 0 && (
+                      <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+                        <div className="col-span-5">Descripción</div>
+                        <div className="col-span-2">Tipo</div>
+                        <div className="col-span-2">Cantidad</div>
+                        <div className="col-span-2">Unidad</div>
+                        <div className="col-span-1"></div>
                       </div>
-                    ))}
+                    )}
+                    {accs.map((a, idx) => {
+                      const row = (
+                        <div className="grid grid-cols-12 gap-2 items-center">
+                          <Input
+                            className="col-span-5"
+                            placeholder="ej. Bushing de repuesto 36 kV"
+                            value={(a.nombre as string) ?? ""}
+                            onChange={(e) => updateAcc(idx, "nombre", e.target.value)}
+                            disabled={isReadOnly}
+                          />
+                          <Select value={(a.tipo as string) ?? "accesorio"} onValueChange={(v) => updateAcc(idx, "tipo", v)} disabled={isReadOnly}>
+                            <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="accesorio">Accesorio</SelectItem>
+                              <SelectItem value="repuesto">Repuesto</SelectItem>
+                              <SelectItem value="herramienta">Herramienta</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            className="col-span-2"
+                            type="number"
+                            min={1}
+                            value={(a.cantidad as number | string) ?? 1}
+                            onChange={(e) => updateAcc(idx, "cantidad", Number(e.target.value))}
+                            disabled={isReadOnly}
+                          />
+                          <Input
+                            className="col-span-2"
+                            placeholder="ud / kg / m"
+                            value={(a.unidad as string) ?? ""}
+                            onChange={(e) => updateAcc(idx, "unidad", e.target.value)}
+                            disabled={isReadOnly}
+                          />
+                          <Button variant="ghost" size="sm" className="col-span-1" onClick={() => removeAcc(idx)} disabled={isReadOnly}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      );
+                      if (customSection7.length === 0) {
+                        return <div key={idx}>{row}</div>;
+                      }
+                      return (
+                        <Card key={idx} className="border-dashed">
+                          <CardContent className="p-3 space-y-2">
+                            <span className="text-xs font-medium text-muted-foreground">Ítem #{idx + 1}</span>
+                            {row}
+                            <CustomFieldsBlock
+                              sectionNumber={7}
+                              values={(a.custom_fields as Record<string, unknown>) ?? {}}
+                              onChange={(k, v) => updateAccCustom(idx, k, v)}
+                              disabled={isReadOnly}
+                              errors={itemErrors[7]?.[idx]}
+                            />
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </>
