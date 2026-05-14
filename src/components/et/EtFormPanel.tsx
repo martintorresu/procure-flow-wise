@@ -221,10 +221,53 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
         }
       }
     }
+
+    // Validación por ítem en secciones array (5 y 7) — sólo custom_fields
+    const newItemErrors: Record<number, Record<number, Record<string, string>>> = {};
+    const arrayMap: Record<number, Record<string, unknown>[]> = { 5: docs, 7: accs };
+    for (const sectionNumber of [5, 7] as const) {
+      const fields = (allSchemas[sectionNumber] ?? []).filter(
+        (f: EtFieldSchema) => f.active && !f.is_system,
+      );
+      if (fields.length === 0) continue;
+      const schema = buildZodSchema(fields);
+      const arr = arrayMap[sectionNumber] ?? [];
+      arr.forEach((it, idx) => {
+        const cf = (it.custom_fields as Record<string, unknown> | undefined) ?? {};
+        const subset: Record<string, unknown> = {};
+        fields.forEach((f) => {
+          subset[f.field_key] = cf[f.field_key];
+        });
+        const res = schema.safeParse(subset);
+        if (!res.success) {
+          const errs: Record<string, string> = {};
+          (res.error as ZodError).issues.forEach((iss) => {
+            const key = String(iss.path[0] ?? "");
+            if (key && !errs[key]) errs[key] = iss.message;
+          });
+          if (!newItemErrors[sectionNumber]) newItemErrors[sectionNumber] = {};
+          newItemErrors[sectionNumber][idx] = errs;
+          if (!firstErrorSection) {
+            firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
+          }
+        }
+      });
+    }
     setCustomErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      const total = Object.values(newErrors).reduce((acc, e) => acc + Object.keys(e).length, 0);
-      toast.error(`Hay ${total} campo(s) adicional(es) con errores`, {
+    setItemErrors(newItemErrors);
+
+    const totalSectionErrors = Object.values(newErrors).reduce(
+      (acc, e) => acc + Object.keys(e).length,
+      0,
+    );
+    const totalItemErrors = Object.values(newItemErrors).reduce(
+      (acc, perIdx) =>
+        acc + Object.values(perIdx).reduce((s, e) => s + Object.keys(e).length, 0),
+      0,
+    );
+    const totalErrors = totalSectionErrors + totalItemErrors;
+    if (totalErrors > 0) {
+      toast.error(`Hay ${totalErrors} campo(s) adicional(es) con errores`, {
         description: "Revisa los campos del tenant marcados en rojo.",
       });
       if (firstErrorSection) setActiveSection(firstErrorSection);
