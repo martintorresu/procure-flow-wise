@@ -68,6 +68,7 @@ export function DynamicField({ field, value, onChange, disabled }: DynamicFieldP
       );
 
     case "checkbox":
+    case "boolean":
       return (
         <div className="flex items-center gap-2 pt-6">
           <Checkbox
@@ -90,6 +91,7 @@ export function DynamicField({ field, value, onChange, disabled }: DynamicFieldP
           <Input
             id={id}
             type="number"
+            step="any"
             value={(value as string | number) ?? ""}
             placeholder={field.placeholder}
             onChange={(e) => onChange(e.target.value === "" ? "" : Number(e.target.value))}
@@ -97,6 +99,46 @@ export function DynamicField({ field, value, onChange, disabled }: DynamicFieldP
           />
         </div>
       );
+
+    case "unit_value": {
+      const v = (value as { value?: number | string; unit?: string } | null) ?? {};
+      const units = field.unitOptions ?? [];
+      return (
+        <div className="space-y-1.5">
+          {baseLabel}
+          <div className="flex gap-2">
+            <Input
+              id={id}
+              type="number"
+              step="any"
+              className="flex-1"
+              value={v.value ?? ""}
+              placeholder={field.placeholder}
+              onChange={(e) =>
+                onChange({ value: e.target.value === "" ? "" : Number(e.target.value), unit: v.unit ?? units[0] ?? "" })
+              }
+              disabled={disabled}
+            />
+            <Select
+              value={v.unit ?? ""}
+              onValueChange={(u) => onChange({ value: v.value ?? "", unit: u })}
+              disabled={disabled}
+            >
+              <SelectTrigger className="w-24">
+                <SelectValue placeholder="Ud." />
+              </SelectTrigger>
+              <SelectContent>
+                {units.map((u) => (
+                  <SelectItem key={u} value={u}>
+                    {u}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      );
+    }
 
     case "date":
       return (
