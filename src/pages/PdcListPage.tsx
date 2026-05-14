@@ -91,7 +91,25 @@ export default function PdcListPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((pdc) => (
+                {loading && [0,1,2,3].map((i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    {Array.from({length: 9}).map((_, j) => (
+                      <td key={j} className="py-3 px-4"><Skeleton className="h-4 w-full" /></td>
+                    ))}
+                  </tr>
+                ))}
+                {!loading && filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="py-12">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <FileText className="w-8 h-8 opacity-40" />
+                        <p className="text-sm font-medium">Sin procesos de compra</p>
+                        <p className="text-xs">Crea tu primer PdC con el botón "Crear PdC".</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {!loading && filtered.map((pdc) => (
                   <tr key={pdc.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="py-3 px-4"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
                     <td className="py-3 px-4 font-mono text-xs font-medium">{pdc.pdc_number}</td>
