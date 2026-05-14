@@ -1015,25 +1015,10 @@ export type Database = {
     }
     Functions: {
       generate_pdc_number: { Args: never; Returns: string }
-      get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
-        }
-        Returns: boolean
-      }
       role_can_access_stage: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _stage: Database["public"]["Enums"]["process_stage"]
-        }
-        Returns: boolean
-      }
-      user_can_access_stage: {
-        Args: {
-          _stage: Database["public"]["Enums"]["process_stage"]
-          _user_id: string
         }
         Returns: boolean
       }
