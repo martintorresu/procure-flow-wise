@@ -197,8 +197,18 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {unresolvedAlerts.slice(0, 3).map((alert) => {
-              const pdc = mockPdcs.find((p) => p.id === alert.pdc_id);
+            {alertsLoading && [0,1,2].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-r-md" />
+            ))}
+            {!alertsLoading && unresolvedAlerts.length === 0 && (
+              <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
+                <Bell className="w-7 h-7 opacity-40" />
+                <p className="text-sm font-medium">Sin alertas pendientes</p>
+                <p className="text-xs">Todo en orden por ahora.</p>
+              </div>
+            )}
+            {!alertsLoading && unresolvedAlerts.slice(0, 3).map((alert) => {
+              const pdc = pdcs.find((p) => p.id === alert.pdc_id);
               const severityColors = {
                 low: "border-l-success", medium: "border-l-warning",
                 high: "border-l-danger", critical: "border-l-danger",
@@ -208,9 +218,9 @@ export default function DashboardPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium">{alert.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{pdc?.pdc_number} — {pdc?.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{pdc?.pdc_number ?? "—"} {pdc?.title ? `— ${pdc.title}` : ""}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground">{alert.created_at}</span>
+                    <span className="text-xs text-muted-foreground">{alert.created_at?.slice(0, 10)}</span>
                   </div>
                 </div>
               );
