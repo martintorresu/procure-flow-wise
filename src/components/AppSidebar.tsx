@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useTenant } from "@/config/tenants";
-import { mockAlerts } from "@/data/mockData";
+import { useAlerts } from "@/hooks/useAlerts";
 
 const baseNavItems = [
   { to: "/", icon: LayoutDashboard, label: "Panel de Control" },
@@ -21,8 +21,9 @@ export default function AppSidebar() {
   const tenant = useTenant();
   const [collapsed, setCollapsed] = useState(false);
 
-  // Conteo de alertas no resueltas (mock por ahora — cuando exista tabla `alerts` cambiar a query con realtime)
-  const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
+  // Conteo de alertas no resueltas vía hook (RLS filtra por tenant)
+  const { data: alerts = [] } = useAlerts();
+  const unresolvedAlerts = alerts.filter((a) => !a.resolved);
   const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical" || a.severity === "high").length;
   const totalAlerts = unresolvedAlerts.length;
 

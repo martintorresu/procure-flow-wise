@@ -1,26 +1,23 @@
 import { useState } from "react";
-import { mockPdcs, getTrafficLight } from "@/data/mockData";
+import { getTrafficLight } from "@/lib/trafficLight";
 import { usePdcs } from "@/hooks/usePdcs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
-import type { PdcStatus, Criticality } from "@/types/pdc";
+import { Plus, Search, FileText } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 
 export default function PdcListPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const { pdcs: realPdcs, loading } = usePdcs();
+  const { pdcs, loading } = usePdcs();
 
-  // Combinar PdCs reales (al inicio) con los mocks de demo
-  const allPdcs = [...realPdcs, ...mockPdcs];
-
-  const filtered = allPdcs.filter((pdc) => {
+  const filtered = pdcs.filter((pdc) => {
     if (statusFilter !== "all" && pdc.current_status !== statusFilter) return false;
     if (criticalityFilter !== "all" && pdc.criticality !== criticalityFilter) return false;
     if (search && !pdc.title.toLowerCase().includes(search.toLowerCase()) && !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())) return false;
