@@ -11,6 +11,7 @@ import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CRIT_FE_TO_DB } from "@/hooks/usePdcs";
+import { SEO } from "@/components/SEO";
 
 const STAGES = [
   { value: "ingenieria", label: "Ingeniería" },
@@ -124,6 +125,7 @@ export default function EditPdcPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <SEO title={pdcNumber ? `Editar PdC ${pdcNumber}` : "Editar PdC"} description="Actualiza datos generales, criticidad y etapa del proceso de compra." />
       <div className="flex items-center gap-3">
         <Link to={`/pdcs/${id}`}>
           <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>

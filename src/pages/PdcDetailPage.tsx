@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { EtFormPanel } from "@/components/et/EtFormPanel";
 import { usePdc } from "@/hooks/usePdcs";
 import { useAuth } from "@/contexts/AuthContext";
+import { SEO } from "@/components/SEO";
 
 export default function PdcDetailPage() {
   const { id } = useParams();
@@ -41,6 +42,7 @@ export default function PdcDetailPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title={`PdC ${pdc.pdc_number} — ${pdc.title}`} description={`Detalle del proceso de compra ${pdc.pdc_number}: estado ${pdc.current_status}, proyecto ${pdc.project}.`} path={`/pdcs/${pdc.id}`} />
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">

@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, Eye, EyeOff, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import loginBg from "@/assets/login-bg.jpg";
 import inhrLogo from "@/assets/inhr-logo.png";
+import { SEO } from "@/components/SEO";
 
 export default function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -52,6 +53,7 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4 sm:p-6">
+      <SEO title="Restablecer contraseña" description="Define una nueva contraseña para tu cuenta de Procurement by InHR." path="/reset-password" />
       <div
         className="absolute inset-0 bg-cover bg-center scale-110 saturate-[1.35] brightness-[1.15]"
         style={{ backgroundImage: `url(${loginBg})` }}

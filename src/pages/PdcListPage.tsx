@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Search } from "lucide-react";
 import type { PdcStatus, Criticality } from "@/types/pdc";
+import { SEO } from "@/components/SEO";
 
 export default function PdcListPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -28,6 +29,7 @@ export default function PdcListPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Procesos de Compra" description="Listado de procesos de compra (PdC) con filtros por estado, criticidad y semáforo." path="/pdcs" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Procesos de Compra</h1>

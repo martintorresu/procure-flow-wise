@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, Link2 } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
 import inhrLogo from "@/assets/inhr-logo.png";
+import { SEO } from "@/components/SEO";
 
 const schema = z.object({
   fullName: z.string().trim().min(2, "Nombre muy corto").max(100),
@@ -46,6 +47,7 @@ export default function SignUpPage() {
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4 sm:p-6">
+      <SEO title="Crear cuenta" description="Regístrate en Procurement by InHR para gestionar procesos de compra industriales con tu equipo." path="/signup" />
       <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#1A3BB5]/30 to-[#0A1628]" aria-hidden />
       <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-[#2255E8]/40 blur-[120px]" aria-hidden />
       <div className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full bg-[#4ABFB5]/30 blur-[140px]" aria-hidden />
