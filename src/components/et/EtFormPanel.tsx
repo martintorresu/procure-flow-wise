@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History, ThumbsUp, ThumbsDown, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -86,6 +86,22 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const [customErrors, setCustomErrors] = useState<Record<number, Record<string, string>>>({});
   // Errores de campos custom por ítem en secciones 5 y 7: {5|7: {itemIdx: {field_key: msg}}}
   const [itemErrors, setItemErrors] = useState<Record<number, Record<number, Record<string, string>>>>({});
+  const [flashItem, setFlashItem] = useState<string | null>(null);
+
+  /** Cambia a la sección, hace scroll al ítem y aplica un flash visual breve. */
+  const jumpToItem = (section: 5 | 7, idx: number) => {
+    const key = `section_${section}` as EtSectionKey;
+    setActiveSection(key);
+    const elementId = `et-item-${section}-${idx}`;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(elementId);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        setFlashItem(elementId);
+        window.setTimeout(() => setFlashItem((curr) => (curr === elementId ? null : curr)), 1800);
+      }
+    });
+  };
 
   if (demoMode) {
     return (
@@ -418,6 +434,42 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
         </CardContent>
       </Card>
 
+      {((itemErrors[5] && Object.keys(itemErrors[5]).length > 0) ||
+        (itemErrors[7] && Object.keys(itemErrors[7]).length > 0)) && (
+        <Card className="border-danger/40 bg-danger/5">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-danger">
+              <AlertCircle className="w-4 h-4" /> Ítems con campos requeridos sin completar
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {([5, 7] as const).flatMap((sec) =>
+                Object.entries(itemErrors[sec] ?? {}).map(([idxStr, errs]) => {
+                  const idx = Number(idxStr);
+                  const labels = (allSchemas[sec] ?? []).reduce<Record<string, string>>(
+                    (acc, f) => { acc[f.field_key] = f.label; return acc; },
+                    {},
+                  );
+                  const fieldNames = Object.keys(errs).map((k) => labels[k] ?? k).join(", ");
+                  return (
+                    <Button
+                      key={`${sec}-${idx}`}
+                      variant="outline"
+                      size="sm"
+                      className="border-danger/40 text-danger hover:bg-danger/10 hover:text-danger h-auto py-1.5"
+                      onClick={() => jumpToItem(sec, idx)}
+                    >
+                      Sec {sec} · Ítem #{idx + 1}
+                      <span className="text-xs text-muted-foreground ml-1">({fieldNames})</span>
+                      <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                    </Button>
+                  );
+                }),
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4">
         {/* Sidebar de secciones */}
         <Card>
@@ -660,7 +712,11 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 ) : (
                   <div className="space-y-3">
                     {docs.map((doc, idx) => (
-                      <Card key={idx} className={customSection5.length > 0 ? "border-dashed" : "border-none shadow-none"}>
+                      <Card
+                        key={idx}
+                        id={`et-item-5-${idx}`}
+                        className={`${customSection5.length > 0 ? "border-dashed" : "border-none shadow-none"} ${flashItem === `et-item-5-${idx}` ? "ring-2 ring-danger ring-offset-2 transition-shadow" : ""}`}
+                      >
                         <CardContent className={customSection5.length > 0 ? "p-3 space-y-2" : "p-0"}>
                           <div className="flex items-center gap-2">
                             <Input
@@ -819,10 +875,18 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                         </div>
                       );
                       if (customSection7.length === 0) {
-                        return <div key={idx}>{row}</div>;
+                        return (
+                          <div key={idx} id={`et-item-7-${idx}`} className={flashItem === `et-item-7-${idx}` ? "ring-2 ring-danger ring-offset-2 rounded transition-shadow" : ""}>
+                            {row}
+                          </div>
+                        );
                       }
                       return (
-                        <Card key={idx} className="border-dashed">
+                        <Card
+                          key={idx}
+                          id={`et-item-7-${idx}`}
+                          className={`border-dashed ${flashItem === `et-item-7-${idx}` ? "ring-2 ring-danger ring-offset-2 transition-shadow" : ""}`}
+                        >
                           <CardContent className="p-3 space-y-2">
                             <span className="text-xs font-medium text-muted-foreground">Ítem #{idx + 1}</span>
                             {row}
