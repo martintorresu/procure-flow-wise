@@ -1,5 +1,4 @@
 import { useParams, Link } from "react-router-dom";
-import { mockPdcs, mockMilestones, mockTechnicalSpecs, mockRfqs, mockRfqSuppliers, mockPurchaseOrders, mockFatEvents, mockLogisticsEvents, mockAlerts, getTrafficLight } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
@@ -8,15 +7,28 @@ import { ArrowLeft, Calendar, DollarSign, User, MapPin, FileText, ClipboardList,
 import { toast } from "sonner";
 import { EtFormPanel } from "@/components/et/EtFormPanel";
 import { usePdc } from "@/hooks/usePdcs";
+import { useMilestones } from "@/hooks/useMilestones";
+import { useRfqs } from "@/hooks/useRfqs";
+import { usePurchaseOrders } from "@/hooks/usePurchaseOrders";
+import { useFatEvents } from "@/hooks/useFatEvents";
+import { useLogisticsEvents } from "@/hooks/useLogisticsEvents";
+import { useAlerts } from "@/hooks/useAlerts";
+import { getTrafficLight } from "@/lib/trafficLight";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEO } from "@/components/SEO";
 
 export default function PdcDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
-  const { pdc: realPdc, loading } = usePdc(id);
-  const pdc = realPdc ?? mockPdcs.find((p) => p.id === id);
+  const { pdc, loading } = usePdc(id);
   const isAdmin = user?.role === "admin";
+
+  const { data: milestones = [] } = useMilestones(pdc?.id);
+  const { data: rfqsData } = useRfqs(pdc?.id);
+  const { data: pos = [] } = usePurchaseOrders(pdc?.id);
+  const { data: fatEvents = [] } = useFatEvents(pdc?.id);
+  const { data: logistics = [] } = useLogisticsEvents(pdc?.id);
+  const { data: allAlerts = [] } = useAlerts();
 
   if (loading) {
     return <div className="text-center py-20 text-muted-foreground">Cargando PdC…</div>;
@@ -31,14 +43,8 @@ export default function PdcDetailPage() {
     );
   }
 
-  const milestones = mockMilestones.filter((m) => m.pdc_id === pdc.id);
-  const techSpecs = mockTechnicalSpecs.filter((t) => t.pdc_id === pdc.id);
-  const rfqs = mockRfqs.filter((r) => r.pdc_id === pdc.id);
-  const rfqSuppliers = rfqs.length > 0 ? mockRfqSuppliers.filter((s) => s.rfq_id === rfqs[0]?.id) : [];
-  const pos = mockPurchaseOrders.filter((p) => p.pdc_id === pdc.id);
-  const fatEvents = mockFatEvents.filter((f) => f.pdc_id === pdc.id);
-  const logistics = mockLogisticsEvents.filter((l) => l.pdc_id === pdc.id);
-  const alerts = mockAlerts.filter((a) => a.pdc_id === pdc.id);
+  const rfqSuppliers = rfqsData?.suppliers ?? [];
+  const alerts = allAlerts.filter((a) => a.pdc_id === pdc.id);
 
   return (
     <div className="space-y-6">
@@ -60,7 +66,7 @@ export default function PdcDetailPage() {
             <p className="text-sm text-muted-foreground">{pdc.project}</p>
           </div>
         </div>
-        {isAdmin && realPdc && (
+        {isAdmin && (
           <Link to={`/pdcs/${pdc.id}/edit`}>
             <Button variant="outline" size="sm" className="gap-2">
               <Pencil className="w-4 h-4" /> Editar PdC

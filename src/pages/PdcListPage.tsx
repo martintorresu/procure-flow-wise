@@ -1,26 +1,23 @@
 import { useState } from "react";
-import { mockPdcs, getTrafficLight } from "@/data/mockData";
+import { getTrafficLight } from "@/lib/trafficLight";
 import { usePdcs } from "@/hooks/usePdcs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search } from "lucide-react";
-import type { PdcStatus, Criticality } from "@/types/pdc";
+import { Plus, Search, FileText } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 
 export default function PdcListPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const { pdcs: realPdcs, loading } = usePdcs();
+  const { pdcs, loading } = usePdcs();
 
-  // Combinar PdCs reales (al inicio) con los mocks de demo
-  const allPdcs = [...realPdcs, ...mockPdcs];
-
-  const filtered = allPdcs.filter((pdc) => {
+  const filtered = pdcs.filter((pdc) => {
     if (statusFilter !== "all" && pdc.current_status !== statusFilter) return false;
     if (criticalityFilter !== "all" && pdc.criticality !== criticalityFilter) return false;
     if (search && !pdc.title.toLowerCase().includes(search.toLowerCase()) && !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())) return false;
@@ -35,7 +32,6 @@ export default function PdcListPage() {
           <h1 className="text-2xl font-bold">Procesos de Compra</h1>
           <p className="text-sm text-muted-foreground">
             {loading ? "Cargando…" : `${filtered.length} procesos encontrados`}
-            {realPdcs.length > 0 && !loading && ` · ${realPdcs.length} reales`}
           </p>
         </div>
         <Link to="/pdcs/new">
@@ -95,7 +91,25 @@ export default function PdcListPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((pdc) => (
+                {loading && [0,1,2,3].map((i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    {Array.from({length: 9}).map((_, j) => (
+                      <td key={j} className="py-3 px-4"><Skeleton className="h-4 w-full" /></td>
+                    ))}
+                  </tr>
+                ))}
+                {!loading && filtered.length === 0 && (
+                  <tr>
+                    <td colSpan={9} className="py-12">
+                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                        <FileText className="w-8 h-8 opacity-40" />
+                        <p className="text-sm font-medium">Sin procesos de compra</p>
+                        <p className="text-xs">Crea tu primer PdC con el botón "Crear PdC".</p>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+                {!loading && filtered.map((pdc) => (
                   <tr key={pdc.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                     <td className="py-3 px-4"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
                     <td className="py-3 px-4 font-mono text-xs font-medium">{pdc.pdc_number}</td>

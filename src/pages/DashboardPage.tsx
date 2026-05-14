@@ -1,24 +1,26 @@
 import { useMemo, useState } from "react";
-import { mockPdcs, mockAlerts, getTrafficLight } from "@/data/mockData";
+import { getTrafficLight } from "@/lib/trafficLight";
+import { useAlerts } from "@/hooks/useAlerts";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight } from "lucide-react";
+import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
 import { SEO } from "@/components/SEO";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { pdcs: realPdcs } = usePdcs();
-  const allPdcs = [...realPdcs, ...mockPdcs];
-  const activePdcs = allPdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
-  const delayedPdcs = allPdcs.filter((p) => getTrafficLight(p) === "red");
-  const criticalPdcs = allPdcs.filter((p) => p.criticality === "high");
-  const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
+  const { pdcs, loading: pdcsLoading } = usePdcs();
+  const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
+  const activePdcs = pdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
+  const delayedPdcs = pdcs.filter((p) => getTrafficLight(p) === "red");
+  const criticalPdcs = pdcs.filter((p) => p.criticality === "high");
+  const unresolvedAlerts = alerts.filter((a) => !a.resolved);
 
   const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
@@ -145,7 +147,14 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPdcs.map((pdc) => (
+                {pdcsLoading && [0,1,2].map((i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    {Array.from({length: 7}).map((_, j) => (
+                      <td key={j} className="py-3 px-2"><Skeleton className="h-4 w-full" /></td>
+                    ))}
+                  </tr>
+                ))}
+                {!pdcsLoading && filteredPdcs.map((pdc) => (
                   <tr key={pdc.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                     <td className="py-3 px-2"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
                     <td className="py-3 px-2 font-mono text-xs">{pdc.pdc_number}</td>
@@ -160,10 +169,13 @@ export default function DashboardPage() {
                     </td>
                   </tr>
                 ))}
-                {filteredPdcs.length === 0 && (
+                {!pdcsLoading && filteredPdcs.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                      No hay PdCs que coincidan con los filtros.
+                    <td colSpan={7} className="py-8 text-center">
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <FileText className="w-6 h-6 opacity-40" />
+                        <span className="text-sm">No hay PdCs que coincidan con los filtros.</span>
+                      </div>
                     </td>
                   </tr>
                 )}
@@ -185,8 +197,18 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {unresolvedAlerts.slice(0, 3).map((alert) => {
-              const pdc = mockPdcs.find((p) => p.id === alert.pdc_id);
+            {alertsLoading && [0,1,2].map((i) => (
+              <Skeleton key={i} className="h-16 w-full rounded-r-md" />
+            ))}
+            {!alertsLoading && unresolvedAlerts.length === 0 && (
+              <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
+                <Bell className="w-7 h-7 opacity-40" />
+                <p className="text-sm font-medium">Sin alertas pendientes</p>
+                <p className="text-xs">Todo en orden por ahora.</p>
+              </div>
+            )}
+            {!alertsLoading && unresolvedAlerts.slice(0, 3).map((alert) => {
+              const pdc = pdcs.find((p) => p.id === alert.pdc_id);
               const severityColors = {
                 low: "border-l-success", medium: "border-l-warning",
                 high: "border-l-danger", critical: "border-l-danger",
@@ -196,9 +218,9 @@ export default function DashboardPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium">{alert.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{pdc?.pdc_number} — {pdc?.title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{pdc?.pdc_number ?? "—"} {pdc?.title ? `— ${pdc.title}` : ""}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground">{alert.created_at}</span>
+                    <span className="text-xs text-muted-foreground">{alert.created_at?.slice(0, 10)}</span>
                   </div>
                 </div>
               );
