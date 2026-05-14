@@ -159,6 +159,23 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     setSection("section_7", next);
   };
 
+  const updateDocCustom = (i: number, key: string, val: unknown) => {
+    const next = docs.map((d, idx) => {
+      if (idx !== i) return d;
+      const cf = (d.custom_fields as Record<string, unknown> | undefined) ?? {};
+      return { ...d, custom_fields: { ...cf, [key]: val } };
+    });
+    setSection("section_5", next);
+  };
+  const updateAccCustom = (i: number, key: string, val: unknown) => {
+    const next = accs.map((a, idx) => {
+      if (idx !== i) return a;
+      const cf = (a.custom_fields as Record<string, unknown> | undefined) ?? {};
+      return { ...a, custom_fields: { ...cf, [key]: val } };
+    });
+    setSection("section_7", next);
+  };
+
   // Sección 6 — pruebas FAT (multi-select almacenado como array)
   const fatTests = (s6.pruebas_seleccionadas as string[] | undefined) ?? [];
   const toggleFatTest = (test: string) => {
