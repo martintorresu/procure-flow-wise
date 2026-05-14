@@ -15,7 +15,25 @@ import { useLogisticsEvents } from "@/hooks/useLogisticsEvents";
 import { useAlerts } from "@/hooks/useAlerts";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { useAuth } from "@/contexts/AuthContext";
+import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { SEO } from "@/components/SEO";
+
+function ApproveButton({ pdcId }: { pdcId: string }) {
+  const m = useApprovePdc();
+  return (
+    <Button
+      size="sm"
+      disabled={m.isPending}
+      onClick={() => m.mutate(pdcId, {
+        onSuccess: () => toast.success("Aprobado y avanzado"),
+        onError: (e) => toast.error((e as Error).message),
+      })}
+    >
+      {m.isPending ? "Aprobando…" : "Aprobar"}
+    </Button>
+  );
+}
+
 
 export default function PdcDetailPage() {
   const { id } = useParams();
@@ -74,6 +92,22 @@ export default function PdcDetailPage() {
           </Link>
         )}
       </div>
+
+      {pdc.approval_status === "pending" && (
+        <Card className="border-l-4 border-l-warning bg-warning/5">
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div>
+              <p className="text-sm font-medium">Esperando aprobación de {pdc.approval_required_role}</p>
+              <p className="text-xs text-muted-foreground">
+                Avance bloqueado a la etapa <code className="bg-muted px-1 rounded">{pdc.approval_target_stage}</code> hasta que el rol indicado apruebe.
+              </p>
+            </div>
+            {(user?.role === pdc.approval_required_role || user?.role === "admin") && (
+              <ApproveButton pdcId={pdc.id} />
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Key info cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
