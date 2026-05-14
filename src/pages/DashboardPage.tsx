@@ -1,24 +1,26 @@
 import { useMemo, useState } from "react";
-import { mockPdcs, mockAlerts, getTrafficLight } from "@/data/mockData";
+import { getTrafficLight } from "@/lib/trafficLight";
+import { useAlerts } from "@/hooks/useAlerts";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight } from "lucide-react";
+import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
 import { SEO } from "@/components/SEO";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { pdcs: realPdcs } = usePdcs();
-  const allPdcs = [...realPdcs, ...mockPdcs];
-  const activePdcs = allPdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
-  const delayedPdcs = allPdcs.filter((p) => getTrafficLight(p) === "red");
-  const criticalPdcs = allPdcs.filter((p) => p.criticality === "high");
-  const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
+  const { pdcs, loading: pdcsLoading } = usePdcs();
+  const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
+  const activePdcs = pdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
+  const delayedPdcs = pdcs.filter((p) => getTrafficLight(p) === "red");
+  const criticalPdcs = pdcs.filter((p) => p.criticality === "high");
+  const unresolvedAlerts = alerts.filter((a) => !a.resolved);
 
   const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
