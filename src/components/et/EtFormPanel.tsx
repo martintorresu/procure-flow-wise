@@ -662,19 +662,32 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 {docs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin documentos agregados.</p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {docs.map((doc, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <Input
-                          placeholder="Nombre del documento (ej. Plano dimensional)"
-                          value={(doc.nombre as string) ?? ""}
-                          onChange={(e) => updateDoc(idx, "nombre", e.target.value)}
-                          disabled={isReadOnly}
-                        />
-                        <Button variant="ghost" size="sm" onClick={() => removeDoc(idx)} disabled={isReadOnly}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
+                      <Card key={idx} className={customSection5.length > 0 ? "border-dashed" : "border-none shadow-none"}>
+                        <CardContent className={customSection5.length > 0 ? "p-3 space-y-2" : "p-0"}>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Nombre del documento (ej. Plano dimensional)"
+                              value={(doc.nombre as string) ?? ""}
+                              onChange={(e) => updateDoc(idx, "nombre", e.target.value)}
+                              disabled={isReadOnly}
+                            />
+                            <Button variant="ghost" size="sm" onClick={() => removeDoc(idx)} disabled={isReadOnly}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          {customSection5.length > 0 && (
+                            <CustomFieldsBlock
+                              sectionNumber={5}
+                              values={(doc.custom_fields as Record<string, unknown>) ?? {}}
+                              onChange={(k, v) => updateDocCustom(idx, k, v)}
+                              disabled={isReadOnly}
+                              errors={itemErrors[5]?.[idx]}
+                            />
+                          )}
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 )}
