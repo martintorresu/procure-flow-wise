@@ -72,6 +72,11 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
 
   // Schema dinámico de Sección 3 del tenant (incluye base is_system + custom)
   const { data: tenantSection3 = [] } = useEtFieldSchema(3);
+  // Custom fields por ítem (secciones 5 y 7) — sólo is_system=false
+  const { data: tenantSection5 = [] } = useEtFieldSchema(5);
+  const { data: tenantSection7 = [] } = useEtFieldSchema(7);
+  const customSection5 = tenantSection5.filter((f) => !f.is_system);
+  const customSection7 = tenantSection7.filter((f) => !f.is_system);
   // Todos los campos custom por sección, para validación Zod en submit
   const { data: allSchemas = {} } = useAllEtFieldSchemas();
 
@@ -79,6 +84,8 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
   const [customErrors, setCustomErrors] = useState<Record<number, Record<string, string>>>({});
+  // Errores de campos custom por ítem en secciones 5 y 7: {5|7: {itemIdx: {field_key: msg}}}
+  const [itemErrors, setItemErrors] = useState<Record<number, Record<number, Record<string, string>>>>({});
 
   if (demoMode) {
     return (
@@ -152,6 +159,23 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     setSection("section_7", next);
   };
 
+  const updateDocCustom = (i: number, key: string, val: unknown) => {
+    const next = docs.map((d, idx) => {
+      if (idx !== i) return d;
+      const cf = (d.custom_fields as Record<string, unknown> | undefined) ?? {};
+      return { ...d, custom_fields: { ...cf, [key]: val } };
+    });
+    setSection("section_5", next);
+  };
+  const updateAccCustom = (i: number, key: string, val: unknown) => {
+    const next = accs.map((a, idx) => {
+      if (idx !== i) return a;
+      const cf = (a.custom_fields as Record<string, unknown> | undefined) ?? {};
+      return { ...a, custom_fields: { ...cf, [key]: val } };
+    });
+    setSection("section_7", next);
+  };
+
   // Sección 6 — pruebas FAT (multi-select almacenado como array)
   const fatTests = (s6.pruebas_seleccionadas as string[] | undefined) ?? [];
   const toggleFatTest = (test: string) => {
@@ -197,10 +221,53 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
         }
       }
     }
+
+    // Validación por ítem en secciones array (5 y 7) — sólo custom_fields
+    const newItemErrors: Record<number, Record<number, Record<string, string>>> = {};
+    const arrayMap: Record<number, Record<string, unknown>[]> = { 5: docs, 7: accs };
+    for (const sectionNumber of [5, 7] as const) {
+      const fields = (allSchemas[sectionNumber] ?? []).filter(
+        (f: EtFieldSchema) => f.active && !f.is_system,
+      );
+      if (fields.length === 0) continue;
+      const schema = buildZodSchema(fields);
+      const arr = arrayMap[sectionNumber] ?? [];
+      arr.forEach((it, idx) => {
+        const cf = (it.custom_fields as Record<string, unknown> | undefined) ?? {};
+        const subset: Record<string, unknown> = {};
+        fields.forEach((f) => {
+          subset[f.field_key] = cf[f.field_key];
+        });
+        const res = schema.safeParse(subset);
+        if (!res.success) {
+          const errs: Record<string, string> = {};
+          (res.error as ZodError).issues.forEach((iss) => {
+            const key = String(iss.path[0] ?? "");
+            if (key && !errs[key]) errs[key] = iss.message;
+          });
+          if (!newItemErrors[sectionNumber]) newItemErrors[sectionNumber] = {};
+          newItemErrors[sectionNumber][idx] = errs;
+          if (!firstErrorSection) {
+            firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
+          }
+        }
+      });
+    }
     setCustomErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      const total = Object.values(newErrors).reduce((acc, e) => acc + Object.keys(e).length, 0);
-      toast.error(`Hay ${total} campo(s) adicional(es) con errores`, {
+    setItemErrors(newItemErrors);
+
+    const totalSectionErrors = Object.values(newErrors).reduce(
+      (acc, e) => acc + Object.keys(e).length,
+      0,
+    );
+    const totalItemErrors = Object.values(newItemErrors).reduce(
+      (acc, perIdx) =>
+        acc + Object.values(perIdx).reduce((s, e) => s + Object.keys(e).length, 0),
+      0,
+    );
+    const totalErrors = totalSectionErrors + totalItemErrors;
+    if (totalErrors > 0) {
+      toast.error(`Hay ${totalErrors} campo(s) adicional(es) con errores`, {
         description: "Revisa los campos del tenant marcados en rojo.",
       });
       if (firstErrorSection) setActiveSection(firstErrorSection);
@@ -595,19 +662,32 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 {docs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin documentos agregados.</p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {docs.map((doc, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <Input
-                          placeholder="Nombre del documento (ej. Plano dimensional)"
-                          value={(doc.nombre as string) ?? ""}
-                          onChange={(e) => updateDoc(idx, "nombre", e.target.value)}
-                          disabled={isReadOnly}
-                        />
-                        <Button variant="ghost" size="sm" onClick={() => removeDoc(idx)} disabled={isReadOnly}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
+                      <Card key={idx} className={customSection5.length > 0 ? "border-dashed" : "border-none shadow-none"}>
+                        <CardContent className={customSection5.length > 0 ? "p-3 space-y-2" : "p-0"}>
+                          <div className="flex items-center gap-2">
+                            <Input
+                              placeholder="Nombre del documento (ej. Plano dimensional)"
+                              value={(doc.nombre as string) ?? ""}
+                              onChange={(e) => updateDoc(idx, "nombre", e.target.value)}
+                              disabled={isReadOnly}
+                            />
+                            <Button variant="ghost" size="sm" onClick={() => removeDoc(idx)} disabled={isReadOnly}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          {customSection5.length > 0 && (
+                            <CustomFieldsBlock
+                              sectionNumber={5}
+                              values={(doc.custom_fields as Record<string, unknown>) ?? {}}
+                              onChange={(k, v) => updateDocCustom(idx, k, v)}
+                              disabled={isReadOnly}
+                              errors={itemErrors[5]?.[idx]}
+                            />
+                          )}
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 )}
@@ -694,51 +774,73 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                 {accs.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Sin accesorios ni repuestos cargados.</p>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
-                      <div className="col-span-5">Descripción</div>
-                      <div className="col-span-2">Tipo</div>
-                      <div className="col-span-2">Cantidad</div>
-                      <div className="col-span-2">Unidad</div>
-                      <div className="col-span-1"></div>
-                    </div>
-                    {accs.map((a, idx) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 items-center">
-                        <Input
-                          className="col-span-5"
-                          placeholder="ej. Bushing de repuesto 36 kV"
-                          value={(a.nombre as string) ?? ""}
-                          onChange={(e) => updateAcc(idx, "nombre", e.target.value)}
-                          disabled={isReadOnly}
-                        />
-                        <Select value={(a.tipo as string) ?? "accesorio"} onValueChange={(v) => updateAcc(idx, "tipo", v)} disabled={isReadOnly}>
-                          <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="accesorio">Accesorio</SelectItem>
-                            <SelectItem value="repuesto">Repuesto</SelectItem>
-                            <SelectItem value="herramienta">Herramienta</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Input
-                          className="col-span-2"
-                          type="number"
-                          min={1}
-                          value={(a.cantidad as number | string) ?? 1}
-                          onChange={(e) => updateAcc(idx, "cantidad", Number(e.target.value))}
-                          disabled={isReadOnly}
-                        />
-                        <Input
-                          className="col-span-2"
-                          placeholder="ud / kg / m"
-                          value={(a.unidad as string) ?? ""}
-                          onChange={(e) => updateAcc(idx, "unidad", e.target.value)}
-                          disabled={isReadOnly}
-                        />
-                        <Button variant="ghost" size="sm" className="col-span-1" onClick={() => removeAcc(idx)} disabled={isReadOnly}>
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
+                  <div className="space-y-3">
+                    {customSection7.length === 0 && (
+                      <div className="grid grid-cols-12 gap-2 text-xs font-medium text-muted-foreground px-1">
+                        <div className="col-span-5">Descripción</div>
+                        <div className="col-span-2">Tipo</div>
+                        <div className="col-span-2">Cantidad</div>
+                        <div className="col-span-2">Unidad</div>
+                        <div className="col-span-1"></div>
                       </div>
-                    ))}
+                    )}
+                    {accs.map((a, idx) => {
+                      const row = (
+                        <div className="grid grid-cols-12 gap-2 items-center">
+                          <Input
+                            className="col-span-5"
+                            placeholder="ej. Bushing de repuesto 36 kV"
+                            value={(a.nombre as string) ?? ""}
+                            onChange={(e) => updateAcc(idx, "nombre", e.target.value)}
+                            disabled={isReadOnly}
+                          />
+                          <Select value={(a.tipo as string) ?? "accesorio"} onValueChange={(v) => updateAcc(idx, "tipo", v)} disabled={isReadOnly}>
+                            <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="accesorio">Accesorio</SelectItem>
+                              <SelectItem value="repuesto">Repuesto</SelectItem>
+                              <SelectItem value="herramienta">Herramienta</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Input
+                            className="col-span-2"
+                            type="number"
+                            min={1}
+                            value={(a.cantidad as number | string) ?? 1}
+                            onChange={(e) => updateAcc(idx, "cantidad", Number(e.target.value))}
+                            disabled={isReadOnly}
+                          />
+                          <Input
+                            className="col-span-2"
+                            placeholder="ud / kg / m"
+                            value={(a.unidad as string) ?? ""}
+                            onChange={(e) => updateAcc(idx, "unidad", e.target.value)}
+                            disabled={isReadOnly}
+                          />
+                          <Button variant="ghost" size="sm" className="col-span-1" onClick={() => removeAcc(idx)} disabled={isReadOnly}>
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      );
+                      if (customSection7.length === 0) {
+                        return <div key={idx}>{row}</div>;
+                      }
+                      return (
+                        <Card key={idx} className="border-dashed">
+                          <CardContent className="p-3 space-y-2">
+                            <span className="text-xs font-medium text-muted-foreground">Ítem #{idx + 1}</span>
+                            {row}
+                            <CustomFieldsBlock
+                              sectionNumber={7}
+                              values={(a.custom_fields as Record<string, unknown>) ?? {}}
+                              onChange={(k, v) => updateAccCustom(idx, k, v)}
+                              disabled={isReadOnly}
+                              errors={itemErrors[7]?.[idx]}
+                            />
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </>
