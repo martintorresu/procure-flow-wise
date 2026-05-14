@@ -66,7 +66,7 @@ export default function PdcDetailPage() {
             <p className="text-sm text-muted-foreground">{pdc.project}</p>
           </div>
         </div>
-        {isAdmin && realPdc && (
+        {isAdmin && (
           <Link to={`/pdcs/${pdc.id}/edit`}>
             <Button variant="outline" size="sm" className="gap-2">
               <Pencil className="w-4 h-4" /> Editar PdC
