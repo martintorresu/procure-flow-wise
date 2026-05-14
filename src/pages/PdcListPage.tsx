@@ -32,7 +32,6 @@ export default function PdcListPage() {
           <h1 className="text-2xl font-bold">Procesos de Compra</h1>
           <p className="text-sm text-muted-foreground">
             {loading ? "Cargando…" : `${filtered.length} procesos encontrados`}
-            {realPdcs.length > 0 && !loading && ` · ${realPdcs.length} reales`}
           </p>
         </div>
         <Link to="/pdcs/new">
