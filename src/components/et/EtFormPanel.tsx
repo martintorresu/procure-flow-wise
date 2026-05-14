@@ -416,7 +416,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   <Label>Exclusiones</Label>
                   <Textarea rows={2} value={s1.exclusiones ?? ""} onChange={(e) => updateS1("exclusiones", e.target.value)} disabled={isReadOnly} />
                 </div>
-                <CustomFieldsBlock sectionNumber={1} values={s1} onChange={updateS1} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={1} values={s1} onChange={updateS1} disabled={isReadOnly} errors={customErrors[1]} />
               </>
             )}
 
