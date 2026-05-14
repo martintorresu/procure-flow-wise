@@ -50,9 +50,19 @@ export function exportEtFormToPdf(args: ExportArgs): void {
     y += lineHeight + 4;
   };
 
+  const fmt = (v: unknown): string => {
+    if (v === undefined || v === null || v === "") return "";
+    if (typeof v === "object" && v !== null && "value" in v && "unit" in v) {
+      const uv = v as { value: unknown; unit: unknown };
+      return `${uv.value ?? ""} ${uv.unit ?? ""}`.trim();
+    }
+    if (Array.isArray(v)) return v.join(", ");
+    return String(v);
+  };
   const kv = (k: string, v: unknown) => {
-    if (v === undefined || v === null || v === "") return;
-    writeLine(`${k}: ${String(v)}`);
+    const s = fmt(v);
+    if (!s) return;
+    writeLine(`${k}: ${s}`);
   };
 
   // Header

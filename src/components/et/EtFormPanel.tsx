@@ -24,6 +24,9 @@ import {
 } from "@/components/ui/dialog";
 import { useEtForm, SECTIONS } from "@/hooks/useEtForm";
 import { DynamicField } from "./DynamicField";
+import { CustomFieldsBlock } from "./CustomFieldsBlock";
+import { useEtFieldSchema } from "@/hooks/useEtFieldSchemas";
+import { schemaToFieldDef } from "@/lib/etSchemaBuilder";
 import type { EtSectionKey } from "@/types/etForm";
 import { CRITICALITY_OPTIONS, FAT_TEST_OPTIONS, PAYMENT_TERMS_OPTIONS, INCOTERM_OPTIONS } from "@/types/etForm";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -64,6 +67,9 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     approve,
     reject,
   } = useEtForm(demoMode ? null : processId);
+
+  // Schema dinámico de Sección 3 del tenant (incluye base is_system + custom)
+  const { data: tenantSection3 = [] } = useEtFieldSchema(3);
 
   const [activeSection, setActiveSection] = useState<EtSectionKey>("section_1");
   const [rejectOpen, setRejectOpen] = useState(false);
@@ -363,6 +369,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   <Label>Exclusiones</Label>
                   <Textarea rows={2} value={s1.exclusiones ?? ""} onChange={(e) => updateS1("exclusiones", e.target.value)} disabled={isReadOnly} />
                 </div>
+                <CustomFieldsBlock sectionNumber={1} values={s1} onChange={updateS1} disabled={isReadOnly} />
               </>
             )}
 
@@ -409,6 +416,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     <Textarea rows={3} value={s2.justificacion ?? ""} onChange={(e) => updateS2("justificacion", e.target.value)} disabled={isReadOnly} />
                   </div>
                 </div>
+                <CustomFieldsBlock sectionNumber={2} values={s2} onChange={updateS2} disabled={isReadOnly} />
               </>
             )}
 
@@ -432,49 +440,65 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   </Select>
                 </div>
 
-                {equipmentSchema && equipmentSchema.length > 0 && (
-                  <div className="space-y-3">
-                    {items.length === 0 && (
-                      <Button variant="outline" size="sm" onClick={addItem} disabled={isReadOnly}>
-                        <Plus className="w-3.5 h-3.5" /> Agregar equipo
-                      </Button>
-                    )}
-                    {items.map((item, idx) => (
-                      <Card key={idx} className="border-dashed">
-                        <CardContent className="p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Equipo #{idx + 1}</span>
-                            <Button variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={isReadOnly}>
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {equipmentSchema.map((f) => (
-                              <DynamicField
-                                key={f.key}
-                                field={f}
-                                value={item[f.key]}
-                                onChange={(v) => updateItem(idx, f.key, v)}
-                                disabled={isReadOnly}
-                              />
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    {items.length > 0 && (
-                      <Button variant="outline" size="sm" onClick={addItem} disabled={isReadOnly}>
-                        <Plus className="w-3.5 h-3.5" /> Agregar otro equipo
-                      </Button>
-                    )}
+                {/* Sección 3 dinámica: campos del tenant + (override) campos del tipo de equipo */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      {items.length} ítem(s) definido(s) · {tenantSection3.length} campo(s) base del tenant
+                      {equipmentSchema && equipmentSchema.length > 0 && ` · ${equipmentSchema.length} campo(s) por tipo de equipo`}
+                    </p>
+                    <Button variant="outline" size="sm" onClick={addItem} disabled={isReadOnly}>
+                      <Plus className="w-3.5 h-3.5" /> Agregar ítem
+                    </Button>
                   </div>
-                )}
-
-                {!equipmentSchema && (
-                  <p className="text-sm text-muted-foreground">
-                    Selecciona un tipo de equipo para ver los campos técnicos.
-                  </p>
-                )}
+                  {items.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Aún no hay ítems. Agrega uno para comenzar.</p>
+                  )}
+                  {items.map((item, idx) => (
+                    <Card key={idx} className="border-dashed">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            Ítem #{idx + 1}
+                            {item.item_description ? ` — ${String(item.item_description).slice(0, 60)}` : ""}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const hasData = Object.values(item).some((v) => v !== undefined && v !== null && v !== "");
+                              if (hasData && !confirm("Este ítem tiene datos. ¿Eliminar?")) return;
+                              removeItem(idx);
+                            }}
+                            disabled={isReadOnly}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {tenantSection3.map((f) => (
+                            <DynamicField
+                              key={f.id}
+                              field={schemaToFieldDef(f)}
+                              value={item[f.field_key]}
+                              onChange={(v) => updateItem(idx, f.field_key, v)}
+                              disabled={isReadOnly}
+                            />
+                          ))}
+                          {equipmentSchema?.map((f) => (
+                            <DynamicField
+                              key={`eq-${f.key}`}
+                              field={f}
+                              value={item[f.key]}
+                              onChange={(v) => updateItem(idx, f.key, v)}
+                              disabled={isReadOnly}
+                            />
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </>
             )}
 
@@ -506,6 +530,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     <Textarea rows={2} value={s4.condiciones ?? ""} onChange={(e) => updateS4("condiciones", e.target.value)} disabled={isReadOnly} />
                   </div>
                 </div>
+                <CustomFieldsBlock sectionNumber={4} values={s4} onChange={updateS4} disabled={isReadOnly} />
               </>
             )}
 
@@ -604,6 +629,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     />
                   </div>
                 </div>
+                <CustomFieldsBlock sectionNumber={6} values={s6 as Record<string, unknown>} onChange={updateS6} disabled={isReadOnly} />
               </>
             )}
 
@@ -733,6 +759,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   <Label>Riesgos Identificados</Label>
                   <Textarea rows={3} value={s8.riesgos ?? ""} onChange={(e) => updateS8("riesgos", e.target.value)} disabled={isReadOnly} />
                 </div>
+                <CustomFieldsBlock sectionNumber={8} values={s8} onChange={updateS8} disabled={isReadOnly} />
               </>
             )}
           </CardContent>

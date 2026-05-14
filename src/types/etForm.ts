@@ -1,6 +1,6 @@
 // Tipos del módulo Formulario de Especificaciones Técnicas (ET)
 
-export type EtFieldType = "text" | "number" | "select" | "textarea" | "checkbox" | "date";
+export type EtFieldType = "text" | "number" | "select" | "textarea" | "checkbox" | "date" | "unit_value" | "boolean";
 
 export interface EtFieldDef {
   key: string;
@@ -9,7 +9,31 @@ export interface EtFieldDef {
   required?: boolean;
   placeholder?: string;
   options?: string[];
+  unitOptions?: string[];
   helpText?: string;
+}
+
+/** Definición de campo dinámico almacenada en BD (et_field_schemas) */
+export interface EtFieldSchema {
+  id: string;
+  tenant_id: string;
+  section_number: number;
+  field_key: string;
+  label: string;
+  field_type: EtFieldType;
+  options: string[] | null;
+  unit_options: string[] | null;
+  placeholder: string | null;
+  required: boolean;
+  display_order: number;
+  active: boolean;
+  is_system: boolean;
+}
+
+/** Valor del tipo unit_value */
+export interface UnitValue {
+  value: number | string;
+  unit: string;
 }
 
 export type EtSectionKey =

@@ -306,6 +306,68 @@ export type Database = {
           },
         ]
       }
+      et_field_schemas: {
+        Row: {
+          active: boolean
+          created_at: string
+          display_order: number
+          field_key: string
+          field_type: string
+          id: string
+          is_system: boolean
+          label: string
+          options: Json | null
+          placeholder: string | null
+          required: boolean
+          section_number: number
+          tenant_id: string
+          unit_options: Json | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          field_key: string
+          field_type: string
+          id?: string
+          is_system?: boolean
+          label: string
+          options?: Json | null
+          placeholder?: string | null
+          required?: boolean
+          section_number: number
+          tenant_id: string
+          unit_options?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          display_order?: number
+          field_key?: string
+          field_type?: string
+          id?: string
+          is_system?: boolean
+          label?: string
+          options?: Json | null
+          placeholder?: string | null
+          required?: boolean
+          section_number?: number
+          tenant_id?: string
+          unit_options?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "et_field_schemas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       et_form_data: {
         Row: {
           et_form_id: string
