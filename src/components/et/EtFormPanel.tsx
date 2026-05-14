@@ -434,6 +434,42 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
         </CardContent>
       </Card>
 
+      {((itemErrors[5] && Object.keys(itemErrors[5]).length > 0) ||
+        (itemErrors[7] && Object.keys(itemErrors[7]).length > 0)) && (
+        <Card className="border-danger/40 bg-danger/5">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-center gap-2 text-sm font-medium text-danger">
+              <AlertCircle className="w-4 h-4" /> Ítems con campos requeridos sin completar
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {([5, 7] as const).flatMap((sec) =>
+                Object.entries(itemErrors[sec] ?? {}).map(([idxStr, errs]) => {
+                  const idx = Number(idxStr);
+                  const labels = (allSchemas[sec] ?? []).reduce<Record<string, string>>(
+                    (acc, f) => { acc[f.field_key] = f.label; return acc; },
+                    {},
+                  );
+                  const fieldNames = Object.keys(errs).map((k) => labels[k] ?? k).join(", ");
+                  return (
+                    <Button
+                      key={`${sec}-${idx}`}
+                      variant="outline"
+                      size="sm"
+                      className="border-danger/40 text-danger hover:bg-danger/10 hover:text-danger h-auto py-1.5"
+                      onClick={() => jumpToItem(sec, idx)}
+                    >
+                      Sec {sec} · Ítem #{idx + 1}
+                      <span className="text-xs text-muted-foreground ml-1">({fieldNames})</span>
+                      <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                    </Button>
+                  );
+                }),
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4">
         {/* Sidebar de secciones */}
         <Card>
