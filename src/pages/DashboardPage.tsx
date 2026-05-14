@@ -147,7 +147,14 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {filteredPdcs.map((pdc) => (
+                {pdcsLoading && [0,1,2].map((i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    {Array.from({length: 7}).map((_, j) => (
+                      <td key={j} className="py-3 px-2"><Skeleton className="h-4 w-full" /></td>
+                    ))}
+                  </tr>
+                ))}
+                {!pdcsLoading && filteredPdcs.map((pdc) => (
                   <tr key={pdc.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
                     <td className="py-3 px-2"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
                     <td className="py-3 px-2 font-mono text-xs">{pdc.pdc_number}</td>
@@ -162,10 +169,13 @@ export default function DashboardPage() {
                     </td>
                   </tr>
                 ))}
-                {filteredPdcs.length === 0 && (
+                {!pdcsLoading && filteredPdcs.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                      No hay PdCs que coincidan con los filtros.
+                    <td colSpan={7} className="py-8 text-center">
+                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                        <FileText className="w-6 h-6 opacity-40" />
+                        <span className="text-sm">No hay PdCs que coincidan con los filtros.</span>
+                      </div>
                     </td>
                   </tr>
                 )}
