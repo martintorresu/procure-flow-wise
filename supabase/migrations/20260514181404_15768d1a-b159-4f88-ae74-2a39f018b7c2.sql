@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.validate_et_repeatable_custom_fields() FROM PUBLIC, anon, authenticated;
