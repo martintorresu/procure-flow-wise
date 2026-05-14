@@ -676,7 +676,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     />
                   </div>
                 </div>
-                <CustomFieldsBlock sectionNumber={6} values={s6 as Record<string, unknown>} onChange={updateS6} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={6} values={s6 as Record<string, unknown>} onChange={updateS6} disabled={isReadOnly} errors={customErrors[6]} />
               </>
             )}
 
