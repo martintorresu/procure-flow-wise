@@ -323,6 +323,7 @@ export function useEtForm(processId: string | null): UseEtFormResult {
         created_by: user.id,
         equipment_type_code: equipmentTypeCode,
         status: "borrador",
+        tenant_id: "", // overridden by set_tenant_id_from_user trigger
       })
       .select()
       .single();
@@ -330,6 +331,7 @@ export function useEtForm(processId: string | null): UseEtFormResult {
 
     await supabase.from("et_form_data").insert({
       et_form_id: created.id,
+      tenant_id: "", // overridden by set_tenant_id_from_user trigger
     });
 
     setFormId(created.id);
