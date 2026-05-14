@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AlertsPage() {
   const { data: alerts = [], isLoading, isError, error } = useAlerts();
-  const { pdcs } = usePdcs();
+  const { data: pdcs = [] } = usePdcs();
   const resolveMutation = useResolveAlert();
 
   const resolve = (id: string) => {

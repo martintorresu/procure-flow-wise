@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Alert } from "@/types/pdc";
+import { queryKeys } from "@/lib/queryKeys";
 
 const SEVERITY_ORDER: Record<Alert["severity"], number> = {
   critical: 0, high: 1, medium: 2, low: 3,
@@ -9,7 +10,7 @@ const SEVERITY_ORDER: Record<Alert["severity"], number> = {
 /** Lista todas las alertas del tenant del usuario (RLS filtra por tenant_id en BD). */
 export function useAlerts(): UseQueryResult<Alert[], Error> {
   return useQuery({
-    queryKey: ["alerts"],
+    queryKey: queryKeys.alerts(),
     queryFn: async (): Promise<Alert[]> => {
       const { data, error } = await supabase
         .from("alerts")
@@ -36,7 +37,7 @@ export function useResolveAlert() {
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: queryKeys.alerts() });
     },
   });
 }

@@ -15,7 +15,7 @@ export default function PdcListPage() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const { pdcs, loading } = usePdcs();
+  const { data: pdcs = [], isLoading: loading } = usePdcs();
 
   const filtered = pdcs.filter((pdc) => {
     if (statusFilter !== "all" && pdc.current_status !== statusFilter) return false;

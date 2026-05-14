@@ -1,11 +1,12 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { FatEvent } from "@/types/pdc";
+import { queryKeys } from "@/lib/queryKeys";
 
 /** Eventos FAT (Factory Acceptance Test) de un PdC. RLS filtra por tenant_id. */
 export function useFatEvents(pdcId: string | undefined): UseQueryResult<FatEvent[], Error> {
   return useQuery({
-    queryKey: ["fat_events", pdcId],
+    queryKey: pdcId ? queryKeys.fatEvents(pdcId) : ["fat_events", "none"],
     enabled: !!pdcId,
     queryFn: async (): Promise<FatEvent[]> => {
       const { data, error } = await supabase

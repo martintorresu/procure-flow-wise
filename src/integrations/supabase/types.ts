@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_rules: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          label: string
+          severity: string
+          tenant_id: string
+          threshold_days: number
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label: string
+          severity: string
+          tenant_id: string
+          threshold_days?: number
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          label?: string
+          severity?: string
+          tenant_id?: string
+          threshold_days?: number
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           created_at: string
@@ -21,6 +65,7 @@ export type Database = {
           due_date: string | null
           id: string
           message: string
+          owner_role: Database["public"]["Enums"]["app_role"] | null
           pdc_id: string | null
           resolved: boolean
           severity: string
@@ -34,6 +79,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           message: string
+          owner_role?: Database["public"]["Enums"]["app_role"] | null
           pdc_id?: string | null
           resolved?: boolean
           severity?: string
@@ -47,6 +93,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           message?: string
+          owner_role?: Database["public"]["Enums"]["app_role"] | null
           pdc_id?: string | null
           resolved?: boolean
           severity?: string
@@ -64,6 +111,56 @@ export type Database = {
           },
           {
             foreignKeyName: "alerts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_matrix: {
+        Row: {
+          active: boolean
+          amount_threshold: number | null
+          condition_type: string
+          created_at: string
+          criticality_level: Database["public"]["Enums"]["criticality"] | null
+          id: string
+          label: string
+          required_role: Database["public"]["Enums"]["app_role"]
+          stage: Database["public"]["Enums"]["process_stage"]
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          amount_threshold?: number | null
+          condition_type: string
+          created_at?: string
+          criticality_level?: Database["public"]["Enums"]["criticality"] | null
+          id?: string
+          label: string
+          required_role: Database["public"]["Enums"]["app_role"]
+          stage: Database["public"]["Enums"]["process_stage"]
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          amount_threshold?: number | null
+          condition_type?: string
+          created_at?: string
+          criticality_level?: Database["public"]["Enums"]["criticality"] | null
+          id?: string
+          label?: string
+          required_role?: Database["public"]["Enums"]["app_role"]
+          stage?: Database["public"]["Enums"]["process_stage"]
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_matrix_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -610,6 +707,11 @@ export type Database = {
       }
       purchase_processes: {
         Row: {
+          approval_required_role: Database["public"]["Enums"]["app_role"] | null
+          approval_status: string | null
+          approval_target_stage:
+            | Database["public"]["Enums"]["process_stage"]
+            | null
           category: string | null
           created_at: string
           created_by: string
@@ -631,6 +733,13 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          approval_required_role?:
+            | Database["public"]["Enums"]["app_role"]
+            | null
+          approval_status?: string | null
+          approval_target_stage?:
+            | Database["public"]["Enums"]["process_stage"]
+            | null
           category?: string | null
           created_at?: string
           created_by: string
@@ -652,6 +761,13 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          approval_required_role?:
+            | Database["public"]["Enums"]["app_role"]
+            | null
+          approval_status?: string | null
+          approval_target_stage?:
+            | Database["public"]["Enums"]["process_stage"]
+            | null
           category?: string | null
           created_at?: string
           created_by?: string

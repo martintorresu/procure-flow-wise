@@ -1,37 +1,52 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { useAlerts } from "@/hooks/useAlerts";
 import { usePdcs } from "@/hooks/usePdcs";
+import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell } from "lucide-react";
+import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
 import { SEO } from "@/components/SEO";
+import { queryKeys } from "@/lib/queryKeys";
+import { toast } from "sonner";
+
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { pdcs, loading: pdcsLoading } = usePdcs();
+  const qc = useQueryClient();
+  const { data: pdcs = [], isLoading: pdcsLoading } = usePdcs();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
+  const approveMutation = useApprovePdc();
+
+  // Prefetch para acelerar navegación a /pdcs (misma key, ya cacheada en realidad)
+  useEffect(() => {
+    qc.prefetchQuery({ queryKey: queryKeys.pdcs() });
+  }, [qc]);
+
   const activePdcs = pdcs.filter((p) => !["closed", "closed_with_incident"].includes(p.current_status));
   const delayedPdcs = pdcs.filter((p) => getTrafficLight(p) === "red");
   const criticalPdcs = pdcs.filter((p) => p.criticality === "high");
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
+  const pendingApprovals = pdcs.filter((p) => p.approval_status === "pending");
+  const isManagerOrAdmin = user?.role === "gerente" || user?.role === "admin";
 
   const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<PdcStatus | "all">("all");
 
-  const ownerOptions = useMemo(
-    () => Array.from(new Set(activePdcs.map((p) => p.current_owner).filter(Boolean))).sort(),
+  const ownerOptions = useMemo<string[]>(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_owner).filter(Boolean) as string[])).sort(),
     [activePdcs]
   );
-  const statusOptions = useMemo(
-    () => Array.from(new Set(activePdcs.map((p) => p.current_status))),
+  const statusOptions = useMemo<PdcStatus[]>(
+    () => Array.from(new Set(activePdcs.map((p) => p.current_status))) as PdcStatus[],
     [activePdcs]
   );
 
@@ -40,6 +55,14 @@ export default function DashboardPage() {
     (ownerFilter === "all" || p.current_owner === ownerFilter) &&
     (statusFilter === "all" || p.current_status === statusFilter)
   );
+
+  const handleApprove = (pdcId: string) => {
+    approveMutation.mutate(pdcId, {
+      onSuccess: () => toast.success("PdC aprobado y avanzado a la siguiente etapa"),
+      onError: (e) => toast.error(`Error al aprobar: ${(e as Error).message}`),
+    });
+  };
+
 
   const stats = [
     { label: "PdCs Activos", value: activePdcs.length, icon: FileText, color: "text-accent", to: "/pdcs" },
@@ -58,6 +81,30 @@ export default function DashboardPage() {
         </div>
         <TrafficLightLegend />
       </div>
+
+      {isManagerOrAdmin && pendingApprovals.length > 0 && (
+        <Card className="border-l-4 border-l-warning bg-warning/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" /> Pendientes de aprobación ({pendingApprovals.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pendingApprovals.map((p) => (
+              <div key={p.id} className="flex items-center justify-between border-b last:border-0 pb-2 last:pb-0">
+                <div className="text-sm">
+                  <Link to={`/pdcs/${p.id}`} className="font-mono text-xs text-accent hover:underline">{p.pdc_number}</Link>
+                  <span className="ml-2 font-medium">{p.title}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">→ {p.approval_target_stage}</span>
+                </div>
+                <Button size="sm" disabled={approveMutation.isPending} onClick={() => handleApprove(p.id)}>
+                  Aprobar
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -1,11 +1,12 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Drawing } from "@/types/pdc";
+import { queryKeys } from "@/lib/queryKeys";
 
 /** Planos asociados a un PdC. RLS filtra por tenant_id. */
 export function useDrawings(pdcId: string | undefined): UseQueryResult<Drawing[], Error> {
   return useQuery({
-    queryKey: ["drawings", pdcId],
+    queryKey: pdcId ? queryKeys.drawings(pdcId) : ["drawings", "none"],
     enabled: !!pdcId,
     queryFn: async (): Promise<Drawing[]> => {
       const { data, error } = await supabase
