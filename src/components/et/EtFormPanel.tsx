@@ -293,6 +293,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   };
 
   const handleApprove = async () => {
+    if (!validateCustomFields()) return;
     const r = await approve();
     if (r.ok) toast.success("ET aprobado");
     else toast.error(r.error ?? "No se pudo aprobar");
