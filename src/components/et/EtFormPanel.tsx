@@ -188,9 +188,11 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     if (saveStatus !== "error") toast.success("Formulario guardado");
   };
 
-  const handleSubmit = async () => {
-    // Validación Zod dinámica de campos custom (is_system=false) por sección
-    // Sólo secciones no-array: 1, 2, 4, 6, 8 (3, 5, 7 son arrays repetibles).
+  /**
+   * Valida con Zod los campos custom (is_system=false) en todas las secciones.
+   * Setea customErrors / itemErrors y retorna true si todo OK.
+   */
+  const validateCustomFields = (): boolean => {
     const sectionValueMap: Record<number, Record<string, unknown>> = {
       1: s1, 2: s2, 4: s4, 6: s6, 8: s8,
     };
@@ -203,11 +205,8 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
       if (fields.length === 0) continue;
       const schema = buildZodSchema(fields);
       const values = sectionValueMap[sectionNumber] ?? {};
-      // Sólo pasar las claves que el schema espera
       const subset: Record<string, unknown> = {};
-      fields.forEach((f) => {
-        subset[f.field_key] = values[f.field_key];
-      });
+      fields.forEach((f) => { subset[f.field_key] = values[f.field_key]; });
       const res = schema.safeParse(subset);
       if (!res.success) {
         const errs: Record<string, string> = {};
@@ -216,13 +215,11 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
           if (key && !errs[key]) errs[key] = iss.message;
         });
         newErrors[sectionNumber] = errs;
-        if (!firstErrorSection) {
-          firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
-        }
+        if (!firstErrorSection) firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
       }
     }
 
-    // Validación por ítem en secciones array (5 y 7) — sólo custom_fields
+    // Validación por ítem en secciones array (5 y 7)
     const newItemErrors: Record<number, Record<number, Record<string, string>>> = {};
     const arrayMap: Record<number, Record<string, unknown>[]> = { 5: docs, 7: accs };
     for (const sectionNumber of [5, 7] as const) {
@@ -235,9 +232,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
       arr.forEach((it, idx) => {
         const cf = (it.custom_fields as Record<string, unknown> | undefined) ?? {};
         const subset: Record<string, unknown> = {};
-        fields.forEach((f) => {
-          subset[f.field_key] = cf[f.field_key];
-        });
+        fields.forEach((f) => { subset[f.field_key] = cf[f.field_key]; });
         const res = schema.safeParse(subset);
         if (!res.success) {
           const errs: Record<string, string> = {};
@@ -247,9 +242,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
           });
           if (!newItemErrors[sectionNumber]) newItemErrors[sectionNumber] = {};
           newItemErrors[sectionNumber][idx] = errs;
-          if (!firstErrorSection) {
-            firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
-          }
+          if (!firstErrorSection) firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
         }
       });
     }
@@ -257,12 +250,10 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
     setItemErrors(newItemErrors);
 
     const totalSectionErrors = Object.values(newErrors).reduce(
-      (acc, e) => acc + Object.keys(e).length,
-      0,
+      (acc, e) => acc + Object.keys(e).length, 0,
     );
     const totalItemErrors = Object.values(newItemErrors).reduce(
-      (acc, perIdx) =>
-        acc + Object.values(perIdx).reduce((s, e) => s + Object.keys(e).length, 0),
+      (acc, perIdx) => acc + Object.values(perIdx).reduce((s, e) => s + Object.keys(e).length, 0),
       0,
     );
     const totalErrors = totalSectionErrors + totalItemErrors;
@@ -271,9 +262,13 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
         description: "Revisa los campos del tenant marcados en rojo.",
       });
       if (firstErrorSection) setActiveSection(firstErrorSection);
-      return;
+      return false;
     }
+    return true;
+  };
 
+  const handleSubmit = async () => {
+    if (!validateCustomFields()) return;
     if (isDirty) await saveNow();
     const result = await submitForReview();
     if (result.ok) {
