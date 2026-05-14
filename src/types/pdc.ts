@@ -33,6 +33,12 @@ export interface Pdc {
   selected_supplier?: string;
   created_at: string;
   updated_at: string;
+  /** Etapa cruda del enum process_stage (BD). */
+  current_stage?: string;
+  /** Estado de aprobación cuando una regla bloqueó el avance. */
+  approval_status?: "pending" | "approved" | "rejected" | null;
+  approval_required_role?: string | null;
+  approval_target_stage?: string | null;
 }
 
 export interface PdcMilestone {
