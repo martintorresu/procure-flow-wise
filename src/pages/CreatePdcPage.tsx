@@ -7,15 +7,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { CRIT_FE_TO_DB } from "@/hooks/usePdcs";
+import { useCreatePdc } from "@/hooks/usePdcs";
 import { SEO } from "@/components/SEO";
 
 export default function CreatePdcPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [submitting, setSubmitting] = useState(false);
+  const createPdc = useCreatePdc();
+  const submitting = createPdc.isPending;
   const [form, setForm] = useState({
     project: "", title: "", description: "", category: "",
     criticality: "medium" as "low" | "medium" | "high",
@@ -39,34 +39,25 @@ export default function CreatePdcPage() {
       return;
     }
 
-    setSubmitting(true);
-    const { data, error } = await supabase
-      .from("purchase_processes")
-      .insert({
+    try {
+      const data = await createPdc.mutateAsync({
         name: form.title,
         project: form.project,
         description: form.description || null,
         category: form.category || null,
-        criticality: CRIT_FE_TO_DB[form.criticality],
+        criticality: form.criticality,
         estimated_amount: form.estimated_amount ? Number(form.estimated_amount) : null,
         currency: form.currency,
         required_on_site_date: form.required_on_site_date,
         requesting_area: form.requesting_area || "Sin especificar",
         responsible_name: form.responsible_name || null,
-        et_document_code: null,
         created_by: user.id,
-        tenant_id: "", // overridden server-side by set_tenant_id_from_user trigger
-      })
-      .select("id, pdc_number")
-      .single();
-    setSubmitting(false);
-
-    if (error) {
-      toast.error(`Error al crear PdC: ${error.message}`);
-      return;
+      });
+      toast.success(`PdC ${data.pdc_number} creado exitosamente`);
+      navigate(`/pdcs/${data.id}`);
+    } catch (err) {
+      toast.error(`Error al crear PdC: ${(err as Error).message}`);
     }
-    toast.success(`PdC ${data.pdc_number} creado exitosamente`);
-    navigate(`/pdcs/${data.id}`);
   };
 
   return (

@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { CRIT_FE_TO_DB } from "@/hooks/usePdcs";
+import { useUpdatePdc } from "@/hooks/usePdcs";
 import { SEO } from "@/components/SEO";
 
 const STAGES = [
@@ -29,7 +29,8 @@ export default function EditPdcPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const updatePdc = useUpdatePdc();
+  const submitting = updatePdc.isPending;
   const [pdcNumber, setPdcNumber] = useState<string>("");
   const [form, setForm] = useState({
     project: "", name: "", description: "", category: "",
@@ -95,32 +96,30 @@ export default function EditPdcPage() {
       toast.error("Complete los campos obligatorios");
       return;
     }
-    setSubmitting(true);
-    const { error } = await supabase
-      .from("purchase_processes")
-      .update({
-        name: form.name,
-        project: form.project,
-        description: form.description || null,
-        category: form.category || null,
-        criticality: CRIT_FE_TO_DB[form.criticality],
-        estimated_amount: form.estimated_amount ? Number(form.estimated_amount) : null,
-        currency: form.currency,
-        required_on_site_date: form.required_on_site_date,
-        requesting_area: form.requesting_area || "Sin especificar",
-        responsible_name: form.responsible_name || null,
-        current_stage: form.current_stage as
-          | "ingenieria" | "programacion" | "compras" | "licitacion"
-          | "evaluacion" | "orden_compra" | "seguimiento" | "recepcion",
-      })
-      .eq("id", id!);
-    setSubmitting(false);
-    if (error) {
-      toast.error(`Error al guardar: ${error.message}`);
-      return;
+    try {
+      await updatePdc.mutateAsync({
+        id: id!,
+        patch: {
+          name: form.name,
+          project: form.project,
+          description: form.description || null,
+          category: form.category || null,
+          criticality: form.criticality,
+          estimated_amount: form.estimated_amount ? Number(form.estimated_amount) : null,
+          currency: form.currency,
+          required_on_site_date: form.required_on_site_date,
+          requesting_area: form.requesting_area || "Sin especificar",
+          responsible_name: form.responsible_name || null,
+          current_stage: form.current_stage as
+            | "ingenieria" | "programacion" | "compras" | "licitacion"
+            | "evaluacion" | "orden_compra" | "seguimiento" | "recepcion",
+        },
+      });
+      toast.success("PdC actualizado correctamente");
+      navigate(`/pdcs/${id}`);
+    } catch (err) {
+      toast.error(`Error al guardar: ${(err as Error).message}`);
     }
-    toast.success("PdC actualizado correctamente");
-    navigate(`/pdcs/${id}`);
   };
 
   return (
