@@ -239,6 +239,7 @@ export default function AdminPage() {
 
       <AlertRulesSection />
       <ApprovalMatrixSection />
+      <EtFieldsAdminSection />
     </div>
   );
 }
