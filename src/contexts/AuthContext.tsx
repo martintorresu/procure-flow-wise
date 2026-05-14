@@ -91,13 +91,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, fullName: string, area?: string): Promise<SignUpResult> => {
+    // Resolver tenant_slug desde URL (path /t/<slug>/ o subdominio) antes del signup
+    const { resolveTenant } = await import("@/config/tenants");
+    const tenant = resolveTenant(window.location.pathname, window.location.hostname);
     const redirectUrl = `${window.location.origin}/`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: { full_name: fullName, area: area ?? "Ingeniería" },
+        data: { full_name: fullName, area: area ?? "Ingeniería", tenant_slug: tenant.slug },
       },
     });
     if (error) return { ok: false, message: error.message };
