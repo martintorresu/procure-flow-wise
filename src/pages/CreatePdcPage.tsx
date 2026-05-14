@@ -14,7 +14,8 @@ import { SEO } from "@/components/SEO";
 export default function CreatePdcPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [submitting, setSubmitting] = useState(false);
+  const createPdc = useCreatePdc();
+  const submitting = createPdc.isPending;
   const [form, setForm] = useState({
     project: "", title: "", description: "", category: "",
     criticality: "medium" as "low" | "medium" | "high",
