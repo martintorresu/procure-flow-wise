@@ -438,49 +438,65 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   </Select>
                 </div>
 
-                {equipmentSchema && equipmentSchema.length > 0 && (
-                  <div className="space-y-3">
-                    {items.length === 0 && (
-                      <Button variant="outline" size="sm" onClick={addItem} disabled={isReadOnly}>
-                        <Plus className="w-3.5 h-3.5" /> Agregar equipo
-                      </Button>
-                    )}
-                    {items.map((item, idx) => (
-                      <Card key={idx} className="border-dashed">
-                        <CardContent className="p-4 space-y-3">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">Equipo #{idx + 1}</span>
-                            <Button variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={isReadOnly}>
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            {equipmentSchema.map((f) => (
-                              <DynamicField
-                                key={f.key}
-                                field={f}
-                                value={item[f.key]}
-                                onChange={(v) => updateItem(idx, f.key, v)}
-                                disabled={isReadOnly}
-                              />
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                    {items.length > 0 && (
-                      <Button variant="outline" size="sm" onClick={addItem} disabled={isReadOnly}>
-                        <Plus className="w-3.5 h-3.5" /> Agregar otro equipo
-                      </Button>
-                    )}
+                {/* Sección 3 dinámica: campos del tenant + (override) campos del tipo de equipo */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      {items.length} ítem(s) definido(s) · {tenantSection3.length} campo(s) base del tenant
+                      {equipmentSchema && equipmentSchema.length > 0 && ` · ${equipmentSchema.length} campo(s) por tipo de equipo`}
+                    </p>
+                    <Button variant="outline" size="sm" onClick={addItem} disabled={isReadOnly}>
+                      <Plus className="w-3.5 h-3.5" /> Agregar ítem
+                    </Button>
                   </div>
-                )}
-
-                {!equipmentSchema && (
-                  <p className="text-sm text-muted-foreground">
-                    Selecciona un tipo de equipo para ver los campos técnicos.
-                  </p>
-                )}
+                  {items.length === 0 && (
+                    <p className="text-sm text-muted-foreground">Aún no hay ítems. Agrega uno para comenzar.</p>
+                  )}
+                  {items.map((item, idx) => (
+                    <Card key={idx} className="border-dashed">
+                      <CardContent className="p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">
+                            Ítem #{idx + 1}
+                            {item.item_description ? ` — ${String(item.item_description).slice(0, 60)}` : ""}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              const hasData = Object.values(item).some((v) => v !== undefined && v !== null && v !== "");
+                              if (hasData && !confirm("Este ítem tiene datos. ¿Eliminar?")) return;
+                              removeItem(idx);
+                            }}
+                            disabled={isReadOnly}
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {tenantSection3.map((f) => (
+                            <DynamicField
+                              key={f.id}
+                              field={schemaToFieldDef(f)}
+                              value={item[f.field_key]}
+                              onChange={(v) => updateItem(idx, f.field_key, v)}
+                              disabled={isReadOnly}
+                            />
+                          ))}
+                          {equipmentSchema?.map((f) => (
+                            <DynamicField
+                              key={`eq-${f.key}`}
+                              field={f}
+                              value={item[f.key]}
+                              onChange={(v) => updateItem(idx, f.key, v)}
+                              disabled={isReadOnly}
+                            />
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
               </>
             )}
 
