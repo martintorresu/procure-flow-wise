@@ -577,7 +577,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     <Textarea rows={2} value={s4.condiciones ?? ""} onChange={(e) => updateS4("condiciones", e.target.value)} disabled={isReadOnly} />
                   </div>
                 </div>
-                <CustomFieldsBlock sectionNumber={4} values={s4} onChange={updateS4} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={4} values={s4} onChange={updateS4} disabled={isReadOnly} errors={customErrors[4]} />
               </>
             )}
 
