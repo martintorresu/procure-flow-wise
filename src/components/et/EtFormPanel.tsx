@@ -839,10 +839,18 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                         </div>
                       );
                       if (customSection7.length === 0) {
-                        return <div key={idx}>{row}</div>;
+                        return (
+                          <div key={idx} id={`et-item-7-${idx}`} className={flashItem === `et-item-7-${idx}` ? "ring-2 ring-danger ring-offset-2 rounded transition-shadow" : ""}>
+                            {row}
+                          </div>
+                        );
                       }
                       return (
-                        <Card key={idx} className="border-dashed">
+                        <Card
+                          key={idx}
+                          id={`et-item-7-${idx}`}
+                          className={`border-dashed ${flashItem === `et-item-7-${idx}` ? "ring-2 ring-danger ring-offset-2 transition-shadow" : ""}`}
+                        >
                           <CardContent className="p-3 space-y-2">
                             <span className="text-xs font-medium text-muted-foreground">Ítem #{idx + 1}</span>
                             {row}
