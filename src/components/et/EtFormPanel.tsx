@@ -25,8 +25,10 @@ import {
 import { useEtForm, SECTIONS } from "@/hooks/useEtForm";
 import { DynamicField } from "./DynamicField";
 import { CustomFieldsBlock } from "./CustomFieldsBlock";
-import { useEtFieldSchema } from "@/hooks/useEtFieldSchemas";
-import { schemaToFieldDef } from "@/lib/etSchemaBuilder";
+import { useEtFieldSchema, useAllEtFieldSchemas } from "@/hooks/useEtFieldSchemas";
+import { schemaToFieldDef, buildZodSchema } from "@/lib/etSchemaBuilder";
+import type { EtFieldSchema } from "@/types/etForm";
+import { ZodError } from "zod";
 import type { EtSectionKey } from "@/types/etForm";
 import { CRITICALITY_OPTIONS, FAT_TEST_OPTIONS, PAYMENT_TERMS_OPTIONS, INCOTERM_OPTIONS } from "@/types/etForm";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,10 +72,13 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
 
   // Schema dinámico de Sección 3 del tenant (incluye base is_system + custom)
   const { data: tenantSection3 = [] } = useEtFieldSchema(3);
+  // Todos los campos custom por sección, para validación Zod en submit
+  const { data: allSchemas = {} } = useAllEtFieldSchemas();
 
   const [activeSection, setActiveSection] = useState<EtSectionKey>("section_1");
   const [rejectOpen, setRejectOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState("");
+  const [customErrors, setCustomErrors] = useState<Record<number, Record<string, string>>>({});
 
   if (demoMode) {
     return (
@@ -160,6 +165,48 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
   };
 
   const handleSubmit = async () => {
+    // Validación Zod dinámica de campos custom (is_system=false) por sección
+    // Sólo secciones no-array: 1, 2, 4, 6, 8 (3, 5, 7 son arrays repetibles).
+    const sectionValueMap: Record<number, Record<string, unknown>> = {
+      1: s1, 2: s2, 4: s4, 6: s6, 8: s8,
+    };
+    const newErrors: Record<number, Record<string, string>> = {};
+    let firstErrorSection: EtSectionKey | null = null;
+    for (const sectionNumber of [1, 2, 4, 6, 8] as const) {
+      const fields = (allSchemas[sectionNumber] ?? []).filter(
+        (f: EtFieldSchema) => f.active && !f.is_system,
+      );
+      if (fields.length === 0) continue;
+      const schema = buildZodSchema(fields);
+      const values = sectionValueMap[sectionNumber] ?? {};
+      // Sólo pasar las claves que el schema espera
+      const subset: Record<string, unknown> = {};
+      fields.forEach((f) => {
+        subset[f.field_key] = values[f.field_key];
+      });
+      const res = schema.safeParse(subset);
+      if (!res.success) {
+        const errs: Record<string, string> = {};
+        (res.error as ZodError).issues.forEach((iss) => {
+          const key = String(iss.path[0] ?? "");
+          if (key && !errs[key]) errs[key] = iss.message;
+        });
+        newErrors[sectionNumber] = errs;
+        if (!firstErrorSection) {
+          firstErrorSection = `section_${sectionNumber}` as EtSectionKey;
+        }
+      }
+    }
+    setCustomErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      const total = Object.values(newErrors).reduce((acc, e) => acc + Object.keys(e).length, 0);
+      toast.error(`Hay ${total} campo(s) adicional(es) con errores`, {
+        description: "Revisa los campos del tenant marcados en rojo.",
+      });
+      if (firstErrorSection) setActiveSection(firstErrorSection);
+      return;
+    }
+
     if (isDirty) await saveNow();
     const result = await submitForReview();
     if (result.ok) {
@@ -369,7 +416,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   <Label>Exclusiones</Label>
                   <Textarea rows={2} value={s1.exclusiones ?? ""} onChange={(e) => updateS1("exclusiones", e.target.value)} disabled={isReadOnly} />
                 </div>
-                <CustomFieldsBlock sectionNumber={1} values={s1} onChange={updateS1} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={1} values={s1} onChange={updateS1} disabled={isReadOnly} errors={customErrors[1]} />
               </>
             )}
 
@@ -416,7 +463,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     <Textarea rows={3} value={s2.justificacion ?? ""} onChange={(e) => updateS2("justificacion", e.target.value)} disabled={isReadOnly} />
                   </div>
                 </div>
-                <CustomFieldsBlock sectionNumber={2} values={s2} onChange={updateS2} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={2} values={s2} onChange={updateS2} disabled={isReadOnly} errors={customErrors[2]} />
               </>
             )}
 
@@ -530,7 +577,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     <Textarea rows={2} value={s4.condiciones ?? ""} onChange={(e) => updateS4("condiciones", e.target.value)} disabled={isReadOnly} />
                   </div>
                 </div>
-                <CustomFieldsBlock sectionNumber={4} values={s4} onChange={updateS4} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={4} values={s4} onChange={updateS4} disabled={isReadOnly} errors={customErrors[4]} />
               </>
             )}
 
@@ -629,7 +676,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                     />
                   </div>
                 </div>
-                <CustomFieldsBlock sectionNumber={6} values={s6 as Record<string, unknown>} onChange={updateS6} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={6} values={s6 as Record<string, unknown>} onChange={updateS6} disabled={isReadOnly} errors={customErrors[6]} />
               </>
             )}
 
@@ -759,7 +806,7 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
                   <Label>Riesgos Identificados</Label>
                   <Textarea rows={3} value={s8.riesgos ?? ""} onChange={(e) => updateS8("riesgos", e.target.value)} disabled={isReadOnly} />
                 </div>
-                <CustomFieldsBlock sectionNumber={8} values={s8} onChange={updateS8} disabled={isReadOnly} />
+                <CustomFieldsBlock sectionNumber={8} values={s8} onChange={updateS8} disabled={isReadOnly} errors={customErrors[8]} />
               </>
             )}
           </CardContent>
