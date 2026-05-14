@@ -5,6 +5,8 @@ import {
   Package, Shield
 } from "lucide-react";
 import { useState } from "react";
+import { useTenant } from "@/config/tenants";
+import { mockAlerts } from "@/data/mockData";
 
 const baseNavItems = [
   { to: "/", icon: LayoutDashboard, label: "Panel de Control" },
@@ -16,7 +18,13 @@ const baseNavItems = [
 export default function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const tenant = useTenant();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Conteo de alertas no resueltas (mock por ahora — cuando exista tabla `alerts` cambiar a query con realtime)
+  const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
+  const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical" || a.severity === "high").length;
+  const totalAlerts = unresolvedAlerts.length;
 
   const navItems = user?.role === "admin"
     ? [...baseNavItems, { to: "/admin", icon: Shield, label: "Administración" }]
@@ -43,9 +51,11 @@ export default function AppSidebar() {
           </div>
         </div>
         {!collapsed && (
-          <div className="overflow-hidden">
-            <h1 className="text-sm font-bold text-sidebar-foreground tracking-wide">Procurement</h1>
-            <p className="text-[10px] text-sidebar-primary uppercase tracking-[0.2em] font-semibold">Insight</p>
+          <div className="overflow-hidden flex-1">
+            <h1 className="text-sm font-bold text-sidebar-foreground tracking-wide truncate">{tenant.name}</h1>
+            <p className="text-[10px] text-sidebar-primary uppercase tracking-[0.2em] font-semibold">
+              {tenant.slug === "default" ? "Insight" : tenant.slug}
+            </p>
           </div>
         )}
       </div>
@@ -54,6 +64,9 @@ export default function AppSidebar() {
       <nav className="relative flex-1 min-h-0 overflow-y-auto py-4 space-y-1 px-2">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+          const isAlerts = item.to === "/alerts";
+          const badgeCount = isAlerts ? totalAlerts : 0;
+          const badgeIsCritical = isAlerts && criticalCount > 0;
           return (
             <Link
               key={item.to}
@@ -67,8 +80,26 @@ export default function AppSidebar() {
               {isActive && (
                 <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full bg-sidebar-primary shadow-[0_0_10px_hsl(var(--sidebar-primary))]" />
               )}
-              <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-sidebar-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-primary"}`} />
-              {!collapsed && <span className="truncate">{item.label}</span>}
+              <span className="relative">
+                <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-sidebar-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-primary"}`} />
+                {badgeCount > 0 && collapsed && (
+                  <span
+                    aria-label={`${badgeCount} alertas pendientes`}
+                    className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white ${badgeIsCritical ? "bg-danger animate-pulse-slow" : "bg-warning"}`}
+                  >
+                    {badgeCount > 9 ? "9+" : badgeCount}
+                  </span>
+                )}
+              </span>
+              {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+              {!collapsed && badgeCount > 0 && (
+                <span
+                  aria-label={`${badgeCount} alertas pendientes`}
+                  className={`ml-auto min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center text-white ${badgeIsCritical ? "bg-danger animate-pulse-slow" : "bg-warning"}`}
+                >
+                  {badgeCount}
+                </span>
+              )}
             </Link>
           );
         })}

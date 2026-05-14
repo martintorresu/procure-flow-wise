@@ -1,13 +1,50 @@
 import type { TrafficLight, Criticality, PdcStatus } from "@/types/pdc";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Check, AlertTriangle, X } from "lucide-react";
 
-export function TrafficLightIndicator({ color }: { color: TrafficLight }) {
+const TRAFFIC_LABELS: Record<TrafficLight, string> = {
+  green: "En plazo (>120 días al sitio o cerrado OK)",
+  yellow: "Advertencia (60–120 días al sitio)",
+  red: "Riesgo (<60 días, alta criticidad <90 días, o cerrado con incidente)",
+};
+
+export function TrafficLightIndicator({ color, showIcon = true }: { color: TrafficLight; showIcon?: boolean }) {
   const styles = {
-    green: "bg-success",
-    yellow: "bg-warning",
-    red: "bg-danger animate-pulse-slow",
+    green: "bg-success text-success-foreground",
+    yellow: "bg-warning text-warning-foreground",
+    red: "bg-danger text-danger-foreground animate-pulse-slow",
   };
+  const Icon = color === "green" ? Check : color === "yellow" ? AlertTriangle : X;
   return (
-    <span className={`inline-block w-3 h-3 rounded-full ${styles[color]}`} title={color} />
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            role="img"
+            aria-label={`Semáforo: ${TRAFFIC_LABELS[color]}`}
+            className={`inline-flex items-center justify-center w-4 h-4 rounded-full shrink-0 ${styles[color]}`}
+          >
+            {showIcon && <Icon className="w-2.5 h-2.5" strokeWidth={3} aria-hidden />}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-xs text-xs">
+          {TRAFFIC_LABELS[color]}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
+export function TrafficLightLegend() {
+  return (
+    <div className="flex flex-wrap gap-3 text-xs text-muted-foreground">
+      {(["green", "yellow", "red"] as const).map((c) => (
+        <div key={c} className="flex items-center gap-1.5">
+          <TrafficLightIndicator color={c} />
+          <span>{TRAFFIC_LABELS[c]}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
