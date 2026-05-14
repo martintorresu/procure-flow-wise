@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Trash2, UserPlus, Database } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const ROLES = [
   { value: "admin", label: "Admin" },
