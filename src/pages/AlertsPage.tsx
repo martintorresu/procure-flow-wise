@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Bell, CheckCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { SEO } from "@/components/SEO";
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState(mockAlerts);
@@ -31,6 +32,7 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Alertas" description="Alertas automáticas de PdCs por retrasos, hitos vencidos y desviaciones por severidad." path="/alerts" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Alertas</h1>

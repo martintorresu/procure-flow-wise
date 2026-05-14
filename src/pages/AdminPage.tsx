@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Trash2, UserPlus, Database } from "lucide-react";
+import { SEO } from "@/components/SEO";
 
 const ROLES = [
   { value: "admin", label: "Admin" },
@@ -128,6 +129,7 @@ export default function AdminPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <SEO title="Administración" description="Gestión de usuarios, roles y datos demo de Procurement by InHR." path="/admin" />
       <div>
         <h1 className="text-2xl font-bold">Administración</h1>
         <p className="text-sm text-muted-foreground">

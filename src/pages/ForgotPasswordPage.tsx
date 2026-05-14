@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import loginBg from "@/assets/login-bg.jpg";
 import inhrLogo from "@/assets/inhr-logo.png";
 import { useTenant } from "@/config/tenants";
+import { SEO } from "@/components/SEO";
 
 export default function ForgotPasswordPage() {
   const tenant = useTenant();
@@ -30,6 +31,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4 sm:p-6">
+      <SEO title="Recuperar contraseña" description="Recibe un enlace por email para restablecer tu contraseña en Procurement by InHR." path="/forgot-password" />
       <div
         className="absolute inset-0 bg-cover bg-center scale-110 saturate-[1.35] brightness-[1.15] contrast-[1.05]"
         style={{ backgroundImage: `url(${loginBg})` }}

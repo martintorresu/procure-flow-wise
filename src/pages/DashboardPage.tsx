@@ -9,6 +9,7 @@ import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
+import { SEO } from "@/components/SEO";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -47,6 +48,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      <SEO title="Panel de control" description="KPIs de procesos de compra activos, semáforos de criticidad y alertas pendientes." path="/" />
       <div>
         <h1 className="text-2xl font-bold text-foreground">Bienvenido, {user?.name}</h1>
         <p className="text-sm text-muted-foreground">Resumen de procesos de compra</p>

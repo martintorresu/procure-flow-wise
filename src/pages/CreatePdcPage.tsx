@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CRIT_FE_TO_DB } from "@/hooks/usePdcs";
+import { SEO } from "@/components/SEO";
 
 export default function CreatePdcPage() {
   const navigate = useNavigate();
@@ -69,6 +70,7 @@ export default function CreatePdcPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      <SEO title="Nuevo Proceso de Compra" description="Crea un nuevo PdC indicando proyecto, criticidad, monto y fecha requerida en obra." path="/pdcs/new" />
       <div>
         <h1 className="text-2xl font-bold">Crear Proceso de Compra</h1>
         <p className="text-sm text-muted-foreground">Complete los datos del nuevo PdC</p>

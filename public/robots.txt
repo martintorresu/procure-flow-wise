@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://procurement.demo.inovahr-app.com/sitemap.xml
