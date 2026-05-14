@@ -5,6 +5,8 @@ import {
   Package, Shield
 } from "lucide-react";
 import { useState } from "react";
+import { useTenant } from "@/config/tenants";
+import { mockAlerts } from "@/data/mockData";
 
 const baseNavItems = [
   { to: "/", icon: LayoutDashboard, label: "Panel de Control" },
@@ -16,7 +18,13 @@ const baseNavItems = [
 export default function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const tenant = useTenant();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Conteo de alertas no resueltas (mock por ahora — cuando exista tabla `alerts` cambiar a query con realtime)
+  const unresolvedAlerts = mockAlerts.filter((a) => !a.resolved);
+  const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical" || a.severity === "high").length;
+  const totalAlerts = unresolvedAlerts.length;
 
   const navItems = user?.role === "admin"
     ? [...baseNavItems, { to: "/admin", icon: Shield, label: "Administración" }]
