@@ -117,7 +117,7 @@ Deno.serve(async (req) => {
         project: "ISO-TEST",
         criticality: "media",
         created_by: acmeUser.user.id,
-        tenant_id: "",
+        tenant_id: tenantAcme!.id,
       } as never).select("id, tenant_id").single();
       if (error || !data) {
         results.push({ table: "purchase_processes", acme_inserted: 0, codelco_can_read: 0, isolated: false, note: "INSERT acme falló: " + error?.message });
