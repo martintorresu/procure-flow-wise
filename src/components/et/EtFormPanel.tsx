@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Loader2, Save, CheckCircle2, AlertCircle, Plus, Trash2, Send, FileDown, History, ThumbsUp, ThumbsDown, ChevronRight } from "lucide-react";
 import {
   Dialog,
   DialogContent,
