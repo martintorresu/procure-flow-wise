@@ -82,6 +82,30 @@ export default function DashboardPage() {
         <TrafficLightLegend />
       </div>
 
+      {isManagerOrAdmin && pendingApprovals.length > 0 && (
+        <Card className="border-l-4 border-l-warning bg-warning/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4" /> Pendientes de aprobación ({pendingApprovals.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {pendingApprovals.map((p) => (
+              <div key={p.id} className="flex items-center justify-between border-b last:border-0 pb-2 last:pb-0">
+                <div className="text-sm">
+                  <Link to={`/pdcs/${p.id}`} className="font-mono text-xs text-accent hover:underline">{p.pdc_number}</Link>
+                  <span className="ml-2 font-medium">{p.title}</span>
+                  <span className="ml-2 text-xs text-muted-foreground">→ {p.approval_target_stage}</span>
+                </div>
+                <Button size="sm" disabled={approveMutation.isPending} onClick={() => handleApprove(p.id)}>
+                  Aprobar
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => {
