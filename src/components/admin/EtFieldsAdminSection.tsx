@@ -13,13 +13,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
-import { ArrowDown, ArrowUp, FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, GripVertical, Pencil, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   useAllEtFieldSchemas, useCreateEtField, useUpdateEtField, useToggleEtField, useReorderEtFields,
 } from "@/hooks/useEtFieldSchemas";
 import { slugifyKey } from "@/lib/etSchemaBuilder";
 import type { EtFieldSchema, EtFieldType } from "@/types/etForm";
+import {
+  DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy, arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 const SECTION_LABELS: Record<number, string> = {
   1: "1. Identificación",
@@ -102,14 +110,22 @@ function SectionFieldsTable({ sectionNumber, fields }: { sectionNumber: number; 
 
   const sorted = useMemo(() => [...fields].sort((a, b) => a.display_order - b.display_order), [fields]);
 
-  const move = async (idx: number, dir: -1 | 1) => {
-    const target = idx + dir;
-    if (target < 0 || target >= sorted.length) return;
-    const a = sorted[idx], b = sorted[target];
-    await reorderMutation.mutateAsync([
-      { id: a.id, display_order: b.display_order },
-      { id: b.id, display_order: a.display_order },
-    ]);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = async (e: DragEndEvent) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const oldIdx = sorted.findIndex((f) => f.id === active.id);
+    const newIdx = sorted.findIndex((f) => f.id === over.id);
+    if (oldIdx === -1 || newIdx === -1) return;
+    const reordered = arrayMove(sorted, oldIdx, newIdx);
+    // Reasignar display_order secuencial 1..N
+    await reorderMutation.mutateAsync(
+      reordered.map((f, i) => ({ id: f.id, display_order: i + 1 })),
+    );
   };
 
   const toggleActive = async (f: EtFieldSchema, next: boolean) => {
@@ -132,59 +148,35 @@ function SectionFieldsTable({ sectionNumber, fields }: { sectionNumber: number; 
       {sorted.length === 0 ? (
         <p className="text-sm text-muted-foreground text-center py-4">Sin campos definidos.</p>
       ) : (
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[80px]">Orden</TableHead>
-              <TableHead>Etiqueta</TableHead>
-              <TableHead className="w-[120px]">Tipo</TableHead>
-              <TableHead className="w-[100px]">Requerido</TableHead>
-              <TableHead className="w-[90px]">Sistema</TableHead>
-              <TableHead className="w-[80px]">Activo</TableHead>
-              <TableHead className="w-[100px]">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sorted.map((f, idx) => (
-              <TableRow key={f.id}>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs font-mono w-6">{f.display_order}</span>
-                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move(idx, -1)} disabled={idx === 0}>
-                      <ArrowUp className="w-3 h-3" />
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => move(idx, 1)} disabled={idx === sorted.length - 1}>
-                      <ArrowDown className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <div className="flex flex-col">
-                    <span className="font-medium text-sm">{f.label}</span>
-                    <span className="text-xs text-muted-foreground font-mono">{f.field_key}</span>
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className="text-xs">{TYPE_LABELS[f.field_type]}</Badge>
-                </TableCell>
-                <TableCell>
-                  <Switch checked={f.required} onCheckedChange={(v) => toggleRequired(f, v)} />
-                </TableCell>
-                <TableCell>
-                  {f.is_system && <Badge variant="secondary" className="text-xs">Sistema</Badge>}
-                </TableCell>
-                <TableCell>
-                  <Switch checked={f.active} onCheckedChange={(v) => toggleActive(f, v)} />
-                </TableCell>
-                <TableCell>
-                  <Button size="sm" variant="ghost" onClick={() => setEditingId(f.id)}>
-                    <Pencil className="w-3.5 h-3.5" />
-                  </Button>
-                </TableCell>
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[60px]"></TableHead>
+                <TableHead className="w-[60px]">Orden</TableHead>
+                <TableHead>Etiqueta</TableHead>
+                <TableHead className="w-[120px]">Tipo</TableHead>
+                <TableHead className="w-[100px]">Requerido</TableHead>
+                <TableHead className="w-[90px]">Sistema</TableHead>
+                <TableHead className="w-[80px]">Activo</TableHead>
+                <TableHead className="w-[100px]">Acciones</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              <SortableContext items={sorted.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+                {sorted.map((f) => (
+                  <SortableFieldRow
+                    key={f.id}
+                    field={f}
+                    onToggleActive={toggleActive}
+                    onToggleRequired={toggleRequired}
+                    onEdit={() => setEditingId(f.id)}
+                  />
+                ))}
+              </SortableContext>
+            </TableBody>
+          </Table>
+        </DndContext>
       )}
       {editingId && (
         <EditFieldDialog
@@ -194,6 +186,63 @@ function SectionFieldsTable({ sectionNumber, fields }: { sectionNumber: number; 
         />
       )}
     </div>
+  );
+}
+
+interface SortableFieldRowProps {
+  field: EtFieldSchema;
+  onToggleActive: (f: EtFieldSchema, next: boolean) => void;
+  onToggleRequired: (f: EtFieldSchema, next: boolean) => void;
+  onEdit: () => void;
+}
+
+function SortableFieldRow({ field: f, onToggleActive, onToggleRequired, onEdit }: SortableFieldRowProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: f.id });
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+  return (
+    <TableRow ref={setNodeRef} style={style} className={isDragging ? "bg-muted/40" : undefined}>
+      <TableCell>
+        <button
+          type="button"
+          aria-label="Reordenar"
+          className="cursor-grab active:cursor-grabbing touch-none p-1 text-muted-foreground hover:text-foreground"
+          {...attributes}
+          {...listeners}
+        >
+          <GripVertical className="w-4 h-4" />
+        </button>
+      </TableCell>
+      <TableCell>
+        <span className="text-xs font-mono">{f.display_order}</span>
+      </TableCell>
+      <TableCell>
+        <div className="flex flex-col">
+          <span className="font-medium text-sm">{f.label}</span>
+          <span className="text-xs text-muted-foreground font-mono">{f.field_key}</span>
+        </div>
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline" className="text-xs">{TYPE_LABELS[f.field_type]}</Badge>
+      </TableCell>
+      <TableCell>
+        <Switch checked={f.required} onCheckedChange={(v) => onToggleRequired(f, v)} />
+      </TableCell>
+      <TableCell>
+        {f.is_system && <Badge variant="secondary" className="text-xs">Sistema</Badge>}
+      </TableCell>
+      <TableCell>
+        <Switch checked={f.active} onCheckedChange={(v) => onToggleActive(f, v)} />
+      </TableCell>
+      <TableCell>
+        <Button size="sm" variant="ghost" onClick={onEdit}>
+          <Pencil className="w-3.5 h-3.5" />
+        </Button>
+      </TableCell>
+    </TableRow>
   );
 }
 
