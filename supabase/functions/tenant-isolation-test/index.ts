@@ -35,13 +35,12 @@ Deno.serve(async (req) => {
   // Validar admin
   const authHeader = req.headers.get("Authorization");
   if (!authHeader?.startsWith("Bearer ")) return json(401, { error: "Unauthorized" });
-  const token = authHeader.replace("Bearer ", "");
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
   });
-  const { data: claims } = await userClient.auth.getClaims(token);
-  if (!claims?.claims?.sub) return json(401, { error: "Unauthorized" });
-  const callerId = claims.claims.sub as string;
+  const { data: userData, error: userErr } = await userClient.auth.getUser();
+  if (userErr || !userData?.user) return json(401, { error: "Unauthorized: " + (userErr?.message ?? "no user") });
+  const callerId = userData.user.id;
 
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
   const { data: isAdmin } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
