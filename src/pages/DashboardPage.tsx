@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { useAlerts } from "@/hooks/useAlerts";
-import { usePdcs, useApprovePdc } from "@/hooks/usePdcs";
-import { useApprovePdc as _legacyUnused } from "@/hooks/useApprovalMatrix";
+import { usePdcs } from "@/hooks/usePdcs";
+import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,8 +17,6 @@ import { SEO } from "@/components/SEO";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 
-// (import unused workaround eliminado — usamos useApprovePdc desde useApprovalMatrix)
-void _legacyUnused;
 
 export default function DashboardPage() {
   const { user } = useAuth();

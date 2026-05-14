@@ -20,7 +20,7 @@ import { SEO } from "@/components/SEO";
 export default function PdcDetailPage() {
   const { id } = useParams();
   const { user } = useAuth();
-  const { pdc, loading } = usePdc(id);
+  const { data: pdc, isLoading: loading } = usePdc(id);
   const isAdmin = user?.role === "admin";
 
   const { data: milestones = [] } = useMilestones(pdc?.id);
