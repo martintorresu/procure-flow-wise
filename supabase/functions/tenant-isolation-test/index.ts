@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       const { data, error } = await acmeClient.from(table as never).insert({
         ...payload,
         created_by: acmeUser.user.id,
-        tenant_id: "",
+        tenant_id: tenantAcme!.id,
       } as never).select("id, tenant_id" as never).single();
       if (error || !data) {
         results.push({ table, acme_inserted: 0, codelco_can_read: 0, isolated: false, note: "INSERT falló: " + error?.message });
