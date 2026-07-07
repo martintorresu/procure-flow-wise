@@ -1,0 +1,1 @@
+UPDATE public.purchase_processes SET name = 'Servicio Prueba Cables MT', updated_at = now() WHERE id = '4cf9ce68-fa55-4437-b80a-a45c0ffa4a22';
