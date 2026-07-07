@@ -1,0 +1,2 @@
+UPDATE public.purchase_processes SET name = 'Interruptor 220 KV', updated_at = now() WHERE id = '0f2b0cd5-de3b-477c-8340-b4e178776631';
+UPDATE public.purchase_processes SET name = 'Transformador de 10 MW / 110 KV', updated_at = now() WHERE id = '22e6df63-0873-4076-aef6-e169656d28b3';
