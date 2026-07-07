@@ -1,0 +1,1 @@
+UPDATE public.purchase_processes SET name = 'Servicio Medición Malla de Tierra', updated_at = now() WHERE id = '2ca2c9ef-6636-4fac-b249-f9ee9326041f';
