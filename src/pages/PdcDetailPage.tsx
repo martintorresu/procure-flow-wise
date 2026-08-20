@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
@@ -18,6 +20,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { SEO } from "@/components/SEO";
 import { ProcessStepper } from "@/components/ProcessStepper";
+import { ProcessStepperZoom } from "@/components/ProcessStepperZoom";
+import { computeStageProgress } from "@/lib/stageProgress";
+import type { Pdc, PdcMilestone } from "@/types/pdc";
 import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
@@ -37,6 +42,61 @@ function ApproveButton({ pdcId }: { pdcId: string }) {
     </Button>
   );
 }
+
+const PURCHASE_STEPS = [
+  { key: "draft", label: "Borrador", icon: FileText },
+  { key: "technical_definition", label: "Técnica", icon: Wrench },
+  { key: "planning", label: "Planificación", icon: ClipboardList },
+  { key: "quotation", label: "Cotización", icon: FileSearch },
+  { key: "evaluation", label: "Evaluación", icon: FileSearch },
+  { key: "awarded", label: "Adjudicación", icon: Award },
+  { key: "po_issued", label: "OC / Vendor", icon: Truck },
+  { key: "drawings", label: "Planos", icon: ClipboardList },
+  { key: "fat", label: "Prueba de Fábrica", icon: FlaskConical },
+  { key: "shipping", label: "Logística", icon: Ship },
+  { key: "arrived", label: "Arribado", icon: MapPin },
+  { key: "closed", label: "Cerrado", icon: Check },
+];
+
+const STATUS_ORDER = PURCHASE_STEPS.map((s) => s.key);
+
+function PurchaseStepperCard({ pdc, milestones }: { pdc: Pdc; milestones: PdcMilestone[] }) {
+  const [showFull, setShowFull] = useState(false);
+  const steps = PURCHASE_STEPS;
+  const idx = STATUS_ORDER.indexOf(pdc.current_status);
+  const activeStepIdx = idx >= 0 ? idx : 0;
+  const useZoom = steps.length > 6 && !showFull;
+  const progress = computeStageProgress(milestones, steps[activeStepIdx].key, pdc.created_at);
+
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-sm font-medium">Avance del proceso</h3>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-muted-foreground">
+              Etapa actual: <span className="font-medium text-foreground">{steps[activeStepIdx]?.label ?? "—"}</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowFull((v) => !v)}
+              className="text-xs text-accent hover:underline"
+            >
+              {useZoom ? `Ver flujo completo (${steps.length} etapas)` : "Ver etapa crítica"}
+            </button>
+          </div>
+        </div>
+        {useZoom ? (
+          <ProcessStepperZoom steps={steps} activeIndex={activeStepIdx} progress={progress} />
+        ) : (
+          <ProcessStepper steps={steps} activeIndex={activeStepIdx} />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+
 
 
 export default function PdcDetailPage() {
