@@ -20,20 +20,20 @@ import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 
-const TYPE_CLASS: Record<ProcessType, string> = {
-  compra: "type-compra",
-  licitacion: "type-licitacion",
-  contrato: "type-contrato",
-  permiso: "type-permiso",
-  personalizado: "type-personalizado",
+const TYPE_STYLES: Record<ProcessType, string> = {
+  compra: "bg-primary/10 text-primary border-primary/20",
+  licitacion: "bg-accent/15 text-accent border-accent/30",
+  contrato: "bg-typeContrato/10 text-typeContrato border-typeContrato/20",
+  permiso: "bg-typePermiso/10 text-typePermiso border-typePermiso/20",
+  personalizado: "bg-muted text-muted-foreground border-border",
 };
 
 function TypeBadge({ type }: { type?: ProcessType | null }) {
-  if (!type || !TYPE_CLASS[type]) {
+  if (!type || !TYPE_STYLES[type]) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${TYPE_CLASS[type]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${TYPE_STYLES[type]}`}>
       {PROCESS_TYPE_LABELS[type]}
     </span>
   );
