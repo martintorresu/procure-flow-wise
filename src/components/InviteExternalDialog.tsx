@@ -155,10 +155,25 @@ export function InviteExternalDialog({ processId, tenantId, invitedBy }: Props) 
                       {EXTERNAL_ROLE_LABELS[p.external_role]}{p.external_company ? ` · ${p.external_company}` : ""}
                     </p>
                   </div>
-                  <Badge variant={p.status === "accepted" ? "default" : "outline"} className="text-xs shrink-0">
-                    {p.status === "accepted" ? "Aceptada" : "Pendiente"}
-                  </Badge>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {p.status === "pending" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-1 h-7 px-2 text-xs"
+                        disabled={resendingId === p.id}
+                        onClick={() => handleResend(p.id)}
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        {resendingId === p.id ? "Enviando…" : "Reenviar"}
+                      </Button>
+                    )}
+                    <Badge variant={p.status === "accepted" ? "default" : "outline"} className="text-xs">
+                      {p.status === "accepted" ? "Aceptada" : "Pendiente"}
+                    </Badge>
+                  </div>
                 </div>
+
               ))}
             </div>
           )}
