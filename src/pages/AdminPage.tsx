@@ -211,28 +211,28 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      {/* PdCs demo */}
+      {/* Procesos demo */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Database className="w-4 h-4" /> PdCs demo (1 por etapa)
+            <Database className="w-4 h-4" /> Procesos demo (1 por etapa)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Crea 8 PdCs marcados con proyecto <code className="bg-muted px-1 rounded">__DEMO__</code>,
+            Crea 8 Procesos marcados con proyecto <code className="bg-muted px-1 rounded">__DEMO__</code>,
             uno por cada etapa del flujo, todos con tu usuario como creador.
           </p>
           <div className="text-sm">
-            PdCs demo actuales: <span className="font-mono font-medium">{demoCount ?? "…"}</span>
+            Procesos demo actuales: <span className="font-mono font-medium">{demoCount ?? "…"}</span>
           </div>
           <div className="flex gap-2">
             <Button onClick={seedPdcs} disabled={working === "seed-pdcs"}>
-              {working === "seed-pdcs" ? "Creando…" : "Sembrar 8 PdCs demo"}
+              {working === "seed-pdcs" ? "Creando…" : "Sembrar 8 Procesos demo"}
             </Button>
             <Button variant="outline" onClick={cleanupDemo} disabled={working === "cleanup"}>
               <Trash2 className="w-4 h-4 mr-2" />
-              {working === "cleanup" ? "Limpiando…" : "Limpiar PdCs demo"}
+              {working === "cleanup" ? "Limpiando…" : "Limpiar Procesos demo"}
             </Button>
           </div>
         </CardContent>
