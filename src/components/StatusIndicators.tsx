@@ -1,6 +1,5 @@
 import type { TrafficLight, Criticality, PdcStatus } from "@/types/pdc";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Check, AlertTriangle, X } from "lucide-react";
 import { genericStageIndex } from "@/lib/processTypes";
 
 const TRAFFIC_LABELS: Record<TrafficLight, string> = {
@@ -27,29 +26,31 @@ const STATUS_TO_GENERIC_STAGE: Record<PdcStatus, string> = {
 
 export function TrafficLightIndicator({
   color,
-  showIcon = true,
+  showIcon,
   size = "md",
 }: {
   color: TrafficLight;
   showIcon?: boolean;
   size?: "sm" | "md" | "lg";
 }) {
-  const styles = {
-    green: "bg-success text-success-foreground",
-    yellow: "bg-warning text-warning-foreground",
-    red: "bg-danger text-danger-foreground animate-pulse-slow",
+  const housingClasses = {
+    sm: "w-3.5 h-[30px] p-[3px] gap-[3px]",
+    md: "w-4 h-[36px] p-1 gap-1",
+    lg: "w-[18px] h-[42px] p-[5px] gap-[5px]",
   };
-  const sizeClasses = {
-    sm: "w-3 h-3",
-    md: "w-4 h-4",
-    lg: "w-5 h-5",
+  const dotClasses = {
+    sm: "w-[5px] h-[5px]",
+    md: "w-[6px] h-[6px]",
+    lg: "w-[7px] h-[7px]",
   };
-  const iconSizeClasses = {
-    sm: "w-2 h-2",
-    md: "w-2.5 h-2.5",
-    lg: "w-3 h-3",
+  const glowVars: Record<TrafficLight, string> = {
+    green: "hsl(var(--success))",
+    yellow: "hsl(var(--warning))",
+    red: "hsl(var(--danger))",
   };
-  const Icon = color === "green" ? Check : color === "yellow" ? AlertTriangle : X;
+
+  const lights: TrafficLight[] = ["green", "yellow", "red"];
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -57,9 +58,28 @@ export function TrafficLightIndicator({
           <span
             role="img"
             aria-label={`Semáforo: ${TRAFFIC_LABELS[color]}`}
-            className={`inline-flex items-center justify-center rounded-full shrink-0 ${sizeClasses[size]} ${styles[color]}`}
+            className={`inline-flex flex-col items-center justify-between rounded-full shrink-0 bg-muted border border-border/50 ${housingClasses[size]}`}
           >
-            {showIcon && <Icon className={`${iconSizeClasses[size]}`} strokeWidth={3} aria-hidden />}
+            {lights.map((light) => {
+              const isActive = light === color;
+              const activeClass =
+                light === "green"
+                  ? "bg-success"
+                  : light === "yellow"
+                    ? "bg-warning"
+                    : "bg-danger";
+              return (
+                <span
+                  key={light}
+                  className={`rounded-full ${dotClasses[size]} ${
+                    isActive
+                      ? `${activeClass} ${light === "red" ? "animate-pulse-slow" : ""}`
+                      : "bg-muted-foreground/20"
+                  }`}
+                  style={isActive ? { boxShadow: `0 0 6px ${glowVars[light]}` } : undefined}
+                />
+              );
+            })}
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs text-xs">
