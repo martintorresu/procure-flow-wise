@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import PreviewHarness from "./pages/__PreviewHarness";
 import { BrowserRouter, Route, Routes, Navigate, useParams, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -81,7 +80,6 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             {/* Login + Signup: default + por tenant */}
-            <Route path="/__preview" element={<PreviewHarness />} />
             <Route path="/login" element={<LoginRoute />} />
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
