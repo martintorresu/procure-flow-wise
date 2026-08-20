@@ -28,7 +28,7 @@ const TYPE_STYLES: Record<ProcessType, string> = {
   personalizado: "bg-muted text-muted-foreground border-border",
 };
 
-export function TypeBadge({ type }: { type?: ProcessType | null }) {
+function TypeBadge({ type }: { type?: ProcessType | null }) {
   if (!type || !TYPE_STYLES[type]) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
