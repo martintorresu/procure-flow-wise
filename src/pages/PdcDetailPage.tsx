@@ -227,10 +227,11 @@ export default function PdcDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { icon: User, label: "Responsable", value: pdc.current_owner },
-          { icon: DollarSign, label: "Monto Estimado", value: `${pdc.currency} ${pdc.estimated_amount.toLocaleString()}` },
+          ...(isExternal ? [] : [{ icon: DollarSign, label: "Monto Estimado", value: `${pdc.currency} ${pdc.estimated_amount.toLocaleString()}` }]),
           { icon: Calendar, label: "Fecha Requerida", value: pdc.required_on_site_date },
-          { icon: MapPin, label: "Proveedor", value: pdc.selected_supplier || "Sin asignar" },
+          ...(isExternal ? [] : [{ icon: MapPin, label: "Proveedor", value: pdc.selected_supplier || "Sin asignar" }]),
         ].map((item) => (
+
           <Card key={item.label}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
