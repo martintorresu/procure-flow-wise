@@ -67,7 +67,7 @@ export function exportEtFormToPdf(args: ExportArgs): void {
 
   // Header
   writeLine("Formulario de Especificaciones Técnicas (ET)", { bold: true, size: 14 });
-  writeLine(`PdC: ${pdcNumber ?? "—"}    Estado: ${status ?? "borrador"}    Completitud: ${completionPct}%`);
+  writeLine(`Proceso: ${pdcNumber ?? "—"}    Estado: ${status ?? "borrador"}    Completitud: ${completionPct}%`);
   writeLine(`Generado: ${new Date().toLocaleString()}`);
   y += 6;
 

@@ -32,7 +32,7 @@ export default function AlertsPage() {
 
   return (
     <div className="space-y-6">
-      <SEO title="Alertas" description="Alertas automáticas de PdCs por retrasos, hitos vencidos y desviaciones por severidad." path="/alerts" />
+      <SEO title="Alertas" description="Alertas automáticas de Procesos por retrasos, hitos vencidos y desviaciones por severidad." path="/alerts" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Alertas</h1>
@@ -57,7 +57,7 @@ export default function AlertsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">PdC</th>
+                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Proceso</th>
                   <th className="py-3 px-4 text-left font-medium text-muted-foreground">Tipo</th>
                   <th className="py-3 px-4 text-left font-medium text-muted-foreground">Severidad</th>
                   <th className="py-3 px-4 text-left font-medium text-muted-foreground">Mensaje</th>

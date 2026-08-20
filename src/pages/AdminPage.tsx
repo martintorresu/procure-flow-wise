@@ -112,7 +112,7 @@ export default function AdminPage() {
     setWorking("seed-pdcs");
     try {
       const data = await callAdmin("seed_pdcs");
-      toast.success(`${data.count} PdCs demo creados`);
+      toast.success(`${data.count} Procesos demo creados`);
       await refreshDemoCount();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error");
@@ -122,11 +122,11 @@ export default function AdminPage() {
   };
 
   const cleanupDemo = async () => {
-    if (!confirm("¿Borrar todos los PdCs demo (project='__DEMO__')?")) return;
+    if (!confirm("¿Borrar todos los Procesos demo (project='__DEMO__')?")) return;
     setWorking("cleanup");
     try {
       const data = await callAdmin("cleanup_demo");
-      toast.success(`${data.deleted} PdCs demo eliminados`);
+      toast.success(`${data.deleted} Procesos demo eliminados`);
       await refreshDemoCount();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error");
@@ -211,28 +211,28 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
-      {/* PdCs demo */}
+      {/* Procesos demo */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <Database className="w-4 h-4" /> PdCs demo (1 por etapa)
+            <Database className="w-4 h-4" /> Procesos demo (1 por etapa)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Crea 8 PdCs marcados con proyecto <code className="bg-muted px-1 rounded">__DEMO__</code>,
+            Crea 8 Procesos marcados con proyecto <code className="bg-muted px-1 rounded">__DEMO__</code>,
             uno por cada etapa del flujo, todos con tu usuario como creador.
           </p>
           <div className="text-sm">
-            PdCs demo actuales: <span className="font-mono font-medium">{demoCount ?? "…"}</span>
+            Procesos demo actuales: <span className="font-mono font-medium">{demoCount ?? "…"}</span>
           </div>
           <div className="flex gap-2">
             <Button onClick={seedPdcs} disabled={working === "seed-pdcs"}>
-              {working === "seed-pdcs" ? "Creando…" : "Sembrar 8 PdCs demo"}
+              {working === "seed-pdcs" ? "Creando…" : "Sembrar 8 Procesos demo"}
             </Button>
             <Button variant="outline" onClick={cleanupDemo} disabled={working === "cleanup"}>
               <Trash2 className="w-4 h-4 mr-2" />
-              {working === "cleanup" ? "Limpiando…" : "Limpiar PdCs demo"}
+              {working === "cleanup" ? "Limpiando…" : "Limpiar Procesos demo"}
             </Button>
           </div>
         </CardContent>
@@ -437,7 +437,7 @@ function ApprovalMatrixSection() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          PdCs que cumplan estas condiciones quedarán en estado <code className="bg-muted px-1 rounded">pending_approval</code> antes de avanzar a la etapa indicada.
+          Procesos que cumplan estas condiciones quedarán en estado <code className="bg-muted px-1 rounded">pending_approval</code> antes de avanzar a la etapa indicada.
         </p>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando reglas…</p>
