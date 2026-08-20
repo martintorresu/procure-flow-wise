@@ -70,6 +70,14 @@ export default {
           ring: "hsl(var(--sidebar-ring))",
           muted: "hsl(var(--sidebar-muted))",
         },
+        typeContrato: {
+          DEFAULT: "hsl(var(--type-contrato))",
+          foreground: "hsl(var(--type-contrato-foreground))",
+        },
+        typePermiso: {
+          DEFAULT: "hsl(var(--type-permiso))",
+          foreground: "hsl(var(--type-permiso-foreground))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
