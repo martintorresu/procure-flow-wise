@@ -23,6 +23,7 @@ import { ProcessStepper } from "@/components/ProcessStepper";
 import { ProcessStepperZoom } from "@/components/ProcessStepperZoom";
 import { computeStageProgress } from "@/lib/stageProgress";
 import type { Pdc, PdcMilestone } from "@/types/pdc";
+import { useStageTemplates, stageIcon } from "@/hooks/useStageTemplates";
 import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
@@ -111,6 +112,7 @@ export default function PdcDetailPage() {
   const { data: fatEvents = [] } = useFatEvents(pdc?.id);
   const { data: logistics = [] } = useLogisticsEvents(pdc?.id);
   const { data: allAlerts = [] } = useAlerts();
+  const { data: stageTemplates = [] } = useStageTemplates(pdc?.process_type);
 
   if (loading) {
     return <div className="text-center py-20 text-muted-foreground">Cargando proceso…</div>;
@@ -130,6 +132,17 @@ export default function PdcDetailPage() {
   const isPurchase = isPurchaseType(processType);
   const showChainButton = canChain(processType, pdc.current_stage, pdc.current_status);
   const alerts = allAlerts.filter((a) => a.pdc_id === pdc.id);
+
+  // Etapas del stepper genérico: plantilla configurable del tenant, con fallback a GENERIC_STAGES
+  const activeTemplates = stageTemplates.filter((t) => t.active);
+  const genericSteps = activeTemplates.length
+    ? activeTemplates.map((t) => ({ key: t.stage_key, label: t.label, icon: stageIcon(t.icon_name) }))
+    : GENERIC_STAGES.map((g, i) => ({
+        key: g.key,
+        label: g.label,
+        icon: [FileText, ClipboardList, Wrench, Check][i],
+      }));
+  const genericActiveIndex = Math.min(genericStageIndex(pdc.current_stage), genericSteps.length - 1);
 
   return (
     <div className="space-y-6">
@@ -217,18 +230,11 @@ export default function PdcDetailPage() {
               <span className="text-xs text-muted-foreground">
                 Etapa actual:{" "}
                 <span className="font-medium text-foreground">
-                  {GENERIC_STAGES[genericStageIndex(pdc.current_stage)].label}
+                  {genericSteps[genericActiveIndex].label}
                 </span>
               </span>
             </div>
-            <ProcessStepper
-              steps={GENERIC_STAGES.map((g, i) => ({
-                key: g.key,
-                label: g.label,
-                icon: [FileText, ClipboardList, Wrench, Check][i],
-              }))}
-              activeIndex={genericStageIndex(pdc.current_stage)}
-            />
+            <ProcessStepper steps={genericSteps} activeIndex={genericActiveIndex} />
           </CardContent>
         </Card>
       )}
