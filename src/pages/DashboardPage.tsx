@@ -21,10 +21,10 @@ import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 
 const TYPE_STYLES: Record<ProcessType, string> = {
-  compra: "bg-primary/10 text-primary border-primary/20",
+  compra: "bg-typeCompra/15 text-typeCompra border-typeCompra/30",
   licitacion: "bg-accent/15 text-accent border-accent/30",
-  contrato: "bg-typeContrato/10 text-typeContrato border-typeContrato/20",
-  permiso: "bg-typePermiso/10 text-typePermiso border-typePermiso/20",
+  contrato: "bg-typeContrato/15 text-typeContrato border-typeContrato/30",
+  permiso: "bg-typePermiso/15 text-typePermiso border-typePermiso/30",
   personalizado: "bg-muted text-muted-foreground border-border",
 };
 
