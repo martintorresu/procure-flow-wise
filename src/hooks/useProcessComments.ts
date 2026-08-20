@@ -31,15 +31,32 @@ export function useAddProcessComment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: { processId: string; tenantId: string; authorUserId: string; body: string }) => {
-      const { error } = await supabase.from("process_comments").insert({
-        process_id: input.processId,
-        tenant_id: input.tenantId,
-        author_user_id: input.authorUserId,
-        body: input.body.trim(),
-      });
+      const { data, error } = await supabase
+        .from("process_comments")
+        .insert({
+          process_id: input.processId,
+          tenant_id: input.tenantId,
+          author_user_id: input.authorUserId,
+          body: input.body.trim(),
+        })
+        .select("id")
+        .single();
       if (error) throw new Error(error.message);
+
+      // Notificación por email: best-effort, nunca bloquea ni falla el comentario.
+      let emailWarning: string | undefined;
+      try {
+        const { error: fnError } = await supabase.functions.invoke("send-comment-notification", {
+          body: { commentId: (data as { id: string }).id, origin: window.location.origin },
+        });
+        if (fnError) emailWarning = fnError.message;
+      } catch (e) {
+        emailWarning = (e as Error).message;
+      }
+      return { emailWarning };
     },
     onSuccess: (_d, vars) =>
       qc.invalidateQueries({ queryKey: ["process_comments", vars.processId] }),
   });
 }
+
