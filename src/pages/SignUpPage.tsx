@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+
 import { AlertCircle, CheckCircle2, Link2 } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
