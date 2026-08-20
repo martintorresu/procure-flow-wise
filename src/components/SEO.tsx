@@ -6,7 +6,7 @@ interface SEOProps {
   path?: string;
 }
 
-const SITE = "Procurement by InHR";
+const SITE = "Pro.Curem Flow";
 const BASE_URL = "https://procurement.demo.inovahr-app.com";
 
 export function SEO({ title, description, path }: SEOProps) {

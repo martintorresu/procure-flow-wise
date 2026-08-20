@@ -1,8 +1,8 @@
-# Procurement by InHR
+# Pro.Curem Flow
 
 > SaaS platform to manage industrial purchase processes (PdC) end-to-end — from technical specification through quotation, awarding, FAT and logistics — with role-based workflows, traffic-light tracking and automatic alerts.
 
-Procurement by InHR is a multi-tenant procurement management application for engineering and operations teams. Each Purchase Process (PdC) moves through an 8-stage lifecycle (Borrador → Técnica → Planificación → Cotización → Adjudicación → OC/Vendor → FAT → Logística) with role-based access (Admin, Ingeniería, Programación, Compras, Gerente, Planificación, Logística).
+Pro.Curem Flow is a multi-tenant procurement management application for engineering and operations teams. Each Purchase Process (PdC) moves through an 8-stage lifecycle (Borrador → Técnica → Planificación → Cotización → Adjudicación → OC/Vendor → FAT → Logística) with role-based access (Admin, Ingeniería, Programación, Compras, Gerente, Planificación, Logística).
 
 ## Pages
 

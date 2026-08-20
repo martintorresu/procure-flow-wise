@@ -8,15 +8,15 @@ export interface TenantConfig {
 
 export const DEFAULT_TENANT: TenantConfig = {
   slug: "default",
-  name: "Procurement",
+  name: "Pro.Curem Flow",
 };
 
 export const TENANTS: Record<string, TenantConfig> = {
   default: DEFAULT_TENANT,
-  acme: { slug: "acme", name: "Procurement Acme" },
-  codelco: { slug: "codelco", name: "Procurement Codelco" },
-  bhp: { slug: "bhp", name: "Procurement BHP" },
-  antofagasta: { slug: "antofagasta", name: "Procurement Antofagasta" },
+  acme: { slug: "acme", name: "Pro.Curem Flow · Acme" },
+  codelco: { slug: "codelco", name: "Pro.Curem Flow · Codelco" },
+  bhp: { slug: "bhp", name: "Pro.Curem Flow · BHP" },
+  antofagasta: { slug: "antofagasta", name: "Pro.Curem Flow · Antofagasta" },
 };
 
 /**

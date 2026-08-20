@@ -656,6 +656,35 @@ export type Database = {
           },
         ]
       }
+      projects: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       purchase_milestones: {
         Row: {
           actual_date: string | null
@@ -787,7 +816,10 @@ export type Database = {
           id: string
           name: string
           pdc_number: string
+          predecessor_process_id: string | null
+          process_type: string
           project: string
+          project_id: string | null
           requesting_area: string | null
           required_on_site_date: string | null
           responsible_name: string | null
@@ -815,7 +847,10 @@ export type Database = {
           id?: string
           name: string
           pdc_number?: string
+          predecessor_process_id?: string | null
+          process_type?: string
           project: string
+          project_id?: string | null
           requesting_area?: string | null
           required_on_site_date?: string | null
           responsible_name?: string | null
@@ -843,7 +878,10 @@ export type Database = {
           id?: string
           name?: string
           pdc_number?: string
+          predecessor_process_id?: string | null
+          process_type?: string
           project?: string
+          project_id?: string | null
           requesting_area?: string | null
           required_on_site_date?: string | null
           responsible_name?: string | null
@@ -856,6 +894,20 @@ export type Database = {
             columns: ["engineering_responsible"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_processes_predecessor_process_id_fkey"
+            columns: ["predecessor_process_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_processes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {

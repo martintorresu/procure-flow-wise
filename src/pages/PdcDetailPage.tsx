@@ -17,6 +17,10 @@ import { getTrafficLight } from "@/lib/trafficLight";
 import { useAuth } from "@/contexts/AuthContext";
 import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { SEO } from "@/components/SEO";
+import { ProcessStepper } from "@/components/ProcessStepper";
+import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
+import { Badge } from "@/components/ui/badge";
+import { Link2 } from "lucide-react";
 
 function ApproveButton({ pdcId }: { pdcId: string }) {
   const m = useApprovePdc();
@@ -49,24 +53,27 @@ export default function PdcDetailPage() {
   const { data: allAlerts = [] } = useAlerts();
 
   if (loading) {
-    return <div className="text-center py-20 text-muted-foreground">Cargando PdC…</div>;
+    return <div className="text-center py-20 text-muted-foreground">Cargando proceso…</div>;
   }
 
   if (!pdc) {
     return (
       <div className="text-center py-20">
-        <p className="text-muted-foreground">PdC no encontrado</p>
+        <p className="text-muted-foreground">Proceso no encontrado</p>
         <Link to="/pdcs"><Button variant="outline" className="mt-4">Volver</Button></Link>
       </div>
     );
   }
 
   const rfqSuppliers = rfqsData?.suppliers ?? [];
+  const processType = (pdc.process_type ?? "compra") as ProcessType;
+  const isPurchase = isPurchaseType(processType);
+  const showChainButton = canChain(processType, pdc.current_stage, pdc.current_status);
   const alerts = allAlerts.filter((a) => a.pdc_id === pdc.id);
 
   return (
     <div className="space-y-6">
-      <SEO title={`PdC ${pdc.pdc_number} — ${pdc.title}`} description={`Detalle del proceso de compra ${pdc.pdc_number}: estado ${pdc.current_status}, proyecto ${pdc.project}.`} path={`/pdcs/${pdc.id}`} />
+      <SEO title={`${pdc.pdc_number} — ${pdc.title}`} description={`Detalle del proceso ${pdc.pdc_number}: estado ${pdc.current_status}, proyecto ${pdc.project}.`} path={`/pdcs/${pdc.id}`} />
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
@@ -79,18 +86,30 @@ export default function PdcDetailPage() {
               <h1 className="text-xl font-bold">{pdc.pdc_number}</h1>
               <StatusBadge status={pdc.current_status} />
               <CriticalityBadge level={pdc.criticality} />
+              <Badge variant="outline" className="text-xs">
+                {isPurchase ? "Proceso de Compra" : PROCESS_TYPE_LABELS[processType]}
+              </Badge>
             </div>
             <p className="text-lg font-medium">{pdc.title}</p>
             <p className="text-sm text-muted-foreground">{pdc.project}</p>
           </div>
         </div>
-        {isAdmin && (
-          <Link to={`/pdcs/${pdc.id}/edit`}>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Pencil className="w-4 h-4" /> Editar PdC
-            </Button>
-          </Link>
-        )}
+        <div className="flex items-center gap-2">
+          {showChainButton && (
+            <Link to={`/pdcs/new?from=${pdc.id}`}>
+              <Button size="sm" className="gap-2">
+                <Link2 className="w-4 h-4" /> Crear proceso de continuación
+              </Button>
+            </Link>
+          )}
+          {isAdmin && (
+            <Link to={`/pdcs/${pdc.id}/edit`}>
+              <Button variant="outline" size="sm" className="gap-2">
+                <Pencil className="w-4 h-4" /> Editar
+              </Button>
+            </Link>
+          )}
+        </div>
       </div>
 
       {pdc.approval_status === "pending" && (
@@ -130,7 +149,30 @@ export default function PdcDetailPage() {
       </div>
 
       {/* Progress stepper */}
-      {(() => {
+      {!isPurchase && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-sm font-medium">Avance del proceso</h3>
+              <span className="text-xs text-muted-foreground">
+                Etapa actual:{" "}
+                <span className="font-medium text-foreground">
+                  {GENERIC_STAGES[genericStageIndex(pdc.current_stage)].label}
+                </span>
+              </span>
+            </div>
+            <ProcessStepper
+              steps={GENERIC_STAGES.map((g, i) => ({
+                key: g.key,
+                label: g.label,
+                icon: [FileText, ClipboardList, Wrench, Check][i],
+              }))}
+              activeIndex={genericStageIndex(pdc.current_stage)}
+            />
+          </CardContent>
+        </Card>
+      )}
+      {isPurchase && (() => {
         const steps = [
           { key: "draft", label: "Borrador", icon: FileText },
           { key: "technical_definition", label: "Técnica", icon: Wrench },

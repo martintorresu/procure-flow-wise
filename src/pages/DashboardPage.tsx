@@ -58,14 +58,14 @@ export default function DashboardPage() {
 
   const handleApprove = (pdcId: string) => {
     approveMutation.mutate(pdcId, {
-      onSuccess: () => toast.success("PdC aprobado y avanzado a la siguiente etapa"),
+      onSuccess: () => toast.success("Proceso aprobado y avanzado a la siguiente etapa"),
       onError: (e) => toast.error(`Error al aprobar: ${(e as Error).message}`),
     });
   };
 
 
   const stats = [
-    { label: "PdCs Activos", value: activePdcs.length, icon: FileText, color: "text-accent", to: "/pdcs" },
+    { label: "Procesos Activos", value: activePdcs.length, icon: FileText, color: "text-accent", to: "/pdcs" },
     { label: "Atrasados", value: delayedPdcs.length, icon: Clock, color: "text-danger", to: "/alerts" },
     { label: "Críticos", value: criticalPdcs.length, icon: AlertTriangle, color: "text-warning", to: "/alerts" },
     { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-primary", to: "/alerts" },
@@ -73,11 +73,11 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <SEO title="Panel de control" description="KPIs de procesos de compra activos, semáforos de criticidad y alertas pendientes." path="/" />
+      <SEO title="Panel de control" description="KPIs de procesos activos, semáforos de criticidad y alertas pendientes." path="/" />
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Bienvenido, {user?.name}</h1>
-          <p className="text-sm text-muted-foreground">Resumen de procesos de compra</p>
+          <p className="text-sm text-muted-foreground">Resumen de procesos</p>
         </div>
         <TrafficLightLegend />
       </div>
@@ -133,7 +133,7 @@ export default function DashboardPage() {
       {/* Table */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">Procesos de Compra Activos</CardTitle>
+          <CardTitle className="text-base">Procesos Activos</CardTitle>
           <Link to="/pdcs">
             <Button variant="ghost" size="sm" className="text-accent">
               Ver todos <ArrowRight className="w-4 h-4 ml-1" />
@@ -146,7 +146,7 @@ export default function DashboardPage() {
               <thead>
                 <tr className="border-b text-left align-bottom">
                   <th className="py-3 px-2 font-medium text-muted-foreground">Semáforo</th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">N° PdC</th>
+                  <th className="py-3 px-2 font-medium text-muted-foreground">N° Proceso</th>
                   <th className="py-3 px-2 font-medium text-muted-foreground">Título</th>
                   <th className="py-3 px-2 font-medium text-muted-foreground">
                     <div className="space-y-1">
@@ -221,7 +221,7 @@ export default function DashboardPage() {
                     <td colSpan={7} className="py-8 text-center">
                       <div className="flex flex-col items-center gap-1 text-muted-foreground">
                         <FileText className="w-6 h-6 opacity-40" />
-                        <span className="text-sm">No hay PdCs que coincidan con los filtros.</span>
+                        <span className="text-sm">No hay procesos que coincidan con los filtros.</span>
                       </div>
                     </td>
                   </tr>
