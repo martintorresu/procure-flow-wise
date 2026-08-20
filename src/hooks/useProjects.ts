@@ -1,5 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { rowToPdc, type PdcRow } from "@/hooks/usePdcs";
+import type { Pdc } from "@/types/pdc";
 
 export interface Project {
   id: string;
@@ -54,5 +56,22 @@ export function useCreateProject() {
       return data as Project;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: PROJECTS_KEY }),
+  });
+}
+
+/** Procesos de un proyecto (para la vista de cadena). */
+export function useProjectProcesses(projectId: string | undefined) {
+  return useQuery({
+    queryKey: ["projects", projectId, "processes"],
+    enabled: !!projectId,
+    queryFn: async (): Promise<Pdc[]> => {
+      const { data, error } = await supabase
+        .from("purchase_processes")
+        .select("*")
+        .eq("project_id", projectId!)
+        .order("created_at", { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data as unknown as PdcRow[]).map(rowToPdc);
+    },
   });
 }
