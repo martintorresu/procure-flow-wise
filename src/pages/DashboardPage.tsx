@@ -41,6 +41,7 @@ function TypeBadge({ type }: { type?: ProcessType | null }) {
 
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: pdcs = [], isLoading: pdcsLoading } = usePdcs();
