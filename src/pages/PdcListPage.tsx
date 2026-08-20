@@ -3,7 +3,7 @@ import { getTrafficLight } from "@/lib/trafficLight";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
