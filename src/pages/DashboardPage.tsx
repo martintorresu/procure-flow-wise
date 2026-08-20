@@ -159,108 +159,103 @@ export default function DashboardPage() {
           </Link>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto" role="table" aria-label="Procesos activos">
-            {/* Header row */}
-            <div
-              role="row"
-              style={gridColumns}
-              className="grid border-b bg-muted/30 text-left text-sm align-bottom"
-            >
-              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Semáforo</div>
-              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">N° Proceso</div>
-              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Título</div>
-              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Tipo</div>
-              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">
-                <div className="space-y-1">
-                  <div>Estado</div>
-                  <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as PdcStatus | "all")}>
-                    <SelectTrigger className="h-7 text-xs font-normal w-[130px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos</SelectItem>
-                      {statusOptions.map((s) => (
-                        <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">
-                <div className="space-y-1">
-                  <div>Criticidad</div>
-                  <Select value={criticalityFilter} onValueChange={(v) => setCriticalityFilter(v as Criticality | "all")}>
-                    <SelectTrigger className="h-7 text-xs font-normal w-[90px]"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todas</SelectItem>
-                      <SelectItem value="high">{CRITICALITY_LABELS.high}</SelectItem>
-                      <SelectItem value="medium">{CRITICALITY_LABELS.medium}</SelectItem>
-                      <SelectItem value="low">{CRITICALITY_LABELS.low}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Acción</div>
-            </div>
-
-            {/* Cards */}
-            <div className="flex flex-col gap-2 mt-2">
-              {pdcsLoading && [0,1,2].map((i) => (
-                <div key={i} style={gridColumns} className="grid rounded-lg shadow-sm border bg-card p-3 items-center">
-                  {Array.from({ length: 7 }).map((_, j) => (
-                    <div key={j} className="px-3"><Skeleton className="h-4 w-full" /></div>
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-4 pb-3 border-b border-border/60">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium">Estado</span>
+              <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as PdcStatus | "all")}>
+                <SelectTrigger className="h-7 text-xs font-normal w-[130px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  {statusOptions.map((s) => (
+                    <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
                   ))}
-                </div>
-              ))}
-              {!pdcsLoading && filteredPdcs.map((pdc) => {
-                const light = getTrafficLight(pdc);
-                const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
-                const bgTint = light === "green" ? "bg-success/[0.06]" : light === "yellow" ? "bg-warning/[0.06]" : "bg-danger/[0.06]";
-                const isChained = Boolean(pdc.predecessor_process_id || activePdcs.some((o) => o.predecessor_process_id === pdc.id));
-                return (
-                  <div
-                    key={pdc.id}
-                    role="row"
-                    tabIndex={0}
-                    onClick={() => navigate(`/pdcs/${pdc.id}`)}
-                    className={`grid rounded-lg shadow-sm border-l-4 ${borderColor} ${bgTint} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-px`}
-                    style={gridColumns}
-                  >
-                    <div role="cell" className="py-4 px-3 flex items-center"><TrafficLightIndicator color={light} size="lg" /></div>
-                    <div role="cell" className="py-4 px-3 font-mono text-xs flex items-center">{pdc.pdc_number}</div>
-                    <div role="cell" className="py-4 px-3 flex items-center">
-                      <div className="flex items-center gap-1.5 min-w-0">
-                        <span className="font-medium truncate">{pdc.title}</span>
-                        {isChained && (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Link2 className="w-3.5 h-3.5 text-accent shrink-0" aria-label="Encadenado" />
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="text-xs">Proceso encadenado</TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </div>
-                    </div>
-                    <div role="cell" className="py-4 px-3 flex items-center"><TypeBadge type={pdc.process_type} /></div>
-                    <div role="cell" className="py-4 px-3 flex items-center"><StatusBadge status={pdc.current_status} colorizeByStage /></div>
-                    <div role="cell" className="py-4 px-3 flex items-center"><CriticalityBadge level={pdc.criticality} /></div>
-                    <div role="cell" className="py-4 px-3 flex items-center" onClick={(e) => e.stopPropagation()}>
-                      <Link to={`/pdcs/${pdc.id}`}>
-                        <Button variant="outline" size="sm">Ver</Button>
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-              {!pdcsLoading && filteredPdcs.length === 0 && (
-                <div className="py-8 text-center rounded-lg border bg-card">
-                  <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                    <FileText className="w-6 h-6 opacity-40" />
-                    <span className="text-sm">No hay procesos que coincidan con los filtros.</span>
-                  </div>
-                </div>
-              )}
+                </SelectContent>
+              </Select>
             </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground font-medium">Criticidad</span>
+              <Select value={criticalityFilter} onValueChange={(v) => setCriticalityFilter(v as Criticality | "all")}>
+                <SelectTrigger className="h-7 text-xs font-normal w-[90px]"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="high">{CRITICALITY_LABELS.high}</SelectItem>
+                  <SelectItem value="medium">{CRITICALITY_LABELS.medium}</SelectItem>
+                  <SelectItem value="low">{CRITICALITY_LABELS.low}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* List */}
+          <div role="list" aria-label="Procesos activos" className="flex flex-col gap-2 mt-3">
+            {pdcsLoading && [0,1,2].map((i) => (
+              <div key={i} className="flex items-center gap-4 rounded-lg shadow-sm border bg-card p-4">
+                <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-24" />
+                  <Skeleton className="h-3 w-20" />
+                </div>
+              </div>
+            ))}
+            {!pdcsLoading && filteredPdcs.map((pdc) => {
+              const light = getTrafficLight(pdc);
+              const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
+              const bgTint = light === "green" ? "bg-success/[0.06]" : light === "yellow" ? "bg-warning/[0.06]" : "bg-danger/[0.06]";
+              const isChained = Boolean(pdc.predecessor_process_id || activePdcs.some((o) => o.predecessor_process_id === pdc.id));
+              const initials = TYPE_INITIALS[(pdc.process_type as ProcessType) ?? "compra"];
+              const avatarBg = light === "green" ? "bg-success" : light === "yellow" ? "bg-warning" : "bg-danger";
+              return (
+                <div
+                  key={pdc.id}
+                  role="listitem"
+                  tabIndex={0}
+                  onClick={() => navigate(`/pdcs/${pdc.id}`)}
+                  className={`flex items-start gap-4 rounded-lg shadow-sm border-l-4 ${borderColor} ${bgTint} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-px p-4`}
+                >
+                  <div
+                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${avatarBg}`}
+                    style={{ boxShadow: `0 0 8px ${LIGHT_GLOW[light]}` }}
+                    aria-label={`Tipo ${pdc.process_type}, semáforo ${light}`}
+                  >
+                    {initials}
+                  </div>
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">{pdc.pdc_number}</span>
+                      <span className="text-foreground font-semibold text-sm truncate">{pdc.title}</span>
+                      {isChained && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link2 className="w-3.5 h-3.5 text-accent shrink-0" aria-label="Encadenado" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">Proceso encadenado</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-muted-foreground">Estado:</span>
+                      <StatusBadge status={pdc.current_status} colorizeByStage />
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-xs text-muted-foreground">Criticidad:</span>
+                      <CriticalityBadge level={pdc.criticality} />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+            {!pdcsLoading && filteredPdcs.length === 0 && (
+              <div className="py-8 text-center rounded-lg border bg-card">
+                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                  <FileText className="w-6 h-6 opacity-40" />
+                  <span className="text-sm">No hay procesos que coincidan con los filtros.</span>
+                </div>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
