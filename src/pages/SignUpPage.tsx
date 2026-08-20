@@ -19,9 +19,12 @@ const AREAS = ["Ingeniería", "Operaciones", "Mantención", "Proyectos", "Compra
 export default function SignUpPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const invitedEmail = searchParams.get("invited_email") ?? "";
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(invitedEmail);
   const [area, setArea] = useState("Ingeniería");
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
