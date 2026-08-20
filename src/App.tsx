@@ -84,7 +84,6 @@ const App = () => (
             <Route path="/signup" element={<SignUpPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/typebadge-preview" element={<TypeBadgePreviewPage />} />
             <Route path="/t/:tenantSlug/login" element={<LoginRoute />} />
 
             {/* Rutas protegidas — tenant default */}
