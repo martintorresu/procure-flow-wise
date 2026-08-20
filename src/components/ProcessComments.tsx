@@ -23,11 +23,18 @@ export function ProcessComments({ processId, tenantId, authorUserId, canComment 
     add.mutate(
       { processId, tenantId, authorUserId, body },
       {
-        onSuccess: () => setBody(""),
+        onSuccess: (res) => {
+          setBody("");
+          if (res?.emailWarning) {
+            toast.warning("Comentario publicado, pero la notificación por email no pudo enviarse.");
+            console.error("send-comment-notification:", res.emailWarning);
+          }
+        },
         onError: (e) => toast.error((e as Error).message),
       },
     );
   };
+
 
   return (
     <Card>

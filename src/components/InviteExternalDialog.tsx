@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { Copy, UserPlus } from "lucide-react";
+import { Copy, UserPlus, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,8 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import {
   EXTERNAL_ROLE_LABELS,
+  sendInviteEmail,
   useInviteParticipant,
   useProcessParticipants,
+  useResendInvite,
   type ExternalRole,
 } from "@/hooks/useProcessParticipants";
 
@@ -29,8 +31,10 @@ export function InviteExternalDialog({ processId, tenantId, invitedBy }: Props) 
   const [externalRole, setExternalRole] = useState<ExternalRole>("proveedor");
   const [permission, setPermission] = useState<"view" | "comment">("view");
   const [link, setLink] = useState("");
+  const [resendingId, setResendingId] = useState<string | null>(null);
 
   const invite = useInviteParticipant();
+  const resend = useResendInvite();
   const { data: participants = [] } = useProcessParticipants(open ? processId : undefined);
 
   const handleInvite = () => {
@@ -42,16 +46,33 @@ export function InviteExternalDialog({ processId, tenantId, invitedBy }: Props) 
     invite.mutate(
       { processId, tenantId, email: clean, externalCompany: company, externalRole, permissionLevel: permission, invitedBy },
       {
-        onSuccess: () => {
+        onSuccess: async (participant) => {
           setLink(`${window.location.origin}/signup?invited_email=${encodeURIComponent(clean)}`);
-          toast.success("Invitación creada. Comparte el link con la persona invitada.");
           setEmail("");
           setCompany("");
+          // Envío best-effort: la invitación ya quedó guardada.
+          const res = await sendInviteEmail(participant.id);
+          if (res.ok) {
+            toast.success("Invitación creada y email enviado.");
+          } else {
+            toast.warning("Invitación creada, pero el email no pudo enviarse. Comparte el link manualmente.");
+            console.error("send-invite-email:", res.error);
+          }
         },
         onError: (e) => toast.error((e as Error).message),
       },
     );
   };
+
+  const handleResend = (participantId: string) => {
+    setResendingId(participantId);
+    resend.mutate(participantId, {
+      onSuccess: () => toast.success("Invitación reenviada"),
+      onError: (e) => toast.error(`No se pudo reenviar: ${(e as Error).message}`),
+      onSettled: () => setResendingId(null),
+    });
+  };
+
 
   const copyLink = async () => {
     await navigator.clipboard.writeText(link);
@@ -134,10 +155,25 @@ export function InviteExternalDialog({ processId, tenantId, invitedBy }: Props) 
                       {EXTERNAL_ROLE_LABELS[p.external_role]}{p.external_company ? ` · ${p.external_company}` : ""}
                     </p>
                   </div>
-                  <Badge variant={p.status === "accepted" ? "default" : "outline"} className="text-xs shrink-0">
-                    {p.status === "accepted" ? "Aceptada" : "Pendiente"}
-                  </Badge>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {p.status === "pending" && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="gap-1 h-7 px-2 text-xs"
+                        disabled={resendingId === p.id}
+                        onClick={() => handleResend(p.id)}
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        {resendingId === p.id ? "Enviando…" : "Reenviar"}
+                      </Button>
+                    )}
+                    <Badge variant={p.status === "accepted" ? "default" : "outline"} className="text-xs">
+                      {p.status === "accepted" ? "Aceptada" : "Pendiente"}
+                    </Badge>
+                  </div>
                 </div>
+
               ))}
             </div>
           )}

@@ -61,6 +61,23 @@ export interface InviteInput {
   invitedBy: string;
 }
 
+/** Dispara el email de invitación. No lanza: el envío es best-effort. */
+export async function sendInviteEmail(participantId: string): Promise<{ ok: boolean; error?: string }> {
+  const { data, error } = await supabase.functions.invoke("send-invite-email", {
+    body: { participantId, origin: window.location.origin },
+  });
+  if (error) {
+    let details = error.message;
+    const ctx = (error as { context?: Response }).context;
+    if (ctx && typeof ctx.text === "function") {
+      try { details = await ctx.text(); } catch { /* noop */ }
+    }
+    return { ok: false, error: details };
+  }
+  if (data && (data as { error?: string }).error) return { ok: false, error: (data as { error: string }).error };
+  return { ok: true };
+}
+
 export function useInviteParticipant() {
   const qc = useQueryClient();
   return useMutation({
@@ -85,6 +102,17 @@ export function useInviteParticipant() {
       qc.invalidateQueries({ queryKey: ["process_participants", vars.processId] }),
   });
 }
+
+/** Reenvía la invitación por email a un participante pendiente. */
+export function useResendInvite() {
+  return useMutation({
+    mutationFn: async (participantId: string) => {
+      const res = await sendInviteEmail(participantId);
+      if (!res.ok) throw new Error(res.error ?? "No se pudo enviar el email");
+    },
+  });
+}
+
 
 /** Vincula invitaciones pendientes del email del usuario logueado. */
 export async function claimProcessInvitations(): Promise<void> {
