@@ -5,7 +5,7 @@ import { useAlerts } from "@/hooks/useAlerts";
 import { usePdcs } from "@/hooks/usePdcs";
 import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
+import { StatusBadge, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, ShieldCheck, Link2 } from "lucide-react";
