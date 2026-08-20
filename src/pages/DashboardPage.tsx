@@ -20,24 +20,19 @@ import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 
-const TYPE_STYLES: Record<ProcessType, string> = {
-  compra: "bg-typeCompra/15 text-typeCompra border-typeCompra/30",
-  licitacion: "bg-accent/15 text-accent border-accent/30",
-  contrato: "bg-typeContrato/15 text-typeContrato border-typeContrato/30",
-  permiso: "bg-typePermiso/15 text-typePermiso border-typePermiso/30",
-  personalizado: "bg-muted text-muted-foreground border-border",
+const TYPE_INITIALS: Record<ProcessType, string> = {
+  compra: "Cp",
+  licitacion: "Lt",
+  contrato: "Ct",
+  permiso: "Pm",
+  personalizado: "Ps",
 };
 
-function TypeBadge({ type }: { type?: ProcessType | null }) {
-  if (!type || !TYPE_STYLES[type]) {
-    return <span className="text-xs text-muted-foreground">—</span>;
-  }
-  return (
-    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${TYPE_STYLES[type]}`}>
-      {PROCESS_TYPE_LABELS[type]}
-    </span>
-  );
-}
+const LIGHT_GLOW: Record<TrafficLight, string> = {
+  green: "hsl(var(--success))",
+  yellow: "hsl(var(--warning))",
+  red: "hsl(var(--danger))",
+};
 
 
 export default function DashboardPage() {
