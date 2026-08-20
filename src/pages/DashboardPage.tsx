@@ -8,15 +8,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link } from "react-router-dom";
-import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, ShieldCheck } from "lucide-react";
+import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, ShieldCheck, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
+import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SEO } from "@/components/SEO";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
+
+const TYPE_CLASS: Record<ProcessType, string> = {
+  compra: "type-compra",
+  licitacion: "type-licitacion",
+  contrato: "type-contrato",
+  permiso: "type-permiso",
+  personalizado: "type-personalizado",
+};
+
+function TypeBadge({ type }: { type?: ProcessType | null }) {
+  if (!type || !TYPE_CLASS[type]) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${TYPE_CLASS[type]}`}>
+      {PROCESS_TYPE_LABELS[type]}
+    </span>
+  );
+}
 
 
 export default function DashboardPage() {
@@ -153,6 +174,7 @@ export default function DashboardPage() {
                   <th className="py-4 px-3 font-medium text-muted-foreground">Semáforo</th>
                   <th className="py-4 px-3 font-medium text-muted-foreground">N° Proceso</th>
                   <th className="py-4 px-3 font-medium text-muted-foreground">Título</th>
+                  <th className="py-4 px-3 font-medium text-muted-foreground">Tipo</th>
                   <th className="py-4 px-3 font-medium text-muted-foreground">
                     <div className="space-y-1">
                       <div>Estado</div>
@@ -201,7 +223,7 @@ export default function DashboardPage() {
               <tbody>
                 {pdcsLoading && [0,1,2].map((i) => (
                   <tr key={i} className="border-b last:border-0">
-                    {Array.from({length: 7}).map((_, j) => (
+                    {Array.from({length: 8}).map((_, j) => (
                       <td key={j} className="py-4 px-3"><Skeleton className="h-4 w-full" /></td>
                     ))}
                   </tr>
@@ -209,12 +231,28 @@ export default function DashboardPage() {
                 {!pdcsLoading && filteredPdcs.map((pdc) => {
                   const light = getTrafficLight(pdc);
                   const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
+                  const isChained = Boolean(pdc.predecessor_process_id || activePdcs.some((o) => o.predecessor_process_id === pdc.id));
                   return (
                     <tr key={pdc.id} className={`border-b last:border-0 border-l-4 ${borderColor} hover:bg-muted/50 transition-all duration-200 hover:shadow-sm hover:-translate-y-px rounded-md`}>
-                      <td className="py-4 px-3"><TrafficLightIndicator color={light} /></td>
+                      <td className="py-4 px-3"><TrafficLightIndicator color={light} size="lg" /></td>
                       <td className="py-4 px-3 font-mono text-xs">{pdc.pdc_number}</td>
-                      <td className="py-4 px-3 font-medium max-w-[200px] truncate">{pdc.title}</td>
-                      <td className="py-4 px-3"><StatusBadge status={pdc.current_status} /></td>
+                      <td className="py-4 px-3">
+                        <div className="flex items-center gap-1.5 max-w-[220px]">
+                          <span className="font-medium truncate">{pdc.title}</span>
+                          {isChained && (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Link2 className="w-3.5 h-3.5 text-accent shrink-0" aria-label="Encadenado" />
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="text-xs">Proceso encadenado</TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-3"><TypeBadge type={pdc.process_type} /></td>
+                      <td className="py-4 px-3"><StatusBadge status={pdc.current_status} colorizeByStage /></td>
                       <td className="py-4 px-3 text-muted-foreground">{pdc.current_owner}</td>
                       <td className="py-4 px-3"><CriticalityBadge level={pdc.criticality} /></td>
                       <td className="py-4 px-3">
@@ -227,7 +265,7 @@ export default function DashboardPage() {
                 })}
                 {!pdcsLoading && filteredPdcs.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center">
+                    <td colSpan={8} className="py-8 text-center">
                       <div className="flex flex-col items-center gap-1 text-muted-foreground">
                         <FileText className="w-6 h-6 opacity-40" />
                         <span className="text-sm">No hay procesos que coincidan con los filtros.</span>
