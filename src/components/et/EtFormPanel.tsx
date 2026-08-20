@@ -112,8 +112,8 @@ export function EtFormPanel({ processId, demoMode = false }: EtFormPanelProps) {
             <div className="text-sm">
               <p className="font-medium">Formulario ET disponible para Procesos de Compra reales</p>
               <p className="text-muted-foreground mt-1">
-                Este PdC es de demostración (datos mock). Crea un nuevo Proceso de Compra desde
-                "Nuevo PdC" para abrir el formulario de Especificaciones Técnicas con persistencia.
+                Este Proceso es de demostración (datos mock). Crea un nuevo Proceso de Compra desde
+                "Nuevo Proceso" para abrir el formulario de Especificaciones Técnicas con persistencia.
               </p>
             </div>
           </div>
