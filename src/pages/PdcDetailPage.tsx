@@ -117,6 +117,14 @@ export default function PdcDetailPage() {
   const { data: logistics = [] } = useLogisticsEvents(pdc?.id);
   const { data: allAlerts = [] } = useAlerts();
   const { data: stageTemplates = [] } = useStageTemplates(pdc?.process_type);
+  const { data: participants = [] } = useProcessParticipants(pdc?.id);
+
+  // ¿El usuario actual es un participante externo (no pertenece al tenant dueño)?
+  const myParticipation = participants.find((p) => p.user_id === user?.id && p.status === "accepted");
+  const isInternal = !!user?.tenantId && !!pdc?.tenant_id && user.tenantId === pdc.tenant_id;
+  const isExternal = !!myParticipation && !isInternal;
+  const canComment = isInternal || myParticipation?.permission_level === "comment";
+
 
   if (loading) {
     return <div className="text-center py-20 text-muted-foreground">Cargando proceso…</div>;
