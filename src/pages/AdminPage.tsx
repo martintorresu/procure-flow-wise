@@ -15,6 +15,7 @@ import { Trash2, UserPlus, Database, Bell, ShieldCheck, Info } from "lucide-reac
 import { SEO } from "@/components/SEO";
 import { useAlertRules, useUpdateAlertRule, TRIGGER_DESCRIPTIONS, type AlertRule, type AlertSeverity } from "@/hooks/useAlertRules";
 import { useApprovalMatrix, useUpdateApprovalRule, type ApprovalRule } from "@/hooks/useApprovalMatrix";
+import { StageTemplatesSection } from "@/components/admin/StageTemplatesSection";
 import { EtFieldsAdminSection } from "@/components/admin/EtFieldsAdminSection";
 import type { UserRole } from "@/types/pdc";
 
@@ -239,6 +240,7 @@ export default function AdminPage() {
 
       <AlertRulesSection />
       <ApprovalMatrixSection />
+      <StageTemplatesSection />
       <EtFieldsAdminSection />
     </div>
   );
