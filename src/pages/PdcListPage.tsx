@@ -3,7 +3,7 @@ import { getTrafficLight } from "@/lib/trafficLight";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 
 export default function PdcListPage() {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -110,7 +111,13 @@ export default function PdcListPage() {
                   </tr>
                 )}
                 {!loading && filtered.map((pdc) => (
-                  <tr key={pdc.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                  <tr
+                    key={pdc.id}
+                    role="button"
+                    tabIndex={0}
+                    className="border-b last:border-0 hover:bg-muted/50 hover:cursor-pointer transition-colors"
+                    onClick={() => navigate(`/pdcs/${pdc.id}`)}
+                  >
                     <td className="py-3 px-4"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
                     <td className="py-3 px-4 font-mono text-xs font-medium">{pdc.pdc_number}</td>
                     <td className="py-3 px-4 text-muted-foreground text-xs">{pdc.project}</td>
@@ -119,7 +126,7 @@ export default function PdcListPage() {
                     <td className="py-3 px-4 text-muted-foreground">{pdc.current_owner}</td>
                     <td className="py-3 px-4"><CriticalityBadge level={pdc.criticality} /></td>
                     <td className="py-3 px-4 font-mono text-xs">{pdc.currency} {pdc.estimated_amount.toLocaleString()}</td>
-                    <td className="py-3 px-4">
+                    <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
                       <Link to={`/pdcs/${pdc.id}`}>
                         <Button variant="outline" size="sm">Ver detalle</Button>
                       </Link>
