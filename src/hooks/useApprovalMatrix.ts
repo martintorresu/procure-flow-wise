@@ -62,7 +62,7 @@ export function useApprovePdc() {
         .eq("id", pdcId).single();
       if (pdcErr) throw new Error(pdcErr.message);
       if (pdc.approval_status !== "pending" || !pdc.approval_target_stage) {
-        throw new Error("Este PdC no tiene una aprobación pendiente.");
+        throw new Error("Este proceso no tiene una aprobación pendiente.");
       }
 
       const { error: upErr } = await supabase

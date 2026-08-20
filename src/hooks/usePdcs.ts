@@ -241,7 +241,7 @@ export function useAdvanceStage() {
 
       const idx = STAGE_ORDER.indexOf(pdc.current_stage as DbStage);
       if (idx < 0 || idx >= STAGE_ORDER.length - 1) {
-        throw new Error("El PdC ya está en la última etapa.");
+        throw new Error("El proceso ya está en la última etapa.");
       }
       const nextStage = STAGE_ORDER[idx + 1];
 
