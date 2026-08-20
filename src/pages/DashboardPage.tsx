@@ -83,7 +83,7 @@ export default function DashboardPage() {
     { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-primary", to: "/alerts" },
   ];
 
-  const gridColumns = { gridTemplateColumns: "72px 110px minmax(180px,1fr) 110px 150px 100px 80px" };
+  
 
   return (
     <div className="space-y-6">
