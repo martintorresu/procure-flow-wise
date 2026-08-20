@@ -27,6 +27,10 @@ import { useStageTemplates, stageIcon } from "@/hooks/useStageTemplates";
 import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
+import { useProcessParticipants } from "@/hooks/useProcessParticipants";
+import { InviteExternalDialog } from "@/components/InviteExternalDialog";
+import { ProcessComments } from "@/components/ProcessComments";
+
 
 function ApproveButton({ pdcId }: { pdcId: string }) {
   const m = useApprovePdc();
