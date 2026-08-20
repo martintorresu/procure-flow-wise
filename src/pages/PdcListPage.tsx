@@ -97,6 +97,21 @@ export default function PdcListPage() {
         </CardContent>
       </Card>
 
+      {(criticalityFilter !== "all" || delayedFilter) && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="font-normal">
+            {delayedFilter && criticalityFilter !== "all"
+              ? "Mostrando procesos atrasados y críticos"
+              : delayedFilter
+              ? "Mostrando solo procesos atrasados"
+              : "Mostrando solo procesos críticos"}
+          </Badge>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground" onClick={clearDashboardFilters}>
+            <X className="w-3 h-3 mr-1" /> Quitar filtro
+          </Button>
+        </div>
+      )}
+
       {/* Table */}
       <Card>
         <CardContent className="p-0">
