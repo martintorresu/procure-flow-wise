@@ -180,21 +180,31 @@ export default function PdcDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {showChainButton && (
-            <Link to={`/pdcs/new?from=${pdc.id}`}>
-              <Button size="sm" className="gap-2">
-                <Link2 className="w-4 h-4" /> Crear proceso de continuación
-              </Button>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to={`/pdcs/${pdc.id}/edit`}>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Pencil className="w-4 h-4" /> Editar
-              </Button>
-            </Link>
+          {isExternal ? (
+            <Badge variant="outline" className="text-xs">Acceso externo · solo lectura</Badge>
+          ) : (
+            <>
+              {showChainButton && (
+                <Link to={`/pdcs/new?from=${pdc.id}`}>
+                  <Button size="sm" className="gap-2">
+                    <Link2 className="w-4 h-4" /> Crear proceso de continuación
+                  </Button>
+                </Link>
+              )}
+              {isAdmin && pdc.tenant_id && user && (
+                <InviteExternalDialog processId={pdc.id} tenantId={pdc.tenant_id} invitedBy={user.id} />
+              )}
+              {isAdmin && (
+                <Link to={`/pdcs/${pdc.id}/edit`}>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Pencil className="w-4 h-4" /> Editar
+                  </Button>
+                </Link>
+              )}
+            </>
           )}
         </div>
+
       </div>
 
       {pdc.approval_status === "pending" && (
