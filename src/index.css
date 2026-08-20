@@ -41,6 +41,13 @@
     --danger: 0 72% 51%;
     --danger-foreground: 0 0% 100%;
 
+    --type-compra: 217 91% 55%;
+    --type-compra-foreground: 0 0% 100%;
+    --type-contrato: 280 65% 50%;
+    --type-contrato-foreground: 0 0% 100%;
+    --type-permiso: 28 85% 50%;
+    --type-permiso-foreground: 0 0% 100%;
+
     --sidebar-background: 230 95% 10%;
     --sidebar-foreground: 200 100% 98%;
     --sidebar-primary: 190 100% 55%;
@@ -52,11 +59,6 @@
     --sidebar-muted: 200 80% 85%;
     --sidebar-gradient: linear-gradient(165deg, hsl(245 95% 14%) 0%, hsl(230 100% 18%) 22%, hsl(220 100% 28%) 45%, hsl(210 100% 40%) 68%, hsl(195 100% 50%) 88%, hsl(185 100% 58%) 100%);
     --sidebar-glow: 0 0 32px hsl(190 100% 60% / 0.55);
-
-    --type-contrato: 280 60% 45%;
-    --type-contrato-foreground: 0 0% 100%;
-    --type-permiso: 30 70% 45%;
-    --type-permiso-foreground: 0 0% 100%;
   }
 }
 

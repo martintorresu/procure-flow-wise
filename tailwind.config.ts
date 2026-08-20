@@ -59,6 +59,18 @@ export default {
           DEFAULT: "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",
         },
+        typeCompra: {
+          DEFAULT: "hsl(var(--type-compra))",
+          foreground: "hsl(var(--type-compra-foreground))",
+        },
+        typeContrato: {
+          DEFAULT: "hsl(var(--type-contrato))",
+          foreground: "hsl(var(--type-contrato-foreground))",
+        },
+        typePermiso: {
+          DEFAULT: "hsl(var(--type-permiso))",
+          foreground: "hsl(var(--type-permiso-foreground))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -69,14 +81,6 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
           muted: "hsl(var(--sidebar-muted))",
-        },
-        typeContrato: {
-          DEFAULT: "hsl(var(--type-contrato))",
-          foreground: "hsl(var(--type-contrato-foreground))",
-        },
-        typePermiso: {
-          DEFAULT: "hsl(var(--type-permiso))",
-          foreground: "hsl(var(--type-permiso-foreground))",
         },
       },
       borderRadius: {
