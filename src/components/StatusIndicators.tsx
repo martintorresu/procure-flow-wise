@@ -33,15 +33,10 @@ export function TrafficLightIndicator({
   showIcon?: boolean;
   size?: "sm" | "md" | "lg";
 }) {
-  const housingClasses = {
-    sm: "w-3.5 h-[30px] p-[3px] gap-[3px]",
-    md: "w-4 h-[36px] p-1 gap-1",
-    lg: "w-[18px] h-[42px] p-[5px] gap-[5px]",
-  };
-  const dotClasses = {
-    sm: "w-[5px] h-[5px]",
-    md: "w-[6px] h-[6px]",
-    lg: "w-[7px] h-[7px]",
+  const sizeClasses = {
+    sm: "w-3 h-3",
+    md: "w-4 h-4",
+    lg: "w-5 h-5",
   };
   const glowVars: Record<TrafficLight, string> = {
     green: "hsl(var(--success))",
@@ -49,7 +44,8 @@ export function TrafficLightIndicator({
     red: "hsl(var(--danger))",
   };
 
-  const lights: TrafficLight[] = ["green", "yellow", "red"];
+  const colorClass =
+    color === "green" ? "bg-success" : color === "yellow" ? "bg-warning" : "bg-danger";
 
   return (
     <TooltipProvider>
@@ -58,29 +54,11 @@ export function TrafficLightIndicator({
           <span
             role="img"
             aria-label={`Semáforo: ${TRAFFIC_LABELS[color]}`}
-            className={`inline-flex flex-col items-center justify-between rounded-full shrink-0 bg-muted border border-border/50 ${housingClasses[size]}`}
-          >
-            {lights.map((light) => {
-              const isActive = light === color;
-              const activeClass =
-                light === "green"
-                  ? "bg-success"
-                  : light === "yellow"
-                    ? "bg-warning"
-                    : "bg-danger";
-              return (
-                <span
-                  key={light}
-                  className={`rounded-full ${dotClasses[size]} ${
-                    isActive
-                      ? `${activeClass} ${light === "red" ? "animate-pulse-slow" : ""}`
-                      : "bg-muted-foreground/20"
-                  }`}
-                  style={isActive ? { boxShadow: `0 0 6px ${glowVars[light]}` } : undefined}
-                />
-              );
-            })}
-          </span>
+            className={`inline-block rounded-full shrink-0 ${sizeClasses[size]} ${colorClass} ${
+              color === "red" ? "animate-pulse-slow" : ""
+            }`}
+            style={{ boxShadow: `0 0 6px ${glowVars[color]}` }}
+          />
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs text-xs">
           {TRAFFIC_LABELS[color]}
