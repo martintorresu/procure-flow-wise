@@ -20,6 +20,7 @@ export const queryKeys = {
   alerts: () => ["alerts"] as const,
   alertRules: () => ["alert_rules"] as const,
   approvalMatrix: () => ["approval_matrix"] as const,
+  stageTemplates: (processType: string) => ["stage_templates", processType] as const,
   etFieldSchema: (section?: number) => ["et_field_schema", section] as const,
   etFieldSchemas: () => ["et_field_schemas"] as const,
 } as const;
