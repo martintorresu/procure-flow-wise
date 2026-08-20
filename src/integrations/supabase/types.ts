@@ -1129,6 +1129,7 @@ export type Database = {
     }
     Functions: {
       generate_pdc_number: { Args: never; Returns: string }
+      process_number_prefix: { Args: { _type: string }; Returns: string }
       role_can_access_stage: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
