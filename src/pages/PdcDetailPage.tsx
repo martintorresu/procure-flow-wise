@@ -565,6 +565,18 @@ export default function PdcDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
+
+      {/* Comentarios (vista interna) */}
+      {!isExternal && pdc.tenant_id && user && (
+        <ProcessComments
+          processId={pdc.id}
+          tenantId={pdc.tenant_id}
+          authorUserId={user.id}
+          canComment
+        />
+      )}
     </div>
+
   );
 }
