@@ -437,7 +437,7 @@ function ApprovalMatrixSection() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          PdCs que cumplan estas condiciones quedarán en estado <code className="bg-muted px-1 rounded">pending_approval</code> antes de avanzar a la etapa indicada.
+          Procesos que cumplan estas condiciones quedarán en estado <code className="bg-muted px-1 rounded">pending_approval</code> antes de avanzar a la etapa indicada.
         </p>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando reglas…</p>
