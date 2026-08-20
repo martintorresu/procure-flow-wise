@@ -16,6 +16,8 @@ import SignUpPage from "@/pages/SignUpPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AdminPage from "@/pages/AdminPage";
+import ProjectsPage from "@/pages/ProjectsPage";
+import ProjectChainPage from "@/pages/ProjectChainPage";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
 
@@ -91,6 +93,8 @@ const App = () => (
               <Route path="/pdcs/new" element={<CreatePdcPage />} />
               <Route path="/pdcs/:id/edit" element={<EditPdcPage />} />
               <Route path="/pdcs/:id" element={<PdcDetailPage />} />
+              <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:id" element={<ProjectChainPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
@@ -102,6 +106,8 @@ const App = () => (
               <Route path="pdcs/new" element={<CreatePdcPage />} />
               <Route path="pdcs/:id/edit" element={<EditPdcPage />} />
               <Route path="pdcs/:id" element={<PdcDetailPage />} />
+              <Route path="projects" element={<ProjectsPage />} />
+              <Route path="projects/:id" element={<ProjectChainPage />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="admin" element={<AdminPage />} />
             </Route>
