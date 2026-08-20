@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,15 +8,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCreatePdc } from "@/hooks/usePdcs";
+import { useCreatePdc, usePdc } from "@/hooks/usePdcs";
+import { ProjectSelect } from "@/components/ProjectSelect";
+import { ProcessStepper } from "@/components/ProcessStepper";
 import { SEO } from "@/components/SEO";
+import { GENERIC_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isPurchaseType, type ProcessType } from "@/lib/processTypes";
+import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2 } from "lucide-react";
+
+const PURCHASE_STEPS = [
+  { key: "draft", label: "Resumen", icon: FileText },
+  { key: "technical_definition", label: "Técnica", icon: Wrench },
+  { key: "planning", label: "Planificación", icon: ClipboardList },
+  { key: "quotation", label: "Cotizaciones", icon: FileSearch },
+  { key: "awarded", label: "Adjudicación", icon: Award },
+  { key: "po_issued", label: "Vendor", icon: Truck },
+  { key: "fat", label: "FAT", icon: FlaskConical },
+  { key: "shipping", label: "Logística", icon: Ship },
+];
+
+const GENERIC_STEPS = GENERIC_STAGES.map((s, i) => ({
+  key: s.key,
+  label: s.label,
+  icon: [FileText, ClipboardList, Wrench, Check][i],
+}));
 
 export default function CreatePdcPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [params] = useSearchParams();
+  const fromId = params.get("from") ?? undefined;
+  const { data: parent } = usePdc(fromId);
   const createPdc = useCreatePdc();
   const submitting = createPdc.isPending;
+
   const [form, setForm] = useState({
+    process_type: "compra" as ProcessType,
+    project_id: null as string | null,
     project: "", title: "", description: "", category: "",
     criticality: "medium" as "low" | "medium" | "high",
     estimated_amount: "", currency: "USD",
@@ -25,12 +52,32 @@ export default function CreatePdcPage() {
     responsible_name: "",
   });
 
-  const update = (field: string, value: string) =>
-    setForm((p) => ({ ...p, [field]: value }));
+  // Precarga editable desde el proceso padre (encadenamiento)
+  useEffect(() => {
+    if (!parent) return;
+    setForm((p) => ({
+      ...p,
+      project_id: parent.project_id ?? null,
+      project: parent.project ?? "",
+      description: parent.selected_supplier
+        ? `Continuación de ${parent.pdc_number}. Proveedor adjudicado: ${parent.selected_supplier}.`
+        : `Continuación de ${parent.pdc_number} — ${parent.title}.`,
+      category: parent.category || "",
+      criticality: parent.criticality,
+      estimated_amount: parent.estimated_amount ? String(parent.estimated_amount) : "",
+      currency: parent.currency || "USD",
+      required_on_site_date: parent.required_on_site_date || "",
+      responsible_name: parent.current_owner && parent.current_owner !== "—" ? parent.current_owner : "",
+    }));
+  }, [parent]);
+
+  const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
+
+  const isPurchase = isPurchaseType(form.process_type);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.project || !form.title || !form.required_on_site_date) {
+    if (!form.project_id || !form.title || !form.required_on_site_date) {
       toast.error("Complete los campos obligatorios");
       return;
     }
@@ -43,6 +90,9 @@ export default function CreatePdcPage() {
       const data = await createPdc.mutateAsync({
         name: form.title,
         project: form.project,
+        project_id: form.project_id,
+        process_type: form.process_type,
+        predecessor_process_id: fromId ?? null,
         description: form.description || null,
         category: form.category || null,
         criticality: form.criticality,
@@ -53,28 +103,55 @@ export default function CreatePdcPage() {
         responsible_name: form.responsible_name || null,
         created_by: user.id,
       });
-      toast.success(`PdC ${data.pdc_number} creado exitosamente`);
+      toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
       navigate(`/pdcs/${data.id}`);
     } catch (err) {
-      toast.error(`Error al crear PdC: ${(err as Error).message}`);
+      toast.error(`Error al crear el proceso: ${(err as Error).message}`);
     }
   };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <SEO title="Nuevo Proceso de Compra" description="Crea un nuevo PdC indicando proyecto, criticidad, monto y fecha requerida en obra." path="/pdcs/new" />
+      <SEO title="Nuevo Proceso" description="Crea un nuevo proceso indicando tipo, proyecto, criticidad, monto y fecha requerida." path="/pdcs/new" />
       <div>
-        <h1 className="text-2xl font-bold">Crear Proceso de Compra</h1>
-        <p className="text-sm text-muted-foreground">Complete los datos del nuevo PdC</p>
+        <h1 className="text-2xl font-bold">Crear Proceso</h1>
+        <p className="text-sm text-muted-foreground">Complete los datos del nuevo proceso</p>
       </div>
+
+      {parent && (
+        <Card className="border-l-4 border-l-accent bg-accent/5">
+          <CardContent className="p-4 flex items-center gap-2 text-sm">
+            <Link2 className="w-4 h-4 text-accent" />
+            <span>
+              Continuación de <span className="font-mono">{parent.pdc_number}</span> — {parent.title}
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardContent className="p-6 space-y-4">
+          <p className="text-xs text-muted-foreground uppercase tracking-wide">
+            {isPurchase ? "Flujo de compra (8 etapas)" : "Flujo genérico (4 etapas)"}
+          </p>
+          <ProcessStepper steps={isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Proyecto *</Label>
-                <Input value={form.project} onChange={(e) => update("project", e.target.value)} placeholder="Nombre del proyecto" />
+                <Label>Tipo de proceso *</Label>
+                <Select value={form.process_type} onValueChange={(v) => update("process_type", v)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PROCESS_TYPES.map((t) => (
+                      <SelectItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Categoría</Label>
@@ -90,6 +167,14 @@ export default function CreatePdcPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Proyecto *</Label>
+              <ProjectSelect
+                value={form.project_id}
+                onChange={(id, name) => setForm((p) => ({ ...p, project_id: id, project: name }))}
+              />
             </div>
 
             <div className="space-y-2">
@@ -116,7 +201,7 @@ export default function CreatePdcPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label>Criticidad</Label>
-                <Select value={form.criticality} onValueChange={(v) => update("criticality", v as "low" | "medium" | "high")}>
+                <Select value={form.criticality} onValueChange={(v) => update("criticality", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Baja</SelectItem>
@@ -149,7 +234,7 @@ export default function CreatePdcPage() {
 
             <div className="flex gap-3 pt-4">
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Creando…" : "Crear PdC"}
+                {submitting ? "Creando…" : "Crear Proceso"}
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate("/pdcs")}>Cancelar</Button>
             </div>
