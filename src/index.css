@@ -53,11 +53,8 @@
     --sidebar-gradient: linear-gradient(165deg, hsl(245 95% 14%) 0%, hsl(230 100% 18%) 22%, hsl(220 100% 28%) 45%, hsl(210 100% 40%) 68%, hsl(195 100% 50%) 88%, hsl(185 100% 58%) 100%);
     --sidebar-glow: 0 0 32px hsl(190 100% 60% / 0.55);
 
-    --type-compra: 220 60% 22%;
-    --type-licitacion: 239 84% 67%;
-    --type-contrato: 270 60% 52%;
-    --type-permiso: 38 92% 50%;
-    --type-personalizado: 215 16% 47%;
+    --type-contrato: 280 60% 45%;
+    --type-permiso: 30 70% 45%;
   }
 }
 
