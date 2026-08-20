@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUpdatePdc } from "@/hooks/usePdcs";
 import { SEO } from "@/components/SEO";
+import { ProjectSelect } from "@/components/ProjectSelect";
 
 const STAGES = [
   { value: "ingenieria", label: "Ingeniería" },
@@ -33,6 +34,7 @@ export default function EditPdcPage() {
   const submitting = updatePdc.isPending;
   const [pdcNumber, setPdcNumber] = useState<string>("");
   const [form, setForm] = useState({
+    project_id: null as string | null,
     project: "", name: "", description: "", category: "",
     criticality: "medium" as "low" | "medium" | "high",
     estimated_amount: "", currency: "USD",
@@ -50,13 +52,14 @@ export default function EditPdcPage() {
       const { data, error } = await supabase
         .from("purchase_processes").select("*").eq("id", id).maybeSingle();
       if (error || !data) {
-        toast.error("No se pudo cargar el PdC");
+        toast.error("No se pudo cargar el proceso");
         setLoading(false);
         return;
       }
       setPdcNumber(data.pdc_number);
       const critMap: Record<string, "low" | "medium" | "high"> = { baja: "low", media: "medium", alta: "high" };
       setForm({
+        project_id: data.project_id ?? null,
         project: data.project ?? "",
         name: data.name ?? "",
         description: data.description ?? "",
@@ -102,6 +105,7 @@ export default function EditPdcPage() {
         patch: {
           name: form.name,
           project: form.project,
+          project_id: form.project_id,
           description: form.description || null,
           category: form.category || null,
           criticality: form.criticality,
@@ -115,7 +119,7 @@ export default function EditPdcPage() {
             | "evaluacion" | "orden_compra" | "seguimiento" | "recepcion",
         },
       });
-      toast.success("PdC actualizado correctamente");
+      toast.success("Proceso actualizado correctamente");
       navigate(`/pdcs/${id}`);
     } catch (err) {
       toast.error(`Error al guardar: ${(err as Error).message}`);
@@ -124,13 +128,13 @@ export default function EditPdcPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <SEO title={pdcNumber ? `Editar PdC ${pdcNumber}` : "Editar PdC"} description="Actualiza datos generales, criticidad y etapa del proceso de compra." />
+      <SEO title={pdcNumber ? `Editar Proceso ${pdcNumber}` : "Editar Proceso"} description="Actualiza datos generales, criticidad y etapa del proceso de compra." />
       <div className="flex items-center gap-3">
         <Link to={`/pdcs/${id}`}>
           <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Editar PdC {pdcNumber}</h1>
+          <h1 className="text-2xl font-bold">Editar Proceso {pdcNumber}</h1>
           <p className="text-sm text-muted-foreground">Edición administrativa de un proceso ya iniciado</p>
         </div>
       </div>
@@ -141,7 +145,10 @@ export default function EditPdcPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Proyecto *</Label>
-                <Input value={form.project} onChange={(e) => update("project", e.target.value)} />
+                <ProjectSelect
+                  value={form.project_id}
+                  onChange={(id, name) => setForm((p) => ({ ...p, project_id: id, project: name }))}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Categoría</Label>
