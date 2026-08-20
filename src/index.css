@@ -54,7 +54,9 @@
     --sidebar-glow: 0 0 32px hsl(190 100% 60% / 0.55);
 
     --type-contrato: 280 60% 45%;
+    --type-contrato-foreground: 0 0% 100%;
     --type-permiso: 30 70% 45%;
+    --type-permiso-foreground: 0 0% 100%;
   }
 }
 
