@@ -1,15 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText } from "lucide-react";
+import { Plus, Search, FileText, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
+import { Badge } from "@/components/ui/badge";
 
 export default function PdcListPage() {
   const navigate = useNavigate();
