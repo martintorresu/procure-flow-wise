@@ -18,7 +18,6 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AdminPage from "@/pages/AdminPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectChainPage from "@/pages/ProjectChainPage";
-import TypeBadgePreviewPage from "@/pages/TypeBadgePreviewPage";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
 
