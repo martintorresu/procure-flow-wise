@@ -2,15 +2,32 @@ import { useEffect, useState } from "react";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent } from "@/components/ui/card";
-import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
+import { StatusBadge, CriticalityBadge } from "@/components/StatusIndicators";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText, X } from "lucide-react";
+import { Plus, Search, FileText, X, Check, AlertTriangle, Link2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
+import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
+import { type TrafficLight } from "@/types/pdc";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const TYPE_INITIALS: Record<ProcessType, string> = {
+  compra: "Cp",
+  licitacion: "Lt",
+  contrato: "Ct",
+  permiso: "Pm",
+  personalizado: "Ps",
+};
+
+const LIGHT_GLOW: Record<TrafficLight, string> = {
+  green: "hsl(var(--success))",
+  yellow: "hsl(var(--warning))",
+  red: "hsl(var(--danger))",
+};
 
 export default function PdcListPage() {
   const navigate = useNavigate();
@@ -112,68 +129,94 @@ export default function PdcListPage() {
         </div>
       )}
 
-      {/* Table */}
+      {/* List */}
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/30">
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">⚡</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">N° Proceso</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Proyecto</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Título</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Estado</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Responsable</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Criticidad</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Monto Est.</th>
-                  <th className="py-3 px-4 text-left font-medium text-muted-foreground">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {loading && [0,1,2,3].map((i) => (
-                  <tr key={i} className="border-b last:border-0">
-                    {Array.from({length: 9}).map((_, j) => (
-                      <td key={j} className="py-3 px-4"><Skeleton className="h-4 w-full" /></td>
-                    ))}
-                  </tr>
-                ))}
-                {!loading && filtered.length === 0 && (
-                  <tr>
-                    <td colSpan={9} className="py-12">
-                      <div className="flex flex-col items-center gap-2 text-muted-foreground">
-                        <FileText className="w-8 h-8 opacity-40" />
-                        <p className="text-sm font-medium">Sin procesos</p>
-                        <p className="text-xs">Crea tu primer proceso con el botón "Crear Proceso".</p>
-                      </div>
-                    </td>
-                  </tr>
-                )}
-                {!loading && filtered.map((pdc) => (
-                  <tr
-                    key={pdc.id}
-                    role="button"
-                    tabIndex={0}
-                    className="border-b last:border-0 hover:bg-muted/50 hover:cursor-pointer transition-colors"
-                    onClick={() => navigate(`/pdcs/${pdc.id}`)}
-                  >
-                    <td className="py-3 px-4"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
-                    <td className="py-3 px-4 font-mono text-xs font-medium">{pdc.pdc_number}</td>
-                    <td className="py-3 px-4 text-muted-foreground text-xs">{pdc.project}</td>
-                    <td className="py-3 px-4 font-medium">{pdc.title}</td>
-                    <td className="py-3 px-4"><StatusBadge status={pdc.current_status} /></td>
-                    <td className="py-3 px-4 text-muted-foreground">{pdc.current_owner}</td>
-                    <td className="py-3 px-4"><CriticalityBadge level={pdc.criticality} /></td>
-                    <td className="py-3 px-4 font-mono text-xs">{pdc.currency} {pdc.estimated_amount.toLocaleString()}</td>
-                    <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
-                      <Link to={`/pdcs/${pdc.id}`}>
-                        <Button variant="outline" size="sm">Ver detalle</Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div role="list" aria-label="Procesos" className="flex flex-col">
+            {loading && [0,1,2,3].map((i) => (
+              <div key={i} className="flex items-center gap-4 border-b last:border-0 p-4">
+                <Skeleton className="w-12 h-12 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-1/3" />
+                  <Skeleton className="h-3 w-40" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <Skeleton className="h-4 w-20 shrink-0" />
+              </div>
+            ))}
+            {!loading && filtered.length === 0 && (
+              <div className="py-12 flex flex-col items-center gap-2 text-muted-foreground">
+                <FileText className="w-8 h-8 opacity-40" />
+                <p className="text-sm font-medium">Sin procesos</p>
+                <p className="text-xs">Crea tu primer proceso con el botón "Crear Proceso".</p>
+              </div>
+            )}
+            {!loading && filtered.map((pdc) => {
+              const light = getTrafficLight(pdc);
+              const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
+              const bgGradient = light === "green" ? "from-success/15 to-success/5" : light === "yellow" ? "from-warning/15 to-warning/5" : "from-danger/15 to-danger/5";
+              const isChained = Boolean(pdc.predecessor_process_id || pdcs.some((o) => o.predecessor_process_id === pdc.id));
+              const initials = TYPE_INITIALS[(pdc.process_type as ProcessType) ?? "compra"];
+              const avatarBg = light === "green" ? "bg-success" : light === "yellow" ? "bg-warning" : "bg-danger";
+              const typeLabel = PROCESS_TYPE_LABELS[(pdc.process_type as ProcessType) ?? "compra"];
+              const StateIcon = light === "green" ? Check : light === "yellow" ? AlertTriangle : X;
+              return (
+                <div
+                  key={pdc.id}
+                  role="listitem"
+                  tabIndex={0}
+                  onClick={() => navigate(`/pdcs/${pdc.id}`)}
+                  className={`flex items-center gap-4 border-b last:border-0 border-border/60 bg-gradient-to-br ${bgGradient} border-l-4 ${borderColor} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 shadow-md p-4`}
+                >
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`relative w-12 h-12 rounded-full flex flex-col items-center justify-center text-sm font-bold text-white shrink-0 ring-2 ring-white shadow-md ${avatarBg}`}
+                          style={{ boxShadow: `0 4px 10px ${LIGHT_GLOW[light]}`, filter: "drop-shadow(0 2px 4px rgb(0 0 0 / 0.15))" }}
+                          aria-label={`Tipo ${typeLabel}, semáforo ${light}`}
+                        >
+                          {initials}
+                          <StateIcon className="w-3 h-3 mt-0.5" strokeWidth={2.5} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">{typeLabel}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+
+                  <div className="flex-1 min-w-0 space-y-1.5">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">{pdc.pdc_number}</span>
+                      <span className="text-foreground font-semibold text-sm truncate">{pdc.title}</span>
+                      {isChained && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Link2 className="w-3.5 h-3.5 text-accent shrink-0" aria-label="Encadenado" />
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="text-xs">Proceso encadenado</TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {pdc.project} · {pdc.current_owner}
+                    </div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <StatusBadge status={pdc.current_status} colorizeByStage />
+                      <CriticalityBadge level={pdc.criticality} />
+                    </div>
+                  </div>
+
+                  <div className="hidden sm:block text-right shrink-0">
+                    <div className="font-mono text-sm font-medium text-foreground">
+                      {pdc.currency} {pdc.estimated_amount.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Monto Est.</div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </CardContent>
       </Card>
