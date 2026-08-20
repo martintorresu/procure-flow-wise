@@ -266,8 +266,37 @@ export default function PdcDetailPage() {
       )}
 
 
+      {/* Vista reducida para participantes externos */}
+      {isExternal && (
+        <>
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <h3 className="font-medium mb-1">Descripción</h3>
+                <p className="text-sm text-muted-foreground">{pdc.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="text-muted-foreground">Categoría:</span> {pdc.category}</div>
+                <div><span className="text-muted-foreground">Creado:</span> {pdc.created_at}</div>
+                <div><span className="text-muted-foreground">Actualizado:</span> {pdc.updated_at}</div>
+              </div>
+            </CardContent>
+          </Card>
+          {pdc.tenant_id && user && (
+            <ProcessComments
+              processId={pdc.id}
+              tenantId={pdc.tenant_id}
+              authorUserId={user.id}
+              canComment={!!canComment}
+            />
+          )}
+        </>
+      )}
+
       {/* Tabs */}
+      {!isExternal && (
       <Tabs defaultValue="summary">
+
         <TabsList className="grid grid-cols-4 lg:grid-cols-9 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
