@@ -234,7 +234,13 @@ export default function DashboardPage() {
                   const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
                   const isChained = Boolean(pdc.predecessor_process_id || activePdcs.some((o) => o.predecessor_process_id === pdc.id));
                   return (
-                    <tr key={pdc.id} className={`border-b last:border-0 border-l-4 ${borderColor} hover:bg-muted/50 transition-all duration-200 hover:shadow-sm hover:-translate-y-px rounded-md`}>
+                    <tr
+                      key={pdc.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => navigate(`/pdcs/${pdc.id}`)}
+                      className={`border-b last:border-0 border-l-4 ${borderColor} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-sm hover:-translate-y-px rounded-md`}
+                    >
                       <td className="py-4 px-3"><TrafficLightIndicator color={light} size="lg" /></td>
                       <td className="py-4 px-3 font-mono text-xs">{pdc.pdc_number}</td>
                       <td className="py-4 px-3">
@@ -256,7 +262,7 @@ export default function DashboardPage() {
                       <td className="py-4 px-3"><StatusBadge status={pdc.current_status} colorizeByStage /></td>
                       <td className="py-4 px-3 text-muted-foreground">{pdc.current_owner}</td>
                       <td className="py-4 px-3"><CriticalityBadge level={pdc.criticality} /></td>
-                      <td className="py-4 px-3">
+                      <td className="py-4 px-3" onClick={(e) => e.stopPropagation()}>
                         <Link to={`/pdcs/${pdc.id}`}>
                           <Button variant="outline" size="sm">Ver</Button>
                         </Link>
