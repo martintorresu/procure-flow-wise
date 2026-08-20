@@ -16,6 +16,7 @@ import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } f
 import { SEO } from "@/components/SEO";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
+import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 
 
 export default function DashboardPage() {
@@ -106,29 +107,30 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {stats.map((s) => {
-          const CardInner = (
-            <Card className={s.to ? "transition-colors hover:bg-muted/40 hover:border-primary/40 cursor-pointer" : ""}>
-              <CardContent className="p-5">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{s.label}</p>
-                    <p className="text-3xl font-bold mt-1">{s.value}</p>
-                  </div>
-                  <s.icon className={`w-10 h-10 ${s.color} opacity-20`} />
-                </div>
-              </CardContent>
-            </Card>
-          );
-          return s.to ? (
-            <Link key={s.label} to={s.to} aria-label={`Ver ${s.label}`}>{CardInner}</Link>
-          ) : (
-            <div key={s.label}>{CardInner}</div>
-          );
-        })}
-      </div>
+      {/* Hero: flujo visual */}
+      {!pdcsLoading && <DashboardFlowHero pdcs={activePdcs} />}
+      {pdcsLoading && <Skeleton className="h-64 w-full rounded-xl" />}
+
+      {/* KPIs compactos */}
+      <Card>
+        <CardContent className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x p-0">
+          {stats.map((s) => (
+            <Link
+              key={s.label}
+              to={s.to}
+              aria-label={`Ver ${s.label}`}
+              className="flex items-center justify-between gap-3 p-4 transition-colors hover:bg-muted/40"
+            >
+              <div>
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{s.label}</p>
+                <p className="text-2xl font-bold mt-0.5">{s.value}</p>
+              </div>
+              <s.icon className={`w-8 h-8 ${s.color} opacity-20`} />
+            </Link>
+          ))}
+        </CardContent>
+      </Card>
+
 
       {/* Table */}
       <Card>
