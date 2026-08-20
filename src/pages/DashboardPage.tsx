@@ -133,9 +133,12 @@ export default function DashboardPage() {
 
 
       {/* Table */}
-      <Card>
+      <Card className="overflow-hidden">
+        <div className="h-1 w-full" style={{ background: "var(--sidebar-gradient)" }} />
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-base">Procesos Activos</CardTitle>
+          <CardTitle className="text-base flex items-center gap-2">
+            <FileText className="w-4 h-4" /> Procesos Activos
+          </CardTitle>
           <Link to="/pdcs">
             <Button variant="ghost" size="sm" className="text-accent">
               Ver todos <ArrowRight className="w-4 h-4 ml-1" />
@@ -143,14 +146,14 @@ export default function DashboardPage() {
           </Link>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-md">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b text-left align-bottom">
-                  <th className="py-3 px-2 font-medium text-muted-foreground">Semáforo</th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">N° Proceso</th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">Título</th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">
+                <tr className="border-b bg-muted/30 text-left align-bottom">
+                  <th className="py-4 px-3 font-medium text-muted-foreground">Semáforo</th>
+                  <th className="py-4 px-3 font-medium text-muted-foreground">N° Proceso</th>
+                  <th className="py-4 px-3 font-medium text-muted-foreground">Título</th>
+                  <th className="py-4 px-3 font-medium text-muted-foreground">
                     <div className="space-y-1">
                       <div>Estado</div>
                       <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as PdcStatus | "all")}>
@@ -164,7 +167,7 @@ export default function DashboardPage() {
                       </Select>
                     </div>
                   </th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">
+                  <th className="py-4 px-3 font-medium text-muted-foreground">
                     <div className="space-y-1">
                       <div>Responsable</div>
                       <Select value={ownerFilter} onValueChange={setOwnerFilter}>
@@ -178,7 +181,7 @@ export default function DashboardPage() {
                       </Select>
                     </div>
                   </th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">
+                  <th className="py-4 px-3 font-medium text-muted-foreground">
                     <div className="space-y-1">
                       <div>Criticidad</div>
                       <Select value={criticalityFilter} onValueChange={(v) => setCriticalityFilter(v as Criticality | "all")}>
@@ -192,32 +195,36 @@ export default function DashboardPage() {
                       </Select>
                     </div>
                   </th>
-                  <th className="py-3 px-2 font-medium text-muted-foreground">Acción</th>
+                  <th className="py-4 px-3 font-medium text-muted-foreground">Acción</th>
                 </tr>
               </thead>
               <tbody>
                 {pdcsLoading && [0,1,2].map((i) => (
                   <tr key={i} className="border-b last:border-0">
                     {Array.from({length: 7}).map((_, j) => (
-                      <td key={j} className="py-3 px-2"><Skeleton className="h-4 w-full" /></td>
+                      <td key={j} className="py-4 px-3"><Skeleton className="h-4 w-full" /></td>
                     ))}
                   </tr>
                 ))}
-                {!pdcsLoading && filteredPdcs.map((pdc) => (
-                  <tr key={pdc.id} className="border-b last:border-0 hover:bg-muted/50 transition-colors">
-                    <td className="py-3 px-2"><TrafficLightIndicator color={getTrafficLight(pdc)} /></td>
-                    <td className="py-3 px-2 font-mono text-xs">{pdc.pdc_number}</td>
-                    <td className="py-3 px-2 font-medium max-w-[200px] truncate">{pdc.title}</td>
-                    <td className="py-3 px-2"><StatusBadge status={pdc.current_status} /></td>
-                    <td className="py-3 px-2 text-muted-foreground">{pdc.current_owner}</td>
-                    <td className="py-3 px-2"><CriticalityBadge level={pdc.criticality} /></td>
-                    <td className="py-3 px-2">
-                      <Link to={`/pdcs/${pdc.id}`}>
-                        <Button variant="outline" size="sm">Ver</Button>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
+                {!pdcsLoading && filteredPdcs.map((pdc) => {
+                  const light = getTrafficLight(pdc);
+                  const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
+                  return (
+                    <tr key={pdc.id} className={`border-b last:border-0 border-l-4 ${borderColor} hover:bg-muted/50 transition-all duration-200 hover:shadow-sm hover:-translate-y-px rounded-md`}>
+                      <td className="py-4 px-3"><TrafficLightIndicator color={light} /></td>
+                      <td className="py-4 px-3 font-mono text-xs">{pdc.pdc_number}</td>
+                      <td className="py-4 px-3 font-medium max-w-[200px] truncate">{pdc.title}</td>
+                      <td className="py-4 px-3"><StatusBadge status={pdc.current_status} /></td>
+                      <td className="py-4 px-3 text-muted-foreground">{pdc.current_owner}</td>
+                      <td className="py-4 px-3"><CriticalityBadge level={pdc.criticality} /></td>
+                      <td className="py-4 px-3">
+                        <Link to={`/pdcs/${pdc.id}`}>
+                          <Button variant="outline" size="sm">Ver</Button>
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
                 {!pdcsLoading && filteredPdcs.length === 0 && (
                   <tr>
                     <td colSpan={7} className="py-8 text-center">
