@@ -83,6 +83,8 @@ export function rowToPdc(r: PdcRow): Pdc {
     created_at: r.created_at,
     updated_at: r.updated_at,
     current_stage: r.current_stage as DbStage,
+    tenant_id: (r as PdcRow & { tenant_id?: string }).tenant_id ?? null,
+
     approval_status: (r.approval_status as Pdc["approval_status"]) ?? null,
     approval_required_role: r.approval_required_role ?? null,
     approval_target_stage: r.approval_target_stage ?? null,
