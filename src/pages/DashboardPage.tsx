@@ -89,8 +89,8 @@ export default function DashboardPage() {
 
   const stats = [
     { label: "Procesos Activos", value: activePdcs.length, icon: FileText, color: "text-accent", to: "/pdcs" },
-    { label: "Atrasados", value: delayedPdcs.length, icon: Clock, color: "text-danger", to: "/alerts" },
-    { label: "Críticos", value: criticalPdcs.length, icon: AlertTriangle, color: "text-warning", to: "/alerts" },
+    { label: "Atrasados", value: delayedPdcs.length, icon: Clock, color: "text-danger", to: "/pdcs?delayed=true" },
+    { label: "Críticos", value: criticalPdcs.length, icon: AlertTriangle, color: "text-warning", to: "/pdcs?criticality=high" },
     { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-primary", to: "/alerts" },
   ];
 

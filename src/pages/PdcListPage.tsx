@@ -1,29 +1,53 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent } from "@/components/ui/card";
 import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText } from "lucide-react";
+import { Plus, Search, FileText, X } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
+import { Badge } from "@/components/ui/badge";
 
 export default function PdcListPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
+  const [delayedFilter, setDelayedFilter] = useState<boolean>(false);
   const [search, setSearch] = useState("");
   const { data: pdcs = [], isLoading: loading } = usePdcs();
+
+  useEffect(() => {
+    const criticality = searchParams.get("criticality");
+    const delayed = searchParams.get("delayed");
+    if (criticality === "low" || criticality === "medium" || criticality === "high") {
+      setCriticalityFilter(criticality);
+    }
+    if (delayed === "true") {
+      setDelayedFilter(true);
+    }
+  }, [searchParams]);
 
   const filtered = pdcs.filter((pdc) => {
     if (statusFilter !== "all" && pdc.current_status !== statusFilter) return false;
     if (criticalityFilter !== "all" && pdc.criticality !== criticalityFilter) return false;
+    if (delayedFilter && getTrafficLight(pdc) !== "red") return false;
     if (search && !pdc.title.toLowerCase().includes(search.toLowerCase()) && !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const clearDashboardFilters = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("criticality");
+    next.delete("delayed");
+    setSearchParams(next, { replace: true });
+    setCriticalityFilter("all");
+    setDelayedFilter(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -72,6 +96,21 @@ export default function PdcListPage() {
           </div>
         </CardContent>
       </Card>
+
+      {(criticalityFilter !== "all" || delayedFilter) && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="font-normal">
+            {delayedFilter && criticalityFilter !== "all"
+              ? "Mostrando procesos atrasados y críticos"
+              : delayedFilter
+              ? "Mostrando solo procesos atrasados"
+              : "Mostrando solo procesos críticos"}
+          </Badge>
+          <Button variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground" onClick={clearDashboardFilters}>
+            <X className="w-3 h-3 mr-1" /> Quitar filtro
+          </Button>
+        </div>
+      )}
 
       {/* Table */}
       <Card>
