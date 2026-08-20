@@ -615,6 +615,53 @@ export type Database = {
           },
         ]
       }
+      process_stage_templates: {
+        Row: {
+          active: boolean
+          created_at: string
+          icon_name: string
+          id: string
+          label: string
+          order_index: number
+          process_type: string
+          stage_key: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          icon_name?: string
+          id?: string
+          label: string
+          order_index?: number
+          process_type: string
+          stage_key: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          icon_name?: string
+          id?: string
+          label?: string
+          order_index?: number
+          process_type?: string
+          stage_key?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_stage_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           area: string | null
