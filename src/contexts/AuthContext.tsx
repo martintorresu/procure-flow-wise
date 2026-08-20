@@ -45,8 +45,10 @@ async function buildDomainUser(supaUser: SupabaseUser): Promise<User | null> {
     email: supaUser.email ?? "",
     role,
     tenantSlug: "default",
+    tenantId: profile?.tenant_id ?? null,
   };
 }
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
