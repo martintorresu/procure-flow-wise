@@ -32,7 +32,7 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4 sm:p-6">
-      <SEO title="Iniciar sesión" description="Accede a Procurement by InHR para gestionar tus procesos de compra industriales." path="/login" />
+      <SEO title="Iniciar sesión" description="Accede a Pro.Curem Flow para gestionar tus procesos de compra industriales." path="/login" />
       {/* Background image — brighter, more vivid */}
       <div
         className="absolute inset-0 bg-cover bg-center scale-110 animate-bg-drift saturate-[1.35] brightness-[1.15] contrast-[1.05]"

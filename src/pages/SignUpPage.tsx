@@ -47,7 +47,7 @@ export default function SignUpPage() {
 
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden bg-[#0A1628] flex items-center justify-center p-4 sm:p-6">
-      <SEO title="Crear cuenta" description="Regístrate en Procurement by InHR para gestionar procesos de compra industriales con tu equipo." path="/signup" />
+      <SEO title="Crear cuenta" description="Regístrate en Pro.Curem Flow para gestionar procesos de compra industriales con tu equipo." path="/signup" />
       <div className="absolute inset-0 bg-gradient-to-br from-[#0A1628] via-[#1A3BB5]/30 to-[#0A1628]" aria-hidden />
       <div className="absolute -top-32 -left-32 w-[480px] h-[480px] rounded-full bg-[#2255E8]/40 blur-[120px]" aria-hidden />
       <div className="absolute -bottom-40 -right-32 w-[520px] h-[520px] rounded-full bg-[#4ABFB5]/30 blur-[140px]" aria-hidden />
@@ -67,7 +67,7 @@ export default function SignUpPage() {
               </div>
             </div>
             <h1 className="text-2xl font-bold text-white">Crear cuenta</h1>
-            <p className="mt-1 text-sm text-[#7AD9CF]">Procurement <span className="font-semibold text-white">by InHR</span></p>
+            <p className="mt-1 text-sm text-[#7AD9CF]">Pro.Curem Flow <span className="font-semibold text-white">by InHR</span></p>
           </div>
 
           {success ? (
