@@ -202,25 +202,35 @@ export default function DashboardPage() {
             {!pdcsLoading && filteredPdcs.map((pdc) => {
               const light = getTrafficLight(pdc);
               const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
-              const bgTint = light === "green" ? "bg-success/[0.06]" : light === "yellow" ? "bg-warning/[0.06]" : "bg-danger/[0.06]";
+              const bgGradient = light === "green" ? "from-success/15 to-success/5" : light === "yellow" ? "from-warning/15 to-warning/5" : "from-danger/15 to-danger/5";
               const isChained = Boolean(pdc.predecessor_process_id || activePdcs.some((o) => o.predecessor_process_id === pdc.id));
               const initials = TYPE_INITIALS[(pdc.process_type as ProcessType) ?? "compra"];
               const avatarBg = light === "green" ? "bg-success" : light === "yellow" ? "bg-warning" : "bg-danger";
+              const typeLabel = PROCESS_TYPE_LABELS[(pdc.process_type as ProcessType) ?? "compra"];
+              const StateIcon = light === "green" ? Check : light === "yellow" ? AlertTriangle : X;
               return (
                 <div
                   key={pdc.id}
                   role="listitem"
                   tabIndex={0}
                   onClick={() => navigate(`/pdcs/${pdc.id}`)}
-                  className={`flex items-start gap-4 rounded-lg shadow-sm border-l-4 ${borderColor} ${bgTint} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-px p-4`}
+                  className={`flex items-start gap-4 rounded-xl shadow-md border-l-4 ${borderColor} bg-gradient-to-br ${bgGradient} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 p-4`}
                 >
-                  <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold text-white shrink-0 ${avatarBg}`}
-                    style={{ boxShadow: `0 0 8px ${LIGHT_GLOW[light]}` }}
-                    aria-label={`Tipo ${pdc.process_type}, semáforo ${light}`}
-                  >
-                    {initials}
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`relative w-12 h-12 rounded-full flex flex-col items-center justify-center text-sm font-bold text-white shrink-0 ring-2 ring-white shadow-md ${avatarBg}`}
+                          style={{ boxShadow: `0 4px 10px ${LIGHT_GLOW[light]}`, filter: "drop-shadow(0 2px 4px rgb(0 0 0 / 0.15))" }}
+                          aria-label={`Tipo ${typeLabel}, semáforo ${light}`}
+                        >
+                          {initials}
+                          <StateIcon className="w-3 h-3 mt-0.5" strokeWidth={2.5} />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs">{typeLabel}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="flex items-center gap-1.5 min-w-0">
                       <span className="font-mono text-xs text-muted-foreground shrink-0">{pdc.pdc_number}</span>
