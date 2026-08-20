@@ -112,7 +112,7 @@ export default function AdminPage() {
     setWorking("seed-pdcs");
     try {
       const data = await callAdmin("seed_pdcs");
-      toast.success(`${data.count} PdCs demo creados`);
+      toast.success(`${data.count} Procesos demo creados`);
       await refreshDemoCount();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error");
@@ -122,11 +122,11 @@ export default function AdminPage() {
   };
 
   const cleanupDemo = async () => {
-    if (!confirm("¿Borrar todos los PdCs demo (project='__DEMO__')?")) return;
+    if (!confirm("¿Borrar todos los Procesos demo (project='__DEMO__')?")) return;
     setWorking("cleanup");
     try {
       const data = await callAdmin("cleanup_demo");
-      toast.success(`${data.deleted} PdCs demo eliminados`);
+      toast.success(`${data.deleted} Procesos demo eliminados`);
       await refreshDemoCount();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Error");
