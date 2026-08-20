@@ -1,6 +1,7 @@
 import type { TrafficLight, Criticality, PdcStatus } from "@/types/pdc";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Check, AlertTriangle, X } from "lucide-react";
+import { genericStageIndex } from "@/lib/processTypes";
 
 const TRAFFIC_LABELS: Record<TrafficLight, string> = {
   green: "En plazo (>120 días al sitio o cerrado OK)",
@@ -8,11 +9,45 @@ const TRAFFIC_LABELS: Record<TrafficLight, string> = {
   red: "Riesgo (<60 días, alta criticidad <90 días, o cerrado con incidente)",
 };
 
-export function TrafficLightIndicator({ color, showIcon = true }: { color: TrafficLight; showIcon?: boolean }) {
+const STATUS_TO_GENERIC_STAGE: Record<PdcStatus, string> = {
+  draft: "ingenieria",
+  technical_definition: "ingenieria",
+  planning: "ingenieria",
+  quotation: "programacion",
+  evaluation: "programacion",
+  awarded: "ejecucion",
+  po_issued: "ejecucion",
+  drawings: "ejecucion",
+  fat: "ejecucion",
+  shipping: "ejecucion",
+  arrived: "recepcion",
+  closed: "recepcion",
+  closed_with_incident: "recepcion",
+};
+
+export function TrafficLightIndicator({
+  color,
+  showIcon = true,
+  size = "md",
+}: {
+  color: TrafficLight;
+  showIcon?: boolean;
+  size?: "sm" | "md" | "lg";
+}) {
   const styles = {
     green: "bg-success text-success-foreground",
     yellow: "bg-warning text-warning-foreground",
     red: "bg-danger text-danger-foreground animate-pulse-slow",
+  };
+  const sizeClasses = {
+    sm: "w-3 h-3",
+    md: "w-4 h-4",
+    lg: "w-5 h-5",
+  };
+  const iconSizeClasses = {
+    sm: "w-2 h-2",
+    md: "w-2.5 h-2.5",
+    lg: "w-3 h-3",
   };
   const Icon = color === "green" ? Check : color === "yellow" ? AlertTriangle : X;
   return (
@@ -22,9 +57,9 @@ export function TrafficLightIndicator({ color, showIcon = true }: { color: Traff
           <span
             role="img"
             aria-label={`Semáforo: ${TRAFFIC_LABELS[color]}`}
-            className={`inline-flex items-center justify-center w-4 h-4 rounded-full shrink-0 ${styles[color]}`}
+            className={`inline-flex items-center justify-center rounded-full shrink-0 ${sizeClasses[size]} ${styles[color]}`}
           >
-            {showIcon && <Icon className="w-2.5 h-2.5" strokeWidth={3} aria-hidden />}
+            {showIcon && <Icon className={`${iconSizeClasses[size]}`} strokeWidth={3} aria-hidden />}
           </span>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-xs text-xs">
@@ -62,7 +97,13 @@ export function CriticalityBadge({ level }: { level: Criticality }) {
   );
 }
 
-export function StatusBadge({ status }: { status: PdcStatus }) {
+export function StatusBadge({
+  status,
+  colorizeByStage = false,
+}: {
+  status: PdcStatus;
+  colorizeByStage?: boolean;
+}) {
   const labels: Record<PdcStatus, string> = {
     draft: "Borrador", technical_definition: "Def. Técnica", planning: "Planificación",
     quotation: "Cotización", evaluation: "Evaluación", awarded: "Adjudicado",
@@ -71,6 +112,19 @@ export function StatusBadge({ status }: { status: PdcStatus }) {
   };
 
   const getColor = (s: PdcStatus) => {
+    if (colorizeByStage) {
+      const stageIdx = genericStageIndex(STATUS_TO_GENERIC_STAGE[s]);
+      switch (stageIdx) {
+        case 0:
+          return "bg-muted text-muted-foreground border border-border";
+        case 1:
+          return "bg-accent/15 text-accent border border-accent/30";
+        case 3:
+          return "bg-success/15 text-success border border-success/30";
+        default:
+          return "bg-primary/10 text-primary border border-primary/20";
+      }
+    }
     if (["draft", "technical_definition", "planning"].includes(s)) return "bg-muted text-muted-foreground";
     if (["quotation", "evaluation"].includes(s)) return "bg-accent/15 text-accent border border-accent/30";
     if (["awarded", "po_issued", "drawings"].includes(s)) return "bg-primary/10 text-primary border border-primary/20";
