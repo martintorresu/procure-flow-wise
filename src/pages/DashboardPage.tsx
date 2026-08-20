@@ -61,13 +61,8 @@ export default function DashboardPage() {
   const isManagerOrAdmin = user?.role === "gerente" || user?.role === "admin";
 
   const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
-  const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<PdcStatus | "all">("all");
 
-  const ownerOptions = useMemo<string[]>(
-    () => Array.from(new Set(activePdcs.map((p) => p.current_owner).filter(Boolean) as string[])).sort(),
-    [activePdcs]
-  );
   const statusOptions = useMemo<PdcStatus[]>(
     () => Array.from(new Set(activePdcs.map((p) => p.current_status))) as PdcStatus[],
     [activePdcs]
@@ -75,7 +70,6 @@ export default function DashboardPage() {
 
   const filteredPdcs = activePdcs.filter((p) =>
     (criticalityFilter === "all" || p.criticality === criticalityFilter) &&
-    (ownerFilter === "all" || p.current_owner === ownerFilter) &&
     (statusFilter === "all" || p.current_status === statusFilter)
   );
 
@@ -93,6 +87,8 @@ export default function DashboardPage() {
     { label: "Críticos", value: criticalPdcs.length, icon: AlertTriangle, color: "text-warning", to: "/pdcs?criticality=high" },
     { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-primary", to: "/alerts" },
   ];
+
+  const gridColumns = { gridTemplateColumns: "72px 110px minmax(180px,1fr) 110px 150px 100px 80px" };
 
   return (
     <div className="space-y-6">
@@ -154,7 +150,7 @@ export default function DashboardPage() {
       </Card>
 
 
-      {/* Table */}
+      {/* Active processes as separated cards */}
       <Card className="overflow-hidden">
         <div className="h-1 w-full" style={{ background: "var(--sidebar-gradient)" }} />
         <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -168,120 +164,108 @@ export default function DashboardPage() {
           </Link>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-md">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/30 text-left align-bottom">
-                  <th className="py-4 px-3 font-medium text-muted-foreground">Semáforo</th>
-                  <th className="py-4 px-3 font-medium text-muted-foreground">N° Proceso</th>
-                  <th className="py-4 px-3 font-medium text-muted-foreground">Título</th>
-                  <th className="py-4 px-3 font-medium text-muted-foreground">Tipo</th>
-                  <th className="py-4 px-3 font-medium text-muted-foreground">
-                    <div className="space-y-1">
-                      <div>Estado</div>
-                      <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as PdcStatus | "all")}>
-                        <SelectTrigger className="h-7 text-xs font-normal w-[140px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos</SelectItem>
-                          {statusOptions.map((s) => (
-                            <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </th>
-                  <th className="py-4 px-3 font-medium text-muted-foreground">
-                    <div className="space-y-1">
-                      <div>Responsable</div>
-                      <Select value={ownerFilter} onValueChange={setOwnerFilter}>
-                        <SelectTrigger className="h-7 text-xs font-normal w-[160px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos</SelectItem>
-                          {ownerOptions.map((o) => (
-                            <SelectItem key={o} value={o}>{o}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </th>
-                  <th className="py-4 px-3 font-medium text-muted-foreground">
-                    <div className="space-y-1">
-                      <div>Criticidad</div>
-                      <Select value={criticalityFilter} onValueChange={(v) => setCriticalityFilter(v as Criticality | "all")}>
-                        <SelectTrigger className="h-7 text-xs font-normal w-[110px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todas</SelectItem>
-                          <SelectItem value="high">{CRITICALITY_LABELS.high}</SelectItem>
-                          <SelectItem value="medium">{CRITICALITY_LABELS.medium}</SelectItem>
-                          <SelectItem value="low">{CRITICALITY_LABELS.low}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </th>
-                  <th className="py-4 px-3 font-medium text-muted-foreground">Acción</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pdcsLoading && [0,1,2].map((i) => (
-                  <tr key={i} className="border-b last:border-0">
-                    {Array.from({length: 8}).map((_, j) => (
-                      <td key={j} className="py-4 px-3"><Skeleton className="h-4 w-full" /></td>
-                    ))}
-                  </tr>
-                ))}
-                {!pdcsLoading && filteredPdcs.map((pdc) => {
-                  const light = getTrafficLight(pdc);
-                  const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
-                  const isChained = Boolean(pdc.predecessor_process_id || activePdcs.some((o) => o.predecessor_process_id === pdc.id));
-                  return (
-                    <tr
-                      key={pdc.id}
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => navigate(`/pdcs/${pdc.id}`)}
-                      className={`border-b last:border-0 border-l-4 ${borderColor} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-sm hover:-translate-y-px rounded-md`}
-                    >
-                      <td className="py-4 px-3"><TrafficLightIndicator color={light} size="lg" /></td>
-                      <td className="py-4 px-3 font-mono text-xs">{pdc.pdc_number}</td>
-                      <td className="py-4 px-3">
-                        <div className="flex items-center gap-1.5 max-w-[220px]">
-                          <span className="font-medium truncate">{pdc.title}</span>
-                          {isChained && (
-                            <TooltipProvider>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Link2 className="w-3.5 h-3.5 text-accent shrink-0" aria-label="Encadenado" />
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="text-xs">Proceso encadenado</TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-4 px-3"><TypeBadge type={pdc.process_type} /></td>
-                      <td className="py-4 px-3"><StatusBadge status={pdc.current_status} colorizeByStage /></td>
-                      <td className="py-4 px-3 text-muted-foreground">{pdc.current_owner}</td>
-                      <td className="py-4 px-3"><CriticalityBadge level={pdc.criticality} /></td>
-                      <td className="py-4 px-3" onClick={(e) => e.stopPropagation()}>
-                        <Link to={`/pdcs/${pdc.id}`}>
-                          <Button variant="outline" size="sm">Ver</Button>
-                        </Link>
-                      </td>
-                    </tr>
-                  );
-                })}
-                {!pdcsLoading && filteredPdcs.length === 0 && (
-                  <tr>
-                    <td colSpan={8} className="py-8 text-center">
-                      <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                        <FileText className="w-6 h-6 opacity-40" />
-                        <span className="text-sm">No hay procesos que coincidan con los filtros.</span>
+          <div className="overflow-x-auto" role="table" aria-label="Procesos activos">
+            {/* Header row */}
+            <div
+              role="row"
+              style={gridColumns}
+              className="grid border-b bg-muted/30 text-left text-sm align-bottom"
+            >
+              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Semáforo</div>
+              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">N° Proceso</div>
+              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Título</div>
+              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Tipo</div>
+              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">
+                <div className="space-y-1">
+                  <div>Estado</div>
+                  <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as PdcStatus | "all")}>
+                    <SelectTrigger className="h-7 text-xs font-normal w-[130px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {statusOptions.map((s) => (
+                        <SelectItem key={s} value={s}>{STATUS_LABELS[s]}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">
+                <div className="space-y-1">
+                  <div>Criticidad</div>
+                  <Select value={criticalityFilter} onValueChange={(v) => setCriticalityFilter(v as Criticality | "all")}>
+                    <SelectTrigger className="h-7 text-xs font-normal w-[90px]"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todas</SelectItem>
+                      <SelectItem value="high">{CRITICALITY_LABELS.high}</SelectItem>
+                      <SelectItem value="medium">{CRITICALITY_LABELS.medium}</SelectItem>
+                      <SelectItem value="low">{CRITICALITY_LABELS.low}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div role="columnheader" className="py-3 px-3 font-medium text-muted-foreground">Acción</div>
+            </div>
+
+            {/* Cards */}
+            <div className="flex flex-col gap-2 mt-2">
+              {pdcsLoading && [0,1,2].map((i) => (
+                <div key={i} style={gridColumns} className="grid rounded-lg shadow-sm border bg-card p-3 items-center">
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <div key={j} className="px-3"><Skeleton className="h-4 w-full" /></div>
+                  ))}
+                </div>
+              ))}
+              {!pdcsLoading && filteredPdcs.map((pdc) => {
+                const light = getTrafficLight(pdc);
+                const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
+                const bgTint = light === "green" ? "bg-success/[0.06]" : light === "yellow" ? "bg-warning/[0.06]" : "bg-danger/[0.06]";
+                const isChained = Boolean(pdc.predecessor_process_id || activePdcs.some((o) => o.predecessor_process_id === pdc.id));
+                return (
+                  <div
+                    key={pdc.id}
+                    role="row"
+                    tabIndex={0}
+                    onClick={() => navigate(`/pdcs/${pdc.id}`)}
+                    className={`grid rounded-lg shadow-sm border-l-4 ${borderColor} ${bgTint} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-px`}
+                    style={gridColumns}
+                  >
+                    <div role="cell" className="py-4 px-3 flex items-center"><TrafficLightIndicator color={light} size="lg" /></div>
+                    <div role="cell" className="py-4 px-3 font-mono text-xs flex items-center">{pdc.pdc_number}</div>
+                    <div role="cell" className="py-4 px-3 flex items-center">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-medium truncate">{pdc.title}</span>
+                        {isChained && (
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Link2 className="w-3.5 h-3.5 text-accent shrink-0" aria-label="Encadenado" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">Proceso encadenado</TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        )}
                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    </div>
+                    <div role="cell" className="py-4 px-3 flex items-center"><TypeBadge type={pdc.process_type} /></div>
+                    <div role="cell" className="py-4 px-3 flex items-center"><StatusBadge status={pdc.current_status} colorizeByStage /></div>
+                    <div role="cell" className="py-4 px-3 flex items-center"><CriticalityBadge level={pdc.criticality} /></div>
+                    <div role="cell" className="py-4 px-3 flex items-center" onClick={(e) => e.stopPropagation()}>
+                      <Link to={`/pdcs/${pdc.id}`}>
+                        <Button variant="outline" size="sm">Ver</Button>
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+              {!pdcsLoading && filteredPdcs.length === 0 && (
+                <div className="py-8 text-center rounded-lg border bg-card">
+                  <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                    <FileText className="w-6 h-6 opacity-40" />
+                    <span className="text-sm">No hay procesos que coincidan con los filtros.</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
