@@ -39,6 +39,12 @@ export interface Pdc {
   approval_status?: "pending" | "approved" | "rejected" | null;
   approval_required_role?: string | null;
   approval_target_stage?: string | null;
+  /** Tipo de proceso: compra | licitacion | contrato | permiso | personalizado. */
+  process_type?: "compra" | "licitacion" | "contrato" | "permiso" | "personalizado";
+  /** Proyecto normalizado (tabla projects). */
+  project_id?: string | null;
+  /** Proceso del que este es continuación. */
+  predecessor_process_id?: string | null;
 }
 
 export interface PdcMilestone {

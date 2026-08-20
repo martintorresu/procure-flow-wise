@@ -7,6 +7,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Pdc, Criticality, PdcStatus } from "@/types/pdc";
 import { queryKeys, type PdcFilters } from "@/lib/queryKeys";
+import type { ProcessType } from "@/lib/processTypes";
 
 // Mapas DB ↔ FE
 const CRIT_DB_TO_FE: Record<string, Criticality> = { baja: "low", media: "medium", alta: "high" };
@@ -57,6 +58,9 @@ export interface PdcRow {
   approval_status: string | null;
   approval_required_role: string | null;
   approval_target_stage: string | null;
+  process_type: string | null;
+  project_id: string | null;
+  predecessor_process_id: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
@@ -82,6 +86,9 @@ export function rowToPdc(r: PdcRow): Pdc {
     approval_status: (r.approval_status as Pdc["approval_status"]) ?? null,
     approval_required_role: r.approval_required_role ?? null,
     approval_target_stage: r.approval_target_stage ?? null,
+    process_type: (r.process_type as Pdc["process_type"]) ?? "compra",
+    project_id: r.project_id ?? null,
+    predecessor_process_id: r.predecessor_process_id ?? null,
   };
 }
 
@@ -117,6 +124,9 @@ export function usePdc(id: string | undefined): UseQueryResult<Pdc | null, Error
 
 export interface CreatePdcInput {
   project: string;
+  project_id?: string | null;
+  process_type?: ProcessType;
+  predecessor_process_id?: string | null;
   name: string;
   description?: string | null;
   category?: string | null;
@@ -138,6 +148,9 @@ export function useCreatePdc() {
         .insert({
           name: input.name,
           project: input.project,
+          project_id: input.project_id ?? null,
+          process_type: input.process_type ?? "compra",
+          predecessor_process_id: input.predecessor_process_id ?? null,
           description: input.description ?? null,
           category: input.category ?? null,
           criticality: CRIT_FE_TO_DB[input.criticality],
@@ -164,6 +177,8 @@ export interface UpdatePdcInput {
   patch: Partial<{
     name: string;
     project: string;
+    project_id: string | null;
+    process_type: ProcessType;
     description: string | null;
     category: string | null;
     criticality: Criticality;
