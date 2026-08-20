@@ -14,17 +14,40 @@ import { Badge } from "@/components/ui/badge";
 
 export default function PdcListPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
+  const [delayedFilter, setDelayedFilter] = useState<boolean>(false);
   const [search, setSearch] = useState("");
   const { data: pdcs = [], isLoading: loading } = usePdcs();
+
+  useEffect(() => {
+    const criticality = searchParams.get("criticality");
+    const delayed = searchParams.get("delayed");
+    if (criticality === "low" || criticality === "medium" || criticality === "high") {
+      setCriticalityFilter(criticality);
+    }
+    if (delayed === "true") {
+      setDelayedFilter(true);
+    }
+  }, [searchParams]);
 
   const filtered = pdcs.filter((pdc) => {
     if (statusFilter !== "all" && pdc.current_status !== statusFilter) return false;
     if (criticalityFilter !== "all" && pdc.criticality !== criticalityFilter) return false;
+    if (delayedFilter && getTrafficLight(pdc) !== "red") return false;
     if (search && !pdc.title.toLowerCase().includes(search.toLowerCase()) && !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
+
+  const clearDashboardFilters = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("criticality");
+    next.delete("delayed");
+    setSearchParams(next, { replace: true });
+    setCriticalityFilter("all");
+    setDelayedFilter(false);
+  };
 
   return (
     <div className="space-y-6">
