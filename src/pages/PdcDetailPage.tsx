@@ -27,6 +27,10 @@ import { useStageTemplates, stageIcon } from "@/hooks/useStageTemplates";
 import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
 import { Badge } from "@/components/ui/badge";
 import { Link2 } from "lucide-react";
+import { useProcessParticipants } from "@/hooks/useProcessParticipants";
+import { InviteExternalDialog } from "@/components/InviteExternalDialog";
+import { ProcessComments } from "@/components/ProcessComments";
+
 
 function ApproveButton({ pdcId }: { pdcId: string }) {
   const m = useApprovePdc();
@@ -113,6 +117,14 @@ export default function PdcDetailPage() {
   const { data: logistics = [] } = useLogisticsEvents(pdc?.id);
   const { data: allAlerts = [] } = useAlerts();
   const { data: stageTemplates = [] } = useStageTemplates(pdc?.process_type);
+  const { data: participants = [] } = useProcessParticipants(pdc?.id);
+
+  // ¿El usuario actual es un participante externo (no pertenece al tenant dueño)?
+  const myParticipation = participants.find((p) => p.user_id === user?.id && p.status === "accepted");
+  const isInternal = !!user?.tenantId && !!pdc?.tenant_id && user.tenantId === pdc.tenant_id;
+  const isExternal = !!myParticipation && !isInternal;
+  const canComment = isInternal || myParticipation?.permission_level === "comment";
+
 
   if (loading) {
     return <div className="text-center py-20 text-muted-foreground">Cargando proceso…</div>;
@@ -168,21 +180,31 @@ export default function PdcDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {showChainButton && (
-            <Link to={`/pdcs/new?from=${pdc.id}`}>
-              <Button size="sm" className="gap-2">
-                <Link2 className="w-4 h-4" /> Crear proceso de continuación
-              </Button>
-            </Link>
-          )}
-          {isAdmin && (
-            <Link to={`/pdcs/${pdc.id}/edit`}>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Pencil className="w-4 h-4" /> Editar
-              </Button>
-            </Link>
+          {isExternal ? (
+            <Badge variant="outline" className="text-xs">Acceso externo · solo lectura</Badge>
+          ) : (
+            <>
+              {showChainButton && (
+                <Link to={`/pdcs/new?from=${pdc.id}`}>
+                  <Button size="sm" className="gap-2">
+                    <Link2 className="w-4 h-4" /> Crear proceso de continuación
+                  </Button>
+                </Link>
+              )}
+              {isAdmin && pdc.tenant_id && user && (
+                <InviteExternalDialog processId={pdc.id} tenantId={pdc.tenant_id} invitedBy={user.id} />
+              )}
+              {isAdmin && (
+                <Link to={`/pdcs/${pdc.id}/edit`}>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <Pencil className="w-4 h-4" /> Editar
+                  </Button>
+                </Link>
+              )}
+            </>
           )}
         </div>
+
       </div>
 
       {pdc.approval_status === "pending" && (
@@ -205,10 +227,11 @@ export default function PdcDetailPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { icon: User, label: "Responsable", value: pdc.current_owner },
-          { icon: DollarSign, label: "Monto Estimado", value: `${pdc.currency} ${pdc.estimated_amount.toLocaleString()}` },
+          ...(isExternal ? [] : [{ icon: DollarSign, label: "Monto Estimado", value: `${pdc.currency} ${pdc.estimated_amount.toLocaleString()}` }]),
           { icon: Calendar, label: "Fecha Requerida", value: pdc.required_on_site_date },
-          { icon: MapPin, label: "Proveedor", value: pdc.selected_supplier || "Sin asignar" },
+          ...(isExternal ? [] : [{ icon: MapPin, label: "Proveedor", value: pdc.selected_supplier || "Sin asignar" }]),
         ].map((item) => (
+
           <Card key={item.label}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -243,8 +266,37 @@ export default function PdcDetailPage() {
       )}
 
 
+      {/* Vista reducida para participantes externos */}
+      {isExternal && (
+        <>
+          <Card>
+            <CardContent className="p-6 space-y-4">
+              <div>
+                <h3 className="font-medium mb-1">Descripción</h3>
+                <p className="text-sm text-muted-foreground">{pdc.description}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div><span className="text-muted-foreground">Categoría:</span> {pdc.category}</div>
+                <div><span className="text-muted-foreground">Creado:</span> {pdc.created_at}</div>
+                <div><span className="text-muted-foreground">Actualizado:</span> {pdc.updated_at}</div>
+              </div>
+            </CardContent>
+          </Card>
+          {pdc.tenant_id && user && (
+            <ProcessComments
+              processId={pdc.id}
+              tenantId={pdc.tenant_id}
+              authorUserId={user.id}
+              canComment={!!canComment}
+            />
+          )}
+        </>
+      )}
+
       {/* Tabs */}
+      {!isExternal && (
       <Tabs defaultValue="summary">
+
         <TabsList className="grid grid-cols-4 lg:grid-cols-9 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
@@ -513,6 +565,18 @@ export default function PdcDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
+      )}
+
+      {/* Comentarios (vista interna) */}
+      {!isExternal && pdc.tenant_id && user && (
+        <ProcessComments
+          processId={pdc.id}
+          tenantId={pdc.tenant_id}
+          authorUserId={user.id}
+          canComment
+        />
+      )}
     </div>
+
   );
 }

@@ -615,6 +615,108 @@ export type Database = {
           },
         ]
       }
+      process_comments: {
+        Row: {
+          author_user_id: string
+          body: string
+          created_at: string
+          id: string
+          process_id: string
+          tenant_id: string
+        }
+        Insert: {
+          author_user_id: string
+          body: string
+          created_at?: string
+          id?: string
+          process_id: string
+          tenant_id: string
+        }
+        Update: {
+          author_user_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          process_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_comments_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_comments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_participants: {
+        Row: {
+          accepted_at: string | null
+          email: string
+          external_company: string | null
+          external_role: string
+          id: string
+          invited_at: string
+          invited_by: string | null
+          permission_level: string
+          process_id: string
+          status: string
+          tenant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          email: string
+          external_company?: string | null
+          external_role?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          permission_level?: string
+          process_id: string
+          status?: string
+          tenant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          email?: string
+          external_company?: string | null
+          external_role?: string
+          id?: string
+          invited_at?: string
+          invited_by?: string | null
+          permission_level?: string
+          process_id?: string
+          status?: string
+          tenant_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_participants_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_participants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_stage_templates: {
         Row: {
           active: boolean
@@ -1175,6 +1277,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_process_invitations: { Args: never; Returns: number }
       generate_pdc_number: { Args: never; Returns: string }
       process_number_prefix: { Args: { _type: string }; Returns: string }
       role_can_access_stage: {

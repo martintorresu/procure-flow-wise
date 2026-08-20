@@ -35,6 +35,9 @@ export interface Pdc {
   updated_at: string;
   /** Etapa cruda del enum process_stage (BD). */
   current_stage?: string;
+  /** Tenant dueño del proceso. */
+  tenant_id?: string | null;
+
   /** Estado de aprobación cuando una regla bloqueó el avance. */
   approval_status?: "pending" | "approved" | "rejected" | null;
   approval_required_role?: string | null;
@@ -138,7 +141,10 @@ export interface User {
   role: UserRole;
   /** Slug del tenant al que pertenece el usuario (ej. "acme", "default") */
   tenantSlug: string;
+  /** Id del tenant del perfil interno (null si no tiene perfil de tenant). */
+  tenantId?: string | null;
 }
+
 
 export const STATUS_LABELS: Record<PdcStatus, string> = {
   draft: "Borrador",

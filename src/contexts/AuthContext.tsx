@@ -45,8 +45,10 @@ async function buildDomainUser(supaUser: SupabaseUser): Promise<User | null> {
     email: supaUser.email ?? "",
     role,
     tenantSlug: "default",
+    tenantId: profile?.tenant_id ?? null,
   };
 }
+
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -59,12 +61,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(newSession);
       if (newSession?.user) {
         setTimeout(() => {
-          buildDomainUser(newSession.user).then(setUser);
+          // Vincula invitaciones externas pendientes para este email
+          supabase.rpc("claim_process_invitations").then(() => {
+            buildDomainUser(newSession.user).then(setUser);
+          });
         }, 0);
       } else {
         setUser(null);
       }
     });
+
 
     // 2. Sesión existente DESPUÉS
     supabase.auth.getSession().then(({ data: { session: existing } }) => {

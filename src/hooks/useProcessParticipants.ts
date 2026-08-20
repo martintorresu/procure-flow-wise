@@ -1,0 +1,92 @@
+import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export type ExternalRole = "mandante" | "contratista" | "proveedor" | "otro";
+export type PermissionLevel = "view" | "comment" | "upload";
+
+export interface ProcessParticipant {
+  id: string;
+  process_id: string;
+  tenant_id: string;
+  email: string;
+  external_company: string | null;
+  external_role: ExternalRole;
+  permission_level: PermissionLevel;
+  status: "pending" | "accepted";
+  user_id: string | null;
+  invited_at: string;
+  accepted_at: string | null;
+}
+
+export const EXTERNAL_ROLE_LABELS: Record<ExternalRole, string> = {
+  mandante: "Mandante",
+  contratista: "Contratista",
+  proveedor: "Proveedor",
+  otro: "Otro",
+};
+
+export const PERMISSION_LABELS: Record<PermissionLevel, string> = {
+  view: "Ver",
+  comment: "Ver + Comentar",
+  upload: "Ver + Subir documentos (próximamente)",
+};
+
+/**
+ * Participantes de un proceso. RLS: los admins internos del tenant ven todos;
+ * un externo solo ve su propia fila.
+ */
+export function useProcessParticipants(processId: string | undefined): UseQueryResult<ProcessParticipant[], Error> {
+  return useQuery({
+    queryKey: ["process_participants", processId ?? "none"],
+    enabled: !!processId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("process_participants")
+        .select("*")
+        .eq("process_id", processId!)
+        .order("invited_at", { ascending: false });
+      if (error) throw new Error(error.message);
+      return (data ?? []) as unknown as ProcessParticipant[];
+    },
+  });
+}
+
+export interface InviteInput {
+  processId: string;
+  tenantId: string;
+  email: string;
+  externalCompany?: string;
+  externalRole: ExternalRole;
+  permissionLevel: Exclude<PermissionLevel, "upload">;
+  invitedBy: string;
+}
+
+export function useInviteParticipant() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: InviteInput) => {
+      const { data, error } = await supabase
+        .from("process_participants")
+        .insert({
+          process_id: input.processId,
+          tenant_id: input.tenantId,
+          email: input.email.trim().toLowerCase(),
+          external_company: input.externalCompany?.trim() || null,
+          external_role: input.externalRole,
+          permission_level: input.permissionLevel,
+          invited_by: input.invitedBy,
+        })
+        .select("*")
+        .single();
+      if (error) throw new Error(error.message);
+      return data as unknown as ProcessParticipant;
+    },
+    onSuccess: (_d, vars) =>
+      qc.invalidateQueries({ queryKey: ["process_participants", vars.processId] }),
+  });
+}
+
+/** Vincula invitaciones pendientes del email del usuario logueado. */
+export async function claimProcessInvitations(): Promise<void> {
+  await supabase.rpc("claim_process_invitations");
+}

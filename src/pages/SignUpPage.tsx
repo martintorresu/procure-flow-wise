@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+
 import { AlertCircle, CheckCircle2, Link2 } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,9 +19,12 @@ const AREAS = ["Ingeniería", "Operaciones", "Mantención", "Proyectos", "Compra
 export default function SignUpPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const invitedEmail = searchParams.get("invited_email") ?? "";
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(invitedEmail);
   const [area, setArea] = useState("Ingeniería");
+
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
