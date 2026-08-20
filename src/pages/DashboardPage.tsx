@@ -12,8 +12,8 @@ import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, ShieldChe
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus } from "@/types/pdc";
-import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
+import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus, type TrafficLight } from "@/types/pdc";
+import { type ProcessType } from "@/lib/processTypes";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SEO } from "@/components/SEO";
 import { queryKeys } from "@/lib/queryKeys";
