@@ -104,6 +104,11 @@ export default function CreatePdcPage() {
         created_by: user.id,
       });
       toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
+      // Los procesos tipo "permiso" continúan en Permisología para completar el trámite
+      if (form.process_type === "permiso") {
+        navigate(`/permits?pdc=${data.id}&project=${form.project_id ?? ""}`);
+        return;
+      }
       navigate(`/pdcs/${data.id}`);
     } catch (err) {
       toast.error(`Error al crear el proceso: ${(err as Error).message}`);

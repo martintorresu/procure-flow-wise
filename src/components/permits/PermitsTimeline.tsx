@@ -75,7 +75,7 @@ export function PermitsTimeline({ permits, onSelect }: { permits: Permit[]; onSe
           {/* Línea de hoy */}
           <div
             className="absolute top-0 bottom-0 w-px bg-accent/70 z-10"
-            style={{ left: `calc(220px + ${todayLeft}% * (100% - 220px) / 100%)` }}
+            style={{ left: `calc(220px + (100% - 220px) * ${(todayLeft / 100).toFixed(4)})` }}
             aria-hidden
           />
           {rows.items.map(({ permit, start, end }) => {
