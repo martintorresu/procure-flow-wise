@@ -18,6 +18,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AdminPage from "@/pages/AdminPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectChainPage from "@/pages/ProjectChainPage";
+import OAuthConsent from "@/pages/OAuthConsent";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
 
@@ -58,7 +59,11 @@ function LoginRoute() {
   const params = useParams();
   const urlTenant = params.tenantSlug ?? "default";
 
+  const nextParam = new URLSearchParams(window.location.search).get("next");
+  const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
+
   if (isAuthenticated && user) {
+    if (safeNext) return <Navigate to={safeNext} replace />;
     const home = user.tenantSlug === "default" ? "/" : `/t/${user.tenantSlug}`;
     return <Navigate to={home} replace />;
   }
@@ -85,6 +90,9 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/t/:tenantSlug/login" element={<LoginRoute />} />
+
+            {/* Consentimiento OAuth (MCP) */}
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
             {/* Rutas protegidas — tenant default */}
             <Route element={<ProtectedRoutes />}>

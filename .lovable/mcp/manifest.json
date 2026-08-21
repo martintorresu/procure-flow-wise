@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://wlpfhcqlubokwnszjycg.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "procurement-by-inhr",
+      "version": "0.1.0",
+      "title": "Procurement by InHR"
+    },
+    "tools": [
+      {
+        "name": "list_processes",
+        "title": "Listar procesos de compra",
+        "description": "Lista los procesos de compra visibles para el usuario, con filtros opcionales por criticidad, etapa, tipo o texto de búsqueda.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Texto a buscar en el nombre o número del proceso."
+            },
+            "criticality": {
+              "type": "string",
+              "enum": [
+                "alta",
+                "media",
+                "baja"
+              ],
+              "description": "Filtrar por criticidad."
+            },
+            "stage": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filtrar por etapa actual (current_stage)."
+            },
+            "process_type": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filtrar por tipo de proceso (PC, CT, LT, PM)."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Máximo de procesos a devolver."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_process",
+        "title": "Detalle de un proceso",
+        "description": "Devuelve el detalle de un proceso de compra (por id o por número de proceso) junto con sus hitos y comentarios recientes.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Identificador único del proceso."
+            },
+            "pdc_number": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Número del proceso, por ejemplo PC-0001."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_alerts",
+        "title": "Listar alertas",
+        "description": "Lista las alertas de seguimiento visibles para el usuario, opcionalmente filtradas por severidad o estado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "severity": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filtrar por severidad de la alerta."
+            },
+            "status": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Filtrar por estado de la alerta."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "description": "Máximo de alertas a devolver."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_projects",
+        "title": "Listar proyectos",
+        "description": "Lista los proyectos visibles para el usuario junto con su información básica.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Texto a buscar en el nombre del proyecto."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25,
+              "description": "Máximo de proyectos a devolver."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_process_comment",
+        "title": "Comentar un proceso",
+        "description": "Agrega un comentario al hilo de seguimiento de un proceso de compra, como el usuario autenticado.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "process_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Identificador del proceso a comentar."
+            },
+            "body": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4000,
+              "description": "Texto del comentario."
+            }
+          },
+          "required": [
+            "process_id",
+            "body"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

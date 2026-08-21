@@ -24,7 +24,9 @@ export default function LoginPage() {
     const result = await login(email, password, tenant.slug);
     setSubmitting(false);
     if (result.ok) {
-      navigate(tenant.slug === "default" ? "/" : `/t/${tenant.slug}`);
+      const nextParam = new URLSearchParams(window.location.search).get("next");
+      const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
+      navigate(safeNext ?? (tenant.slug === "default" ? "/" : `/t/${tenant.slug}`));
     } else {
       setError(result.message ?? "Credenciales inválidas.");
     }

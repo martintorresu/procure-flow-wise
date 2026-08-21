@@ -100,7 +100,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Resolver tenant_slug desde URL (path /t/<slug>/ o subdominio) antes del signup
     const { resolveTenant } = await import("@/config/tenants");
     const tenant = resolveTenant(window.location.pathname, window.location.hostname);
-    const redirectUrl = `${window.location.origin}/`;
+    const nextParam = new URLSearchParams(window.location.search).get("next");
+    const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : "/";
+    const redirectUrl = `${window.location.origin}${safeNext}`;
     const { error } = await supabase.auth.signUp({
       email,
       password,
