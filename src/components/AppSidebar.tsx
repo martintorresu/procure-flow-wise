@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
-  Package, Shield, FolderKanban, UserCog
+  Package, Shield, FolderKanban, UserCog, ClipboardList
 } from "lucide-react";
 import { useState } from "react";
 import { useTenant } from "@/config/tenants";
@@ -13,6 +13,7 @@ const baseNavItems = [
   { to: "/pdcs", icon: FileText, label: "Procesos" },
   { to: "/projects", icon: FolderKanban, label: "Proyectos" },
   { to: "/pdcs/new", icon: Plus, label: "Crear Proceso" },
+  { to: "/commitments", icon: ClipboardList, label: "Compromisos" },
   { to: "/alerts", icon: Bell, label: "Alertas" },
   { to: "/profile", icon: UserCog, label: "Mi perfil" },
 ];

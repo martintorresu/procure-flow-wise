@@ -30,6 +30,7 @@ import { Link2 } from "lucide-react";
 import { useProcessParticipants } from "@/hooks/useProcessParticipants";
 import { InviteExternalDialog } from "@/components/InviteExternalDialog";
 import { ProcessComments } from "@/components/ProcessComments";
+import { ProcessCommitments } from "@/components/ProcessCommitments";
 
 
 function ApproveButton({ pdcId }: { pdcId: string }) {
@@ -297,7 +298,7 @@ export default function PdcDetailPage() {
       {!isExternal && (
       <Tabs defaultValue="summary">
 
-        <TabsList className="grid grid-cols-4 lg:grid-cols-9 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-10 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
           <TabsTrigger value="planning">Planificación</TabsTrigger>
@@ -306,8 +307,13 @@ export default function PdcDetailPage() {
           <TabsTrigger value="vendor">OC / Vendor</TabsTrigger>
           <TabsTrigger value="fat">Prueba de Fábrica</TabsTrigger>
           <TabsTrigger value="logistics">Logística</TabsTrigger>
+          <TabsTrigger value="commitments">Compromisos</TabsTrigger>
           <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="commitments">
+          <ProcessCommitments pdcId={pdc.id} />
+        </TabsContent>
 
         {/* Summary */}
         <TabsContent value="summary">
