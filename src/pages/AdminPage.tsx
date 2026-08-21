@@ -214,6 +214,21 @@ export default function AdminPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Teléfono (E.164)</Label>
+              <Input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="+56912345678"
+                className={form.phone && !isValidE164(form.phone) ? "border-destructive" : ""}
+              />
+              <p className="text-[11px] text-muted-foreground">Código de país + número, sin espacios.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>RUT / Identificador fiscal</Label>
+              <Input value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} placeholder="12.345.678-9" />
+            </div>
+
             <div className="md:col-span-2">
               <Button type="submit" disabled={working?.startsWith("user:")}>
                 {working?.startsWith("user:") ? "Creando…" : "Crear usuario"}
