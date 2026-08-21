@@ -11,6 +11,8 @@ import { getTrafficLight } from "@/lib/trafficLight";
 import { useProject, useProjectProcesses } from "@/hooks/useProjects";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import type { Pdc } from "@/types/pdc";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ProjectPermitsSection } from "@/components/permits/ProjectPermitsSection";
 
 /** Ordena los procesos siguiendo predecessor → continuación; los huérfanos al final. */
 function buildChains(processes: Pdc[]): Pdc[][] {
@@ -69,49 +71,62 @@ export default function ProjectChainPage() {
         </div>
       </div>
 
-      {isLoading && <Skeleton className="h-40 w-full" />}
+      <Tabs defaultValue="processes">
+        <TabsList>
+          <TabsTrigger value="processes">Procesos</TabsTrigger>
+          <TabsTrigger value="permits">Permisos</TabsTrigger>
+        </TabsList>
 
-      {!isLoading && processes.length === 0 && (
-        <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
-          Este proyecto aún no tiene procesos.
-        </CardContent></Card>
-      )}
+        <TabsContent value="processes" className="space-y-6 mt-4">
+          {isLoading && <Skeleton className="h-40 w-full" />}
 
-      <div className="space-y-8">
-        {chains.map((chain, ci) => (
-          <div key={ci} className="space-y-2">
-            {chain.map((p, i) => (
-              <div key={`${ci}-${p.id}`} className="space-y-2">
-                <Card className="transition-colors hover:border-primary/40">
-                  <CardContent className="p-4 flex flex-wrap items-center gap-3">
-                    <TrafficLightIndicator color={getTrafficLight(p)} />
-                    <Badge variant="outline" className="text-xs">
-                      {PROCESS_TYPE_LABELS[(p.process_type ?? "compra") as ProcessType]}
-                    </Badge>
-                    <span className="font-mono text-xs">{p.pdc_number}</span>
-                    <span className="font-medium flex-1 min-w-[160px] truncate">{p.title}</span>
-                    <StatusBadge status={p.current_status} />
-                    <span className="text-xs text-muted-foreground flex items-center gap-1">
-                      <User className="w-3 h-3" /> {p.current_owner}
-                    </span>
-                    <Link to={`/pdcs/${p.id}`}>
-                      <Button variant="outline" size="sm">Ver ficha</Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-                {i < chain.length - 1 && (
-                  <div className="flex justify-center">
-                    <ArrowDown
-                      className="w-5 h-5"
-                      style={{ color: "#39FF14", filter: "drop-shadow(0 0 6px #39FF14)" }}
-                    />
+          {!isLoading && processes.length === 0 && (
+            <Card><CardContent className="py-12 text-center text-sm text-muted-foreground">
+              Este proyecto aún no tiene procesos.
+            </CardContent></Card>
+          )}
+
+          <div className="space-y-8">
+            {chains.map((chain, ci) => (
+              <div key={ci} className="space-y-2">
+                {chain.map((p, i) => (
+                  <div key={`${ci}-${p.id}`} className="space-y-2">
+                    <Card className="transition-colors hover:border-primary/40">
+                      <CardContent className="p-4 flex flex-wrap items-center gap-3">
+                        <TrafficLightIndicator color={getTrafficLight(p)} />
+                        <Badge variant="outline" className="text-xs">
+                          {PROCESS_TYPE_LABELS[(p.process_type ?? "compra") as ProcessType]}
+                        </Badge>
+                        <span className="font-mono text-xs">{p.pdc_number}</span>
+                        <span className="font-medium flex-1 min-w-[160px] truncate">{p.title}</span>
+                        <StatusBadge status={p.current_status} />
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <User className="w-3 h-3" /> {p.current_owner}
+                        </span>
+                        <Link to={`/pdcs/${p.id}`}>
+                          <Button variant="outline" size="sm">Ver ficha</Button>
+                        </Link>
+                      </CardContent>
+                    </Card>
+                    {i < chain.length - 1 && (
+                      <div className="flex justify-center">
+                        <ArrowDown
+                          className="w-5 h-5"
+                          style={{ color: "#39FF14", filter: "drop-shadow(0 0 6px #39FF14)" }}
+                        />
+                      </div>
+                    )}
                   </div>
-                )}
+                ))}
               </div>
             ))}
-          </div>
-        ))}
-      </div>
+    </div>
+        </TabsContent>
+
+        <TabsContent value="permits" className="mt-4">
+          <ProjectPermitsSection projectId={id} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
