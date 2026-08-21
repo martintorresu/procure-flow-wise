@@ -1,0 +1,154 @@
+// Edge function: send-whatsapp-alert
+// Envía una alerta por WhatsApp usando la Meta WhatsApp Business API (templates aprobados).
+// Requiere JWT válido del usuario que dispara la alerta; la config del tenant se lee con service role.
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { createClient } from "npm:@supabase/supabase-js@2";
+
+const GRAPH_VERSION = "v21.0";
+const APP_BASE_URL = "https://app.pro-curem.com";
+const TEMPLATE_NAME = "action_required_alert";
+const TEMPLATE_LANG = "es";
+
+const ACTION_LABELS: Record<string, string> = {
+  approval_required: "Aprobación requerida",
+  et_pending: "Completar Especificación Técnica",
+  milestone_overdue: "Hito atrasado",
+  fat_pending: "Coordinar prueba de fábrica (FAT)",
+  drawings_pending: "Revisión de planos",
+  delivery_risk: "Riesgo de entrega",
+};
+
+const E164 = /^\+[1-9]\d{6,14}$/;
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), {
+      status,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+
+  try {
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader.startsWith("Bearer ")) return json({ error: "No autorizado" }, 401);
+
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: userData } = await userClient.auth.getUser();
+    const caller = userData?.user;
+    if (!caller) return json({ error: "No autorizado" }, 401);
+
+    const body = await req.json().catch(() => ({}));
+    const alertId = typeof body?.alert_id === "string" ? body.alert_id : "";
+    const userId = typeof body?.user_id === "string" ? body.user_id : "";
+    const tenantId = typeof body?.tenant_id === "string" ? body.tenant_id : "";
+    if (!alertId || !userId || !tenantId) {
+      return json({ error: "alert_id, user_id y tenant_id son requeridos" }, 400);
+    }
+
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // El caller debe pertenecer al mismo tenant que la alerta.
+    const { data: callerProfile } = await admin
+      .from("profiles").select("tenant_id").eq("id", caller.id).maybeSingle();
+    if (!callerProfile || callerProfile.tenant_id !== tenantId) {
+      return json({ error: "Tenant no autorizado" }, 403);
+    }
+
+    const [{ data: alert }, { data: profile }, { data: config }] = await Promise.all([
+      admin.from("alerts")
+        .select("id, tenant_id, pdc_id, type, message, due_date")
+        .eq("id", alertId).eq("tenant_id", tenantId).maybeSingle(),
+      admin.from("profiles")
+        .select("id, full_name, email, phone, tenant_id, whatsapp_notifications_enabled")
+        .eq("id", userId).maybeSingle(),
+      admin.from("whatsapp_config")
+        .select("phone_number_id, access_token, enabled")
+        .eq("tenant_id", tenantId).maybeSingle(),
+    ]);
+
+    if (!alert) return json({ error: "Alerta no encontrada" }, 404);
+    if (!profile || profile.tenant_id !== tenantId) return json({ error: "Usuario no encontrado" }, 404);
+    if (!config?.enabled) return json({ skipped: "whatsapp_disabled" });
+    if (profile.whatsapp_notifications_enabled === false) return json({ skipped: "user_opted_out" });
+
+    const phone = (profile.phone ?? "").trim();
+    if (!phone) return json({ skipped: "no_phone" });
+    if (!E164.test(phone)) return json({ skipped: "invalid_phone" });
+
+    // Token: variable de entorno global (preferida) o el guardado en la config del tenant.
+    const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN") || (config.access_token ?? "");
+    const phoneNumberId = config.phone_number_id ?? "";
+    if (!accessToken || !phoneNumberId) return json({ error: "Configuración de WhatsApp incompleta" }, 400);
+
+    let pdcName = "Proceso";
+    if (alert.pdc_id) {
+      const { data: pdc } = await admin
+        .from("purchase_processes").select("pdc_number, name").eq("id", alert.pdc_id).maybeSingle();
+      if (pdc) pdcName = `${pdc.pdc_number} · ${pdc.name}`;
+    }
+
+    const actionType = ACTION_LABELS[alert.type] ?? alert.type;
+    const dueDate = alert.due_date
+      ? new Date(alert.due_date).toLocaleDateString("es-CL")
+      : "Sin fecha límite";
+
+    const payload = {
+      messaging_product: "whatsapp",
+      to: phone,
+      type: "template",
+      template: {
+        name: TEMPLATE_NAME,
+        language: { code: TEMPLATE_LANG },
+        components: [
+          {
+            type: "body",
+            parameters: [
+              { type: "text", text: profile.full_name ?? profile.email ?? "Usuario" },
+              { type: "text", text: actionType },
+              { type: "text", text: pdcName },
+              { type: "text", text: dueDate },
+            ],
+          },
+          {
+            type: "button",
+            sub_type: "url",
+            index: "0",
+            parameters: [{ type: "text", text: String(alert.pdc_id ?? "") }],
+          },
+        ],
+      },
+    };
+
+    const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json().catch(() => ({}));
+
+    const metaMessageId = result?.messages?.[0]?.id ?? null;
+    const errorMessage = res.ok ? null : (result?.error?.message ?? `HTTP ${res.status}`);
+
+    await admin.from("whatsapp_log").insert({
+      tenant_id: tenantId,
+      alert_id: alertId,
+      user_id: userId,
+      phone,
+      status: res.ok ? "sent" : "failed",
+      meta_message_id: metaMessageId,
+      error_message: errorMessage,
+    });
+
+    if (!res.ok) return json({ ok: false, error: errorMessage }, 502);
+    return json({ ok: true, message_id: metaMessageId, link: `${APP_BASE_URL}/pdc/${alert.pdc_id}` });
+  } catch (e) {
+    return json({ error: e instanceof Error ? e.message : "Error desconocido" }, 500);
+  }
+});
