@@ -19,6 +19,7 @@ import { SEO } from "@/components/SEO";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
+import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   compra: "Cp",
@@ -144,6 +145,9 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
+
+      {/* Compromisos pendientes del usuario */}
+      <DashboardCommitmentsWidget />
 
       {/* Active processes as separated cards */}
       <Card className="overflow-hidden">
