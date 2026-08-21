@@ -279,7 +279,7 @@ export function useAdvanceStage() {
           .eq("id", pdcId);
         if (upErr) throw new Error(upErr.message);
 
-        await supabase.from("alerts").insert({
+        const { data: alertRow } = await supabase.from("alerts").insert({
           tenant_id: pdc.tenant_id,
           pdc_id: pdcId,
           type: "approval_required",
@@ -287,9 +287,19 @@ export function useAdvanceStage() {
           message: `${pdc.pdc_number} requiere aprobación de ${matched.required_role} para avanzar a ${nextStage}.`,
           owner_role: matched.required_role as
             | "admin" | "compras" | "ingenieria" | "programacion" | "gerente" | "planificacion" | "logistica",
-        });
+        }).select("id").maybeSingle();
+
+        // Notificación WhatsApp (no bloqueante): sólo si el tenant la tiene habilitada
+        if (alertRow?.id && pdc.tenant_id) {
+          void notifyWhatsappByRole({
+            alertId: alertRow.id,
+            tenantId: pdc.tenant_id,
+            role: matched.required_role,
+          });
+        }
         return { advanced: false, pendingRole: matched.required_role };
       }
+
 
       // Sin bloqueo → avanza
       const { error: advErr } = await supabase
