@@ -20,6 +20,7 @@ import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
+import { DashboardPermitsWidget } from "@/components/DashboardPermitsWidget";
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   compra: "Cp",
@@ -147,7 +148,10 @@ export default function DashboardPage() {
 
 
       {/* Compromisos pendientes del usuario */}
-      <DashboardCommitmentsWidget />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DashboardCommitmentsWidget />
+        <DashboardPermitsWidget />
+      </div>
 
       {/* Active processes as separated cards */}
       <Card className="overflow-hidden">
