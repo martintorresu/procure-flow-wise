@@ -20,6 +20,7 @@ import { EtFieldsAdminSection } from "@/components/admin/EtFieldsAdminSection";
 import { WhatsappConfigSection } from "@/components/admin/WhatsappConfigSection";
 import { TenantUsersContactSection } from "@/components/admin/TenantUsersContactSection";
 import { ApiKeysSection } from "@/components/admin/ApiKeysSection";
+import { PermitTypesSection } from "@/components/admin/PermitTypesSection";
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/pdc";
 
@@ -271,6 +272,7 @@ export default function AdminPage() {
       <WhatsappConfigSection />
       <TenantUsersContactSection />
       <ApiKeysSection />
+      <PermitTypesSection />
       <StageTemplatesSection />
       <EtFieldsAdminSection />
 

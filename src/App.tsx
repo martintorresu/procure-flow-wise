@@ -20,6 +20,7 @@ import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectChainPage from "@/pages/ProjectChainPage";
 import ProfilePage from "@/pages/ProfilePage";
 import CommitmentsPage from "@/pages/CommitmentsPage";
+import PermitsPage from "@/pages/PermitsPage";
 import OAuthConsent from "@/pages/OAuthConsent";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
@@ -107,6 +108,7 @@ const App = () => (
               <Route path="/projects/:id" element={<ProjectChainPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/commitments" element={<CommitmentsPage />} />
+              <Route path="/permits" element={<PermitsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
@@ -122,6 +124,7 @@ const App = () => (
               <Route path="projects/:id" element={<ProjectChainPage />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="commitments" element={<CommitmentsPage />} />
+              <Route path="permits" element={<PermitsPage />} />
               <Route path="profile" element={<ProfilePage />} />
               <Route path="admin" element={<AdminPage />} />
             </Route>
