@@ -47,8 +47,9 @@ export default function AdminPage() {
 
   // Form individual
   const [form, setForm] = useState({
-    email: "", password: "demo123456", full_name: "", role: "ingenieria",
+    email: "", password: "demo123456", full_name: "", role: "ingenieria", phone: "", rut: "",
   });
+
 
   const refreshDemoCount = async () => {
     const { count } = await supabase
