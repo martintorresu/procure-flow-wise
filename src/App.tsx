@@ -18,6 +18,7 @@ import ResetPasswordPage from "@/pages/ResetPasswordPage";
 import AdminPage from "@/pages/AdminPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectChainPage from "@/pages/ProjectChainPage";
+import ProfilePage from "@/pages/ProfilePage";
 import OAuthConsent from "@/pages/OAuthConsent";
 import NotFound from "./pages/NotFound.tsx";
 import { TENANTS } from "@/config/tenants";
@@ -104,6 +105,7 @@ const App = () => (
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectChainPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin" element={<AdminPage />} />
             </Route>
 
@@ -117,6 +119,7 @@ const App = () => (
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="projects/:id" element={<ProjectChainPage />} />
               <Route path="alerts" element={<AlertsPage />} />
+              <Route path="profile" element={<ProfilePage />} />
               <Route path="admin" element={<AdminPage />} />
             </Route>
 
