@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -48,6 +49,17 @@ export default function PermitsPage() {
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Permit | null>(null);
+
+  // Alta guiada tras crear un proceso tipo "permiso"
+  const [searchParams, setSearchParams] = useSearchParams();
+  const prefillPdc = searchParams.get("pdc") ?? undefined;
+  const prefillProject = searchParams.get("project") || undefined;
+  useEffect(() => {
+    if (prefillPdc) {
+      setEditing(null);
+      setDialogOpen(true);
+    }
+  }, [prefillPdc]);
 
   const projectName = (id: string | null) => projects.find((p) => p.id === id)?.name ?? "—";
   const userName = (id: string | null) => {
@@ -230,7 +242,16 @@ export default function PermitsPage() {
         )
       )}
 
-      <PermitFormDialog open={dialogOpen} onOpenChange={setDialogOpen} permit={editing} />
+      <PermitFormDialog
+        open={dialogOpen}
+        onOpenChange={(v) => {
+          setDialogOpen(v);
+          if (!v && prefillPdc) setSearchParams({}, { replace: true });
+        }}
+        permit={editing}
+        defaultPdcId={editing ? undefined : prefillPdc}
+        defaultProjectId={editing ? undefined : prefillProject}
+      />
     </div>
   );
 }
