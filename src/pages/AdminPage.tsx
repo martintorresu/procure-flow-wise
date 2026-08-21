@@ -75,12 +75,19 @@ export default function AdminPage() {
     return data;
   };
 
-  const createUser = async (payload: typeof form) => {
+  const createUser = async (payload: {
+    email: string; password: string; full_name: string; role: string; phone?: string; rut?: string;
+  }) => {
     if (!payload.email || !payload.password) {
       toast.error("Email y password requeridos");
       return;
     }
+    if (payload.phone && !isValidE164(payload.phone)) {
+      toast.error("Teléfono inválido. Usa formato E.164: +56912345678");
+      return;
+    }
     setWorking(`user:${payload.email}`);
+
     try {
       const data = await callAdmin("create_user", payload);
       toast.success(`Usuario creado: ${data.email} (${data.role})`);
