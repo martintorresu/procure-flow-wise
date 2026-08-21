@@ -118,6 +118,50 @@ export type Database = {
           },
         ]
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          enabled: boolean
+          id: string
+          key_hash: string
+          key_prefix: string | null
+          last_used_at: string | null
+          name: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          key_hash: string
+          key_prefix?: string | null
+          last_used_at?: string | null
+          name: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          enabled?: boolean
+          id?: string
+          key_hash?: string
+          key_prefix?: string | null
+          last_used_at?: string | null
+          name?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_matrix: {
         Row: {
           active: boolean
@@ -650,6 +694,95 @@ export type Database = {
           },
           {
             foreignKeyName: "process_comments_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_commitments: {
+        Row: {
+          commitment_text: string
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          id: string
+          meeting_date: string | null
+          meeting_title: string | null
+          notes: string | null
+          pdc_id: string | null
+          priority: string | null
+          raw_json: Json | null
+          responsible_name: string | null
+          responsible_user_id: string | null
+          source: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          commitment_text: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          meeting_date?: string | null
+          meeting_title?: string | null
+          notes?: string | null
+          pdc_id?: string | null
+          priority?: string | null
+          raw_json?: Json | null
+          responsible_name?: string | null
+          responsible_user_id?: string | null
+          source?: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          commitment_text?: string
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          id?: string
+          meeting_date?: string | null
+          meeting_title?: string | null
+          notes?: string | null
+          pdc_id?: string | null
+          priority?: string | null
+          raw_json?: Json | null
+          responsible_name?: string | null
+          responsible_user_id?: string | null
+          source?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_commitments_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_commitments_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_commitments_responsible_user_id_fkey"
+            columns: ["responsible_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_commitments_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
