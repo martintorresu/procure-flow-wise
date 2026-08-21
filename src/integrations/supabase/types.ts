@@ -659,6 +659,211 @@ export type Database = {
           },
         ]
       }
+      permit_documents: {
+        Row: {
+          document_type: string | null
+          file_url: string | null
+          id: string
+          name: string
+          permit_id: string
+          tenant_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          document_type?: string | null
+          file_url?: string | null
+          id?: string
+          name: string
+          permit_id: string
+          tenant_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          document_type?: string | null
+          file_url?: string | null
+          id?: string
+          name?: string
+          permit_id?: string
+          tenant_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_documents_permit_id_fkey"
+            columns: ["permit_id"]
+            isOneToOne: false
+            referencedRelation: "permits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permit_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permit_types: {
+        Row: {
+          category: string | null
+          created_at: string
+          enabled: boolean
+          id: string
+          name: string
+          requires_renewal: boolean
+          sort_order: number
+          tenant_id: string
+          typical_authority: string | null
+          typical_duration_days: number | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name: string
+          requires_renewal?: boolean
+          sort_order?: number
+          tenant_id: string
+          typical_authority?: string | null
+          typical_duration_days?: number | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          name?: string
+          requires_renewal?: boolean
+          sort_order?: number
+          tenant_id?: string
+          typical_authority?: string | null
+          typical_duration_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permit_types_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      permits: {
+        Row: {
+          application_date: string | null
+          approval_date: string | null
+          created_at: string
+          expiration_date: string | null
+          id: string
+          issuing_authority: string | null
+          notes: string | null
+          pdc_id: string | null
+          permit_number: string | null
+          permit_type: string
+          permit_type_id: string | null
+          project_id: string | null
+          renewal_of: string | null
+          responsible_user_id: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          application_date?: string | null
+          approval_date?: string | null
+          created_at?: string
+          expiration_date?: string | null
+          id?: string
+          issuing_authority?: string | null
+          notes?: string | null
+          pdc_id?: string | null
+          permit_number?: string | null
+          permit_type: string
+          permit_type_id?: string | null
+          project_id?: string | null
+          renewal_of?: string | null
+          responsible_user_id?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          application_date?: string | null
+          approval_date?: string | null
+          created_at?: string
+          expiration_date?: string | null
+          id?: string
+          issuing_authority?: string | null
+          notes?: string | null
+          pdc_id?: string | null
+          permit_number?: string | null
+          permit_type?: string
+          permit_type_id?: string | null
+          project_id?: string | null
+          renewal_of?: string | null
+          responsible_user_id?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "permits_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permits_permit_type_id_fkey"
+            columns: ["permit_type_id"]
+            isOneToOne: false
+            referencedRelation: "permit_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permits_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permits_renewal_of_fkey"
+            columns: ["renewal_of"]
+            isOneToOne: false
+            referencedRelation: "permits"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permits_responsible_user_id_fkey"
+            columns: ["responsible_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "permits_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_comments: {
         Row: {
           author_user_id: string
@@ -1521,6 +1726,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      seed_permit_types: { Args: { _tenant_id: string }; Returns: undefined }
     }
     Enums: {
       app_role:
