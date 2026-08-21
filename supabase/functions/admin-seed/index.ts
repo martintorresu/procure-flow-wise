@@ -80,12 +80,17 @@ Deno.serve(async (req) => {
       const password = String(p.password ?? "");
       const fullName = String(p.full_name ?? "").trim() || email;
       const role = String(p.role ?? "") as Role;
+      const phone = String(p.phone ?? "").trim();
+      const rut = String(p.rut ?? "").trim();
 
       if (!email || !password || password.length < 6) {
         return json(400, { error: "email y password (>= 6 chars) requeridos" });
       }
       if (!VALID_ROLES.includes(role)) {
         return json(400, { error: `role inválido. Debe ser uno de: ${VALID_ROLES.join(", ")}` });
+      }
+      if (phone && !/^\+[1-9]\d{6,14}$/.test(phone)) {
+        return json(400, { error: "phone debe estar en formato E.164 (ej: +56912345678)" });
       }
 
       // Crear usuario con email confirmado
@@ -99,6 +104,13 @@ Deno.serve(async (req) => {
 
       const newId = created.user.id;
 
+      if (phone || rut) {
+        await admin.from("profiles").update({
+          phone: phone || null,
+          rut: rut || null,
+        }).eq("id", newId);
+      }
+
       // El trigger handle_new_user crea profile y rol 'ingenieria' por defecto.
       // Si el rol pedido es distinto, lo reemplazamos.
       if (role !== "ingenieria") {
@@ -110,6 +122,7 @@ Deno.serve(async (req) => {
       }
 
       return json(200, { ok: true, user_id: newId, email, role });
+
     }
 
     if (action === "seed_pdcs") {
