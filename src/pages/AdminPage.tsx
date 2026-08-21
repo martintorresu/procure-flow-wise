@@ -267,8 +267,11 @@ export default function AdminPage() {
 
       <AlertRulesSection />
       <ApprovalMatrixSection />
+      <WhatsappConfigSection />
+      <TenantUsersContactSection />
       <StageTemplatesSection />
       <EtFieldsAdminSection />
+
     </div>
   );
 }
