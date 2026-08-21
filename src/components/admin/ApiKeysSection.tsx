@@ -14,15 +14,22 @@ const ENDPOINT = `https://${PROJECT_ID}.supabase.co/functions/v1/import-commitme
 
 const SAMPLE_PAYLOAD = `{
   "api_key": "TU_API_KEY",
-  "meeting_title": "Reunión de avance proyecto X",
+  "meeting_title": "Visita a obra — Torre B, piso 7",
   "meeting_date": "2026-08-20",
   "commitments": [
     {
-      "text": "Subir certificado de materiales",
-      "responsible": "Juan Pérez",
+      "text": "Reparar filtración en losa del piso 7 antes del hormigonado",
+      "responsible": "Juan Pérez (jefe de obra)",
       "due_date": "2026-08-25",
       "priority": "alta",
       "pdc_reference": "PC-2024-0045"
+    },
+    {
+      "text": "Enviar certificado de calidad del hormigón del lote 12",
+      "responsible": "María Soto",
+      "due_date": "2026-08-27",
+      "priority": "media",
+      "pdc_reference": "CT-2024-0012"
     }
   ]
 }`;
@@ -61,9 +68,23 @@ export function ApiKeysSection() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
+        <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
+          <h3 className="text-sm font-semibold">Conecta tu agente de minutas</h3>
+          <p className="text-sm text-muted-foreground">
+            Configura tu agente GPT (o cualquier herramienta de transcripción) para enviar los
+            compromisos detectados a este endpoint. Pro.Curem los vinculará automáticamente con los
+            procesos y responsables correctos.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Flujo típico: reunión de obra → transcripción o notas de voz → el agente extrae los
+            acuerdos → POST al endpoint → compromisos con responsable, fecha y alertas dentro del
+            proceso.
+          </p>
+        </div>
+
         <p className="text-sm text-muted-foreground">
-          Genera claves para que un agente externo (por ejemplo un GPT) importe compromisos de reuniones.
-          La clave se muestra una sola vez; en la base solo se guarda su huella cifrada.
+          Genera claves para que un agente externo importe compromisos de reuniones. La clave se
+          muestra una sola vez; en la base solo se guarda su huella cifrada.
         </p>
 
         <div className="flex flex-wrap items-end gap-3">
