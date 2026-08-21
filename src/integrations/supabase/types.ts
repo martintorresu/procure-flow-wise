@@ -771,9 +771,12 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          phone: string | null
           position: string | null
+          rut: string | null
           tenant_id: string
           updated_at: string
+          whatsapp_notifications_enabled: boolean
         }
         Insert: {
           area?: string | null
@@ -781,9 +784,12 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          phone?: string | null
           position?: string | null
+          rut?: string | null
           tenant_id: string
           updated_at?: string
+          whatsapp_notifications_enabled?: boolean
         }
         Update: {
           area?: string | null
@@ -791,9 +797,12 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          phone?: string | null
           position?: string | null
+          rut?: string | null
           tenant_id?: string
           updated_at?: string
+          whatsapp_notifications_enabled?: boolean
         }
         Relationships: [
           {
@@ -1271,6 +1280,98 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      whatsapp_config: {
+        Row: {
+          access_token: string
+          business_account_id: string
+          created_at: string
+          enabled: boolean
+          id: string
+          phone_number_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token?: string
+          business_account_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          phone_number_id?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          business_account_id?: string
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          phone_number_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      whatsapp_log: {
+        Row: {
+          alert_id: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          meta_message_id: string | null
+          phone: string | null
+          status: string
+          tenant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          alert_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          meta_message_id?: string | null
+          phone?: string | null
+          status: string
+          tenant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          alert_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          meta_message_id?: string | null
+          phone?: string | null
+          status?: string
+          tenant_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "whatsapp_log_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "whatsapp_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
