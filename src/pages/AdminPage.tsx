@@ -17,7 +17,11 @@ import { useAlertRules, useUpdateAlertRule, TRIGGER_DESCRIPTIONS, type AlertRule
 import { useApprovalMatrix, useUpdateApprovalRule, type ApprovalRule } from "@/hooks/useApprovalMatrix";
 import { StageTemplatesSection } from "@/components/admin/StageTemplatesSection";
 import { EtFieldsAdminSection } from "@/components/admin/EtFieldsAdminSection";
+import { WhatsappConfigSection } from "@/components/admin/WhatsappConfigSection";
+import { TenantUsersContactSection } from "@/components/admin/TenantUsersContactSection";
+import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/pdc";
+
 
 const ROLES = [
   { value: "admin", label: "Admin" },
@@ -43,8 +47,9 @@ export default function AdminPage() {
 
   // Form individual
   const [form, setForm] = useState({
-    email: "", password: "demo123456", full_name: "", role: "ingenieria",
+    email: "", password: "demo123456", full_name: "", role: "ingenieria", phone: "", rut: "",
   });
+
 
   const refreshDemoCount = async () => {
     const { count } = await supabase
@@ -70,12 +75,19 @@ export default function AdminPage() {
     return data;
   };
 
-  const createUser = async (payload: typeof form) => {
+  const createUser = async (payload: {
+    email: string; password: string; full_name: string; role: string; phone?: string; rut?: string;
+  }) => {
     if (!payload.email || !payload.password) {
       toast.error("Email y password requeridos");
       return;
     }
+    if (payload.phone && !isValidE164(payload.phone)) {
+      toast.error("Teléfono inválido. Usa formato E.164: +56912345678");
+      return;
+    }
     setWorking(`user:${payload.email}`);
+
     try {
       const data = await callAdmin("create_user", payload);
       toast.success(`Usuario creado: ${data.email} (${data.role})`);
@@ -202,6 +214,21 @@ export default function AdminPage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Teléfono (E.164)</Label>
+              <Input
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder="+56912345678"
+                className={form.phone && !isValidE164(form.phone) ? "border-destructive" : ""}
+              />
+              <p className="text-[11px] text-muted-foreground">Código de país + número, sin espacios.</p>
+            </div>
+            <div className="space-y-2">
+              <Label>RUT / Identificador fiscal</Label>
+              <Input value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} placeholder="12.345.678-9" />
+            </div>
+
             <div className="md:col-span-2">
               <Button type="submit" disabled={working?.startsWith("user:")}>
                 {working?.startsWith("user:") ? "Creando…" : "Crear usuario"}
@@ -240,8 +267,11 @@ export default function AdminPage() {
 
       <AlertRulesSection />
       <ApprovalMatrixSection />
+      <WhatsappConfigSection />
+      <TenantUsersContactSection />
       <StageTemplatesSection />
       <EtFieldsAdminSection />
+
     </div>
   );
 }

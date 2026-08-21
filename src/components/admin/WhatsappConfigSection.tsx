@@ -1,0 +1,137 @@
+import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { MessageCircle } from "lucide-react";
+import { toast } from "sonner";
+import {
+  useWhatsappConfig, useSaveWhatsappConfig, useWhatsappLog, type WhatsappConfigInput,
+} from "@/hooks/useWhatsappConfig";
+
+const EMPTY: WhatsappConfigInput = {
+  phone_number_id: "", access_token: "", business_account_id: "", enabled: false,
+};
+
+export function WhatsappConfigSection() {
+  const { data: config, isLoading } = useWhatsappConfig();
+  const { data: logs = [] } = useWhatsappLog(10);
+  const save = useSaveWhatsappConfig();
+  const [form, setForm] = useState<WhatsappConfigInput>(EMPTY);
+
+  useEffect(() => {
+    if (config) {
+      setForm({
+        phone_number_id: config.phone_number_id ?? "",
+        access_token: config.access_token ?? "",
+        business_account_id: config.business_account_id ?? "",
+        enabled: config.enabled,
+      });
+    }
+  }, [config]);
+
+  const onSave = async () => {
+    if (form.enabled && (!form.phone_number_id.trim() || !form.access_token.trim())) {
+      toast.error("Para activar necesitas Phone Number ID y Access Token");
+      return;
+    }
+    try {
+      await save.mutateAsync({ id: config?.id, ...form });
+      toast.success("Configuración de WhatsApp guardada");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <MessageCircle className="w-4 h-4" /> WhatsApp (Meta Business API)
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          Credenciales de la app de WhatsApp Business de Meta para tu organización. Las alertas se envían
+          con el template aprobado <code className="bg-muted px-1 rounded">action_required_alert</code> (idioma es).
+        </p>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Cargando configuración…</p>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Phone Number ID</Label>
+                <Input
+                  value={form.phone_number_id}
+                  onChange={(e) => setForm({ ...form, phone_number_id: e.target.value })}
+                  placeholder="1234567890"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Business Account ID</Label>
+                <Input
+                  value={form.business_account_id}
+                  onChange={(e) => setForm({ ...form, business_account_id: e.target.value })}
+                  placeholder="0987654321"
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label>Access Token permanente</Label>
+                <Input
+                  type="password"
+                  value={form.access_token}
+                  onChange={(e) => setForm({ ...form, access_token: e.target.value })}
+                  placeholder="EAAG…"
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Si existe el secret <code className="bg-muted px-1 rounded">META_WHATSAPP_ACCESS_TOKEN</code> en
+                  el backend, ese tiene prioridad sobre este valor.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={form.enabled} onCheckedChange={(v) => setForm({ ...form, enabled: v })} />
+              <span className="text-sm">Notificaciones por WhatsApp activas</span>
+            </div>
+            <Button onClick={onSave} disabled={save.isPending}>
+              {save.isPending ? "Guardando…" : "Guardar configuración"}
+            </Button>
+
+            {logs.length > 0 && (
+              <div className="pt-2">
+                <p className="text-xs font-medium mb-2">Últimos envíos</p>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Teléfono</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Detalle</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {logs.map((l) => (
+                      <TableRow key={l.id}>
+                        <TableCell className="text-xs">{new Date(l.created_at).toLocaleString("es-CL")}</TableCell>
+                        <TableCell className="text-xs font-mono">{l.phone ?? "—"}</TableCell>
+                        <TableCell className={`text-xs font-medium ${l.status === "sent" ? "text-success" : "text-destructive"}`}>
+                          {l.status === "sent" ? "Enviado" : "Fallido"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground truncate max-w-[240px]">
+                          {l.error_message ?? l.meta_message_id ?? "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

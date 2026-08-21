@@ -143,6 +143,13 @@ export interface User {
   tenantSlug: string;
   /** Id del tenant del perfil interno (null si no tiene perfil de tenant). */
   tenantId?: string | null;
+  /** Teléfono en formato E.164 (ej: +56912345678). */
+  phone?: string;
+  /** RUT o identificador fiscal regional. */
+  rut?: string;
+  /** Preferencia de recibir alertas por WhatsApp. */
+  whatsappNotificationsEnabled?: boolean;
+
 }
 
 

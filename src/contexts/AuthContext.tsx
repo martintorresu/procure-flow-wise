@@ -46,7 +46,11 @@ async function buildDomainUser(supaUser: SupabaseUser): Promise<User | null> {
     role,
     tenantSlug: "default",
     tenantId: profile?.tenant_id ?? null,
+    phone: profile?.phone ?? undefined,
+    rut: profile?.rut ?? undefined,
+    whatsappNotificationsEnabled: profile?.whatsapp_notifications_enabled ?? true,
   };
+
 }
 
 
