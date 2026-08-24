@@ -92,16 +92,25 @@ Deno.serve(async (req) => {
     if (!accessToken || !phoneNumberId) return json({ error: "Configuración de WhatsApp incompleta" }, 400);
 
     let pdcName = "Proceso";
+    let currentStage = "Sin etapa";
     if (alert.pdc_id) {
       const { data: pdc } = await admin
-        .from("purchase_processes").select("pdc_number, name").eq("id", alert.pdc_id).maybeSingle();
-      if (pdc) pdcName = `${pdc.pdc_number} · ${pdc.name}`;
+        .from("purchase_processes").select("pdc_number, name, current_stage").eq("id", alert.pdc_id).maybeSingle();
+      if (pdc) {
+        pdcName = `${pdc.pdc_number} · ${pdc.name}`;
+        if (pdc.current_stage) currentStage = String(pdc.current_stage);
+      }
     }
 
     const actionType = ACTION_LABELS[alert.type] ?? alert.type;
     const dueDate = alert.due_date
       ? new Date(alert.due_date).toLocaleDateString("es-CL")
       : "Sin fecha límite";
+    // {{4}} = acción requerida
+    const requiredAction = alert.message?.trim()
+      ? alert.message.trim()
+      : `${actionType} (vence: ${dueDate})`;
+
 
     const payload = {
       messaging_product: "whatsapp",
