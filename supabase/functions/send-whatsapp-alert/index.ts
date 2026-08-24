@@ -61,12 +61,15 @@ Deno.serve(async (req) => {
       return json({ error: "Tenant no autorizado" }, 403);
     }
 
-    const [{ data: alert }, { data: profile }, { data: config }] = await Promise.all([
+    const [{ data: alert }, { data: profile }, { data: contact }, { data: config }] = await Promise.all([
       admin.from("alerts")
         .select("id, tenant_id, pdc_id, type, message, due_date")
         .eq("id", alertId).eq("tenant_id", tenantId).maybeSingle(),
       admin.from("profiles")
-        .select("id, full_name, email, phone, tenant_id, whatsapp_notifications_enabled")
+        .select("id, full_name, email, tenant_id")
+        .eq("id", userId).maybeSingle(),
+      admin.from("profile_contacts")
+        .select("id, phone, whatsapp_notifications_enabled")
         .eq("id", userId).maybeSingle(),
       admin.from("whatsapp_config")
         .select("phone_number_id, access_token, enabled")
@@ -76,11 +79,12 @@ Deno.serve(async (req) => {
     if (!alert) return json({ error: "Alerta no encontrada" }, 404);
     if (!profile || profile.tenant_id !== tenantId) return json({ error: "Usuario no encontrado" }, 404);
     if (!config?.enabled) return json({ skipped: "whatsapp_disabled" });
-    if (profile.whatsapp_notifications_enabled === false) return json({ skipped: "user_opted_out" });
+    if (contact?.whatsapp_notifications_enabled === false) return json({ skipped: "user_opted_out" });
 
-    const phone = (profile.phone ?? "").trim();
+    const phone = (contact?.phone ?? "").trim();
     if (!phone) return json({ skipped: "no_phone" });
     if (!E164.test(phone)) return json({ skipped: "invalid_phone" });
+
 
     // Token: variable de entorno global (preferida) o el guardado en la config del tenant.
     const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN") || (config.access_token ?? "");
