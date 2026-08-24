@@ -55,7 +55,7 @@ export function WhatsappConfigSection() {
       <CardContent className="space-y-4">
         <p className="text-xs text-muted-foreground">
           Credenciales de la app de WhatsApp Business de Meta para tu organización. Las alertas se envían
-          con el template aprobado <code className="bg-muted px-1 rounded">action_required_alert</code> (idioma es).
+          con el template aprobado <code className="bg-muted px-1 rounded">procurem_alerta</code> (idioma es).
         </p>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando configuración…</p>
