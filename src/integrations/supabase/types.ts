@@ -1102,6 +1102,41 @@ export type Database = {
           },
         ]
       }
+      profile_contacts: {
+        Row: {
+          created_at: string
+          id: string
+          phone: string | null
+          rut: string | null
+          updated_at: string
+          whatsapp_notifications_enabled: boolean
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          phone?: string | null
+          rut?: string | null
+          updated_at?: string
+          whatsapp_notifications_enabled?: boolean
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          phone?: string | null
+          rut?: string | null
+          updated_at?: string
+          whatsapp_notifications_enabled?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profile_contacts_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           area: string | null
@@ -1109,12 +1144,9 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
-          phone: string | null
           position: string | null
-          rut: string | null
           tenant_id: string
           updated_at: string
-          whatsapp_notifications_enabled: boolean
         }
         Insert: {
           area?: string | null
@@ -1122,12 +1154,9 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
-          phone?: string | null
           position?: string | null
-          rut?: string | null
           tenant_id: string
           updated_at?: string
-          whatsapp_notifications_enabled?: boolean
         }
         Update: {
           area?: string | null
@@ -1135,12 +1164,9 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
-          phone?: string | null
           position?: string | null
-          rut?: string | null
           tenant_id?: string
           updated_at?: string
-          whatsapp_notifications_enabled?: boolean
         }
         Relationships: [
           {

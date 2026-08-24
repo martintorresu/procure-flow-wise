@@ -105,11 +105,13 @@ Deno.serve(async (req) => {
       const newId = created.user.id;
 
       if (phone || rut) {
-        await admin.from("profiles").update({
+        await admin.from("profile_contacts").upsert({
+          id: newId,
           phone: phone || null,
           rut: rut || null,
-        }).eq("id", newId);
+        }, { onConflict: "id" });
       }
+
 
       // El trigger handle_new_user crea profile y rol 'ingenieria' por defecto.
       // Si el rol pedido es distinto, lo reemplazamos.

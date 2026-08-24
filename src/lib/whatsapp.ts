@@ -37,20 +37,20 @@ export async function notifyWhatsappByRole(params: {
     const ids = (roleRows ?? []).map((r) => r.user_id);
     if (!ids.length) return;
 
+    // El teléfono y la preferencia de WhatsApp son datos privados: la edge
+    // function (service role) resuelve y filtra los destinatarios.
     const { data: profiles } = await supabase
       .from("profiles")
-      .select("id, phone, whatsapp_notifications_enabled, tenant_id")
+      .select("id, tenant_id")
       .in("id", ids)
       .eq("tenant_id", params.tenantId);
 
-    const targets = (profiles ?? []).filter(
-      (p) => !!p.phone && p.whatsapp_notifications_enabled !== false,
-    );
     await Promise.all(
-      targets.map((p) =>
+      (profiles ?? []).map((p) =>
         notifyWhatsappAlert({ alertId: params.alertId, userId: p.id, tenantId: params.tenantId }),
       ),
     );
+
   } catch (e) {
     console.warn("[whatsapp] no se pudieron resolver destinatarios:", e);
   }
