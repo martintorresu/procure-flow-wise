@@ -6,7 +6,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const GRAPH_VERSION = "v21.0";
 const APP_BASE_URL = "https://app.pro-curem.com";
-const TEMPLATE_NAME = "action_required_alert";
+const TEMPLATE_NAME = "procurem_alerta";
 const TEMPLATE_LANG = "es";
 
 const ACTION_LABELS: Record<string, string> = {
