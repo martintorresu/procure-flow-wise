@@ -123,17 +123,11 @@ Deno.serve(async (req) => {
           {
             type: "body",
             parameters: [
-              { type: "text", text: profile.full_name ?? profile.email ?? "Usuario" },
-              { type: "text", text: actionType },
-              { type: "text", text: pdcName },
-              { type: "text", text: dueDate },
+              { type: "text", text: actionType },      // {{1}} tipo de alerta
+              { type: "text", text: pdcName },         // {{2}} nombre del proceso
+              { type: "text", text: currentStage },    // {{3}} etapa actual
+              { type: "text", text: requiredAction },  // {{4}} acción requerida
             ],
-          },
-          {
-            type: "button",
-            sub_type: "url",
-            index: "0",
-            parameters: [{ type: "text", text: String(alert.pdc_id ?? "") }],
           },
         ],
       },
