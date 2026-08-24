@@ -29,9 +29,14 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 /** Construye el objeto User del dominio a partir de la sesión + profile + roles. */
 async function buildDomainUser(supaUser: SupabaseUser): Promise<User | null> {
-  const [{ data: profile }, { data: roles }] = await Promise.all([
+  const [{ data: profile }, { data: roles }, { data: contact }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", supaUser.id).maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", supaUser.id),
+    supabase
+      .from("profile_contacts")
+      .select("phone, rut, whatsapp_notifications_enabled")
+      .eq("id", supaUser.id)
+      .maybeSingle(),
   ]);
 
   // Rol prioritario: admin > gerente > compras > ingenieria > planificacion > logistica
@@ -46,10 +51,11 @@ async function buildDomainUser(supaUser: SupabaseUser): Promise<User | null> {
     role,
     tenantSlug: "default",
     tenantId: profile?.tenant_id ?? null,
-    phone: profile?.phone ?? undefined,
-    rut: profile?.rut ?? undefined,
-    whatsappNotificationsEnabled: profile?.whatsapp_notifications_enabled ?? true,
+    phone: contact?.phone ?? undefined,
+    rut: contact?.rut ?? undefined,
+    whatsappNotificationsEnabled: contact?.whatsapp_notifications_enabled ?? true,
   };
+
 
 }
 
