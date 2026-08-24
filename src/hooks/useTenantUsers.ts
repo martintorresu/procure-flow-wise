@@ -13,17 +13,30 @@ export interface TenantUser {
 
 const KEY = ["tenant-users"] as const;
 
-/** Perfiles visibles para el usuario actual (RLS: mismo tenant / admin). */
+/**
+ * Perfiles visibles para el usuario actual (RLS: mismo tenant / admin).
+ * Los datos de contacto sensibles (teléfono/RUT) viven en `profile_contacts`
+ * y sólo son legibles por el propio usuario o un admin.
+ */
 export function useTenantUsers(): UseQueryResult<TenantUser[], Error> {
   return useQuery({
     queryKey: KEY,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, area, phone, rut, whatsapp_notifications_enabled")
-        .order("full_name");
+      const [{ data, error }, { data: contacts }] = await Promise.all([
+        supabase.from("profiles").select("id, email, full_name, area").order("full_name"),
+        supabase
+          .from("profile_contacts")
+          .select("id, phone, rut, whatsapp_notifications_enabled"),
+      ]);
       if (error) throw new Error(error.message);
-      return (data ?? []) as TenantUser[];
+      const byId = new Map((contacts ?? []).map((c) => [c.id, c]));
+      return (data ?? []).map((p) => ({
+        ...p,
+        phone: byId.get(p.id)?.phone ?? null,
+        rut: byId.get(p.id)?.rut ?? null,
+        whatsapp_notifications_enabled:
+          byId.get(p.id)?.whatsapp_notifications_enabled ?? true,
+      })) as TenantUser[];
     },
   });
 }
@@ -39,7 +52,9 @@ export function useUpdateProfileContact() {
       whatsapp_notifications_enabled?: boolean;
     }) => {
       const { id, ...values } = input;
-      const { error } = await supabase.from("profiles").update(values).eq("id", id);
+      const { error } = await supabase
+        .from("profile_contacts")
+        .upsert({ id, ...values }, { onConflict: "id" });
       if (error) throw new Error(error.message);
     },
     onSuccess: () => {
@@ -55,16 +70,30 @@ export function useMyProfile(userId?: string): UseQueryResult<TenantUser | null,
     queryKey: ["my-profile", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, email, full_name, area, phone, rut, whatsapp_notifications_enabled")
-        .eq("id", userId!)
-        .maybeSingle();
+      const [{ data, error }, { data: contact }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("id, email, full_name, area")
+          .eq("id", userId!)
+          .maybeSingle(),
+        supabase
+          .from("profile_contacts")
+          .select("id, phone, rut, whatsapp_notifications_enabled")
+          .eq("id", userId!)
+          .maybeSingle(),
+      ]);
       if (error) throw new Error(error.message);
-      return (data ?? null) as TenantUser | null;
+      if (!data) return null;
+      return {
+        ...data,
+        phone: contact?.phone ?? null,
+        rut: contact?.rut ?? null,
+        whatsapp_notifications_enabled: contact?.whatsapp_notifications_enabled ?? true,
+      } as TenantUser;
     },
   });
 }
+
 
 /** Valida formato E.164: '+' seguido de 7 a 15 dígitos, sin espacios ni signos. */
 export const E164_REGEX = /^\+[1-9]\d{6,14}$/;
