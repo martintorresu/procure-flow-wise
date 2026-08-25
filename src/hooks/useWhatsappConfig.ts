@@ -54,7 +54,34 @@ export function useSaveWhatsappConfig() {
   });
 }
 
+export interface WhatsappTestResult {
+  ok?: boolean;
+  skipped?: string;
+  error?: string;
+  message_id?: string | null;
+  phone?: string;
+}
+
+/** Envía un mensaje de prueba con la plantilla `procurem_alerta` (solo admin). */
+export function useSendWhatsappTest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tenantId, userId }: { tenantId: string; userId?: string }) => {
+      const { data, error } = await supabase.functions.invoke("send-whatsapp-alert", {
+        body: { test: true, tenant_id: tenantId, user_id: userId },
+      });
+      if (error) {
+        const detail = await (error as { context?: Response }).context?.text?.().catch(() => "");
+        throw new Error(detail || error.message);
+      }
+      return data as WhatsappTestResult;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["whatsapp-log"] }),
+  });
+}
+
 export interface WhatsappLogRow {
+
   id: string;
   phone: string | null;
   status: string;
