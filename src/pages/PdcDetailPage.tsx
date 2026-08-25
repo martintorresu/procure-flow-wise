@@ -22,7 +22,7 @@ import { SEO } from "@/components/SEO";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { ProcessStepperZoom } from "@/components/ProcessStepperZoom";
 import { computeStageProgress } from "@/lib/stageProgress";
-import { formatDate, formatStageLabel, humanizeTechnicalText } from "@/lib/stageLabels";
+import { formatDate, humanizeTechnicalText } from "@/lib/stageLabels";
 import type { Pdc, PdcMilestone } from "@/types/pdc";
 import { useStageTemplates, stageIcon } from "@/hooks/useStageTemplates";
 import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
