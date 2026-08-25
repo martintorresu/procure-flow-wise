@@ -7,7 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const GRAPH_VERSION = "v21.0";
 const APP_BASE_URL = "https://app.pro-curem.com";
 const TEMPLATE_NAME = "procurem_alerta";
-const TEMPLATE_LANG = "es";
+const TEMPLATE_LANG = "es_CL";
 
 const ACTION_LABELS: Record<string, string> = {
   approval_required: "Aprobación requerida",
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
 
     // Meta exige el código de idioma exacto con el que se aprobó la plantilla.
     // Si devuelve 132001 (no existe la traducción), probamos las variantes de español.
-    const langCandidates = [TEMPLATE_LANG, "es_ES", "es_LA", "es_MX", "es_AR"];
+    const langCandidates = [TEMPLATE_LANG, "es", "es_ES", "es_LA", "es_MX", "es_AR"];
     let res!: Response;
     let result: any = {};
     for (const lang of langCandidates) {
