@@ -4,22 +4,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
-  useWhatsappConfig, useSaveWhatsappConfig, useWhatsappLog, type WhatsappConfigInput,
+  useWhatsappConfig, useSaveWhatsappConfig, useWhatsappLog, useSendWhatsappTest,
+  type WhatsappConfigInput,
 } from "@/hooks/useWhatsappConfig";
+import { useTenantUsers } from "@/hooks/useTenantUsers";
+import { useAuth } from "@/contexts/AuthContext";
 
 const EMPTY: WhatsappConfigInput = {
   phone_number_id: "", access_token: "", business_account_id: "", enabled: false,
 };
 
+const SKIP_LABELS: Record<string, string> = {
+  whatsapp_disabled: "WhatsApp está desactivado para esta organización.",
+  user_opted_out: "El destinatario tiene desactivadas las notificaciones por WhatsApp.",
+  no_phone: "El destinatario no tiene teléfono cargado.",
+  invalid_phone: "El teléfono del destinatario no está en formato E.164.",
+};
+
 export function WhatsappConfigSection() {
   const { data: config, isLoading } = useWhatsappConfig();
   const { data: logs = [] } = useWhatsappLog(10);
+  const { data: users = [] } = useTenantUsers();
+  const { user } = useAuth();
   const save = useSaveWhatsappConfig();
+  const sendTest = useSendWhatsappTest();
   const [form, setForm] = useState<WhatsappConfigInput>(EMPTY);
+  const [targetUser, setTargetUser] = useState<string>("");
+  const [testResult, setTestResult] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (config) {
