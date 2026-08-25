@@ -38,6 +38,8 @@ const GENERIC_STEPS = GENERIC_STAGES.map((s, i) => ({
 export default function CreatePdcPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const subscription = useTenantSubscription();
+
   const [params] = useSearchParams();
   const fromId = params.get("from") ?? undefined;
   const { data: parent } = usePdc(fromId);
