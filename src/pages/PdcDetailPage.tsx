@@ -32,6 +32,8 @@ import { useProcessParticipants } from "@/hooks/useProcessParticipants";
 import { InviteExternalDialog } from "@/components/InviteExternalDialog";
 import { ProcessComments } from "@/components/ProcessComments";
 import { ProcessCommitments } from "@/components/ProcessCommitments";
+import { ProcessDocuments } from "@/components/ProcessDocuments";
+
 
 
 function ApproveButton({ pdcId }: { pdcId: string }) {
