@@ -49,6 +49,8 @@ export default function DashboardPage() {
   const { data: pdcs = [], isLoading: pdcsLoading } = usePdcs();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
   const approveMutation = useApprovePdc();
+  const subscription = useTenantSubscription();
+
 
   // Prefetch para acelerar navegación a /pdcs (misma key, ya cacheada en realidad)
   useEffect(() => {
