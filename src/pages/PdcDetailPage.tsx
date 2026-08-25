@@ -335,7 +335,7 @@ export default function PdcDetailPage() {
                   <h3 className="font-medium mb-2">Alertas activas</h3>
                   {alerts.filter((a) => !a.resolved).map((a) => (
                     <div key={a.id} className={`border-l-4 ${a.severity === "critical" || a.severity === "high" ? "border-l-danger" : "border-l-warning"} bg-muted/30 rounded-r p-3 mb-2`}>
-                      <p className="text-sm">{a.message}</p>
+                      <p className="text-sm">{humanizeTechnicalText(a.message)}</p>
                     </div>
                   ))}
                 </div>
