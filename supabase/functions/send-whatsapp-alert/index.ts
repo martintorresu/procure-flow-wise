@@ -104,23 +104,31 @@ Deno.serve(async (req) => {
 
     let pdcName = "Proceso";
     let currentStage = "Sin etapa";
-    if (alert.pdc_id) {
-      const { data: pdc } = await admin
-        .from("purchase_processes").select("pdc_number, name, current_stage").eq("id", alert.pdc_id).maybeSingle();
-      if (pdc) {
-        pdcName = `${pdc.pdc_number} · ${pdc.name}`;
-        if (pdc.current_stage) currentStage = String(pdc.current_stage);
+    let actionType = "Prueba de configuración";
+    let requiredAction = "Mensaje de verificación desde Pro.Curem. No requiere acción.";
+
+    if (alert) {
+      if (alert.pdc_id) {
+        const { data: pdc } = await admin
+          .from("purchase_processes").select("pdc_number, name, current_stage").eq("id", alert.pdc_id).maybeSingle();
+        if (pdc) {
+          pdcName = `${pdc.pdc_number} · ${pdc.name}`;
+          if (pdc.current_stage) currentStage = String(pdc.current_stage);
+        }
       }
+      actionType = ACTION_LABELS[alert.type] ?? alert.type;
+      const dueDate = alert.due_date
+        ? new Date(alert.due_date).toLocaleDateString("es-CL")
+        : "Sin fecha límite";
+      // {{4}} = acción requerida
+      requiredAction = alert.message?.trim()
+        ? alert.message.trim()
+        : `${actionType} (vence: ${dueDate})`;
+    } else {
+      pdcName = "Proceso de prueba";
+      currentStage = "—";
     }
 
-    const actionType = ACTION_LABELS[alert.type] ?? alert.type;
-    const dueDate = alert.due_date
-      ? new Date(alert.due_date).toLocaleDateString("es-CL")
-      : "Sin fecha límite";
-    // {{4}} = acción requerida
-    const requiredAction = alert.message?.trim()
-      ? alert.message.trim()
-      : `${actionType} (vence: ${dueDate})`;
 
 
     const payload = {
