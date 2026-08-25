@@ -7,7 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const GRAPH_VERSION = "v21.0";
 const APP_BASE_URL = "https://app.pro-curem.com";
 const TEMPLATE_NAME = "procurem_alerta";
-const TEMPLATE_LANG = "es_CL";
+const TEMPLATE_LANG = "es";
 
 const ACTION_LABELS: Record<string, string> = {
   approval_required: "Aprobación requerida",
@@ -131,13 +131,13 @@ Deno.serve(async (req) => {
 
 
 
-    const buildPayload = (lang: string) => ({
+    const payload = {
       messaging_product: "whatsapp",
       to: phone,
       type: "template",
       template: {
         name: TEMPLATE_NAME,
-        language: { code: lang },
+        language: { code: TEMPLATE_LANG },
         components: [
           {
             type: "body",
@@ -150,22 +150,14 @@ Deno.serve(async (req) => {
           },
         ],
       },
-    });
+    };
 
-    // Meta exige el código de idioma exacto con el que se aprobó la plantilla.
-    // Si devuelve 132001 (no existe la traducción), probamos las variantes de español.
-    const langCandidates = [TEMPLATE_LANG, "es", "es_ES", "es_LA", "es_MX", "es_AR"];
-    let res!: Response;
-    let result: any = {};
-    for (const lang of langCandidates) {
-      res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-        body: JSON.stringify(buildPayload(lang)),
-      });
-      result = await res.json().catch(() => ({}));
-      if (res.ok || result?.error?.code !== 132001) break;
-    }
+    const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify(payload),
+    });
+    const result = await res.json().catch(() => ({}));
 
     const metaMessageId = result?.messages?.[0]?.id ?? null;
     const errorMessage = res.ok ? null : (result?.error?.message ?? `HTTP ${res.status}`);
