@@ -62,6 +62,37 @@ export function WhatsappConfigSection() {
     }
   };
 
+  const onTest = async () => {
+    const tenantId = config?.tenant_id;
+    if (!tenantId) {
+      toast.error("Guarda primero la configuración de WhatsApp");
+      return;
+    }
+    setTestResult(null);
+    try {
+      const res = await sendTest.mutateAsync({ tenantId, userId: targetUser || user?.id });
+      if (res?.skipped) {
+        const msg = SKIP_LABELS[res.skipped] ?? `Envío omitido: ${res.skipped}`;
+        setTestResult(msg);
+        toast.error(msg);
+      } else if (res?.ok) {
+        const msg = `Enviado a ${res.phone} · ID Meta: ${res.message_id ?? "—"}`;
+        setTestResult(msg);
+        toast.success("Mensaje de prueba enviado");
+      } else {
+        const msg = res?.error ?? "Respuesta inesperada";
+        setTestResult(msg);
+        toast.error(msg);
+      }
+    } catch (e) {
+      const msg = (e as Error).message;
+      setTestResult(msg);
+      toast.error(msg);
+    }
+  };
+
+
+
   return (
     <Card>
       <CardHeader>
