@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_participant_self_update() FROM PUBLIC, anon, authenticated;
