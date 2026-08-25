@@ -4,9 +4,11 @@ import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
   Package, Shield, FolderKanban, UserCog, MessagesSquare, FileCheck
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTenant } from "@/config/tenants";
 import { useAlerts } from "@/hooks/useAlerts";
+import { useIsMobile } from "@/hooks/use-mobile";
+
 
 const baseNavItems = [
   { to: "/", icon: LayoutDashboard, label: "Panel de Control" },
@@ -23,7 +25,14 @@ export default function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
   const tenant = useTenant();
+  const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Colapso automático en viewports ≤768px
+  useEffect(() => {
+    setCollapsed(isMobile);
+  }, [isMobile]);
+
 
   // Conteo de alertas no resueltas vía hook (RLS filtra por tenant)
   const { data: alerts = [] } = useAlerts();

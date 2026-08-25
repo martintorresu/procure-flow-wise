@@ -37,10 +37,12 @@ const ROLES = [
 
 const SAMPLE_USERS = ROLES.map((r) => ({
   role: r.value,
+  roleLabel: r.label,
   email: `${r.value}@demo.local`,
   full_name: `Demo ${r.label}`,
   password: "demo123456",
 }));
+
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
@@ -471,7 +473,7 @@ function ApprovalMatrixSection() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-xs text-muted-foreground">
-          Procesos que cumplan estas condiciones quedarán en estado <code className="bg-muted px-1 rounded">pending_approval</code> antes de avanzar a la etapa indicada.
+          Procesos que cumplan estas condiciones quedarán en estado <span className="font-medium text-foreground">Pendiente de aprobación</span> antes de avanzar a la etapa indicada.
         </p>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando reglas…</p>
@@ -494,7 +496,7 @@ function ApprovalMatrixSection() {
                   return (
                     <TableRow key={r.id}>
                       <TableCell className="font-medium text-xs">{d.label}</TableCell>
-                      <TableCell className="text-xs"><code className="bg-muted px-1 rounded">{d.stage}</code></TableCell>
+                      <TableCell className="text-xs">{formatStageLabel(d.stage)}</TableCell>
                       <TableCell className="text-xs capitalize">{d.condition_type}</TableCell>
                       <TableCell>
                         <Input
