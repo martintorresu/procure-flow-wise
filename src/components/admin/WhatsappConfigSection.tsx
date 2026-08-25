@@ -4,22 +4,39 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, Send } from "lucide-react";
 import { toast } from "sonner";
 import {
-  useWhatsappConfig, useSaveWhatsappConfig, useWhatsappLog, type WhatsappConfigInput,
+  useWhatsappConfig, useSaveWhatsappConfig, useWhatsappLog, useSendWhatsappTest,
+  type WhatsappConfigInput,
 } from "@/hooks/useWhatsappConfig";
+import { useTenantUsers } from "@/hooks/useTenantUsers";
+import { useAuth } from "@/contexts/AuthContext";
 
 const EMPTY: WhatsappConfigInput = {
   phone_number_id: "", access_token: "", business_account_id: "", enabled: false,
 };
 
+const SKIP_LABELS: Record<string, string> = {
+  whatsapp_disabled: "WhatsApp está desactivado para esta organización.",
+  user_opted_out: "El destinatario tiene desactivadas las notificaciones por WhatsApp.",
+  no_phone: "El destinatario no tiene teléfono cargado.",
+  invalid_phone: "El teléfono del destinatario no está en formato E.164.",
+};
+
 export function WhatsappConfigSection() {
   const { data: config, isLoading } = useWhatsappConfig();
   const { data: logs = [] } = useWhatsappLog(10);
+  const { data: users = [] } = useTenantUsers();
+  const { user } = useAuth();
   const save = useSaveWhatsappConfig();
+  const sendTest = useSendWhatsappTest();
   const [form, setForm] = useState<WhatsappConfigInput>(EMPTY);
+  const [targetUser, setTargetUser] = useState<string>("");
+  const [testResult, setTestResult] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (config) {
@@ -44,6 +61,37 @@ export function WhatsappConfigSection() {
       toast.error((e as Error).message);
     }
   };
+
+  const onTest = async () => {
+    const tenantId = config?.tenant_id;
+    if (!tenantId) {
+      toast.error("Guarda primero la configuración de WhatsApp");
+      return;
+    }
+    setTestResult(null);
+    try {
+      const res = await sendTest.mutateAsync({ tenantId, userId: targetUser || user?.id });
+      if (res?.skipped) {
+        const msg = SKIP_LABELS[res.skipped] ?? `Envío omitido: ${res.skipped}`;
+        setTestResult(msg);
+        toast.error(msg);
+      } else if (res?.ok) {
+        const msg = `Enviado a ${res.phone} · ID Meta: ${res.message_id ?? "—"}`;
+        setTestResult(msg);
+        toast.success("Mensaje de prueba enviado");
+      } else {
+        const msg = res?.error ?? "Respuesta inesperada";
+        setTestResult(msg);
+        toast.error(msg);
+      }
+    } catch (e) {
+      const msg = (e as Error).message;
+      setTestResult(msg);
+      toast.error(msg);
+    }
+  };
+
+
 
   return (
     <Card>
@@ -99,6 +147,38 @@ export function WhatsappConfigSection() {
             <Button onClick={onSave} disabled={save.isPending}>
               {save.isPending ? "Guardando…" : "Guardar configuración"}
             </Button>
+
+            <div className="rounded-lg border p-4 space-y-3">
+              <p className="text-sm font-medium">Prueba de envío</p>
+              <p className="text-xs text-muted-foreground">
+                Envía la plantilla <code className="bg-muted px-1 rounded">procurem_alerta</code> con datos de
+                ejemplo al teléfono del destinatario. Requiere la configuración guardada y activa.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                <div className="space-y-2 flex-1">
+                  <Label>Destinatario</Label>
+                  <Select value={targetUser || user?.id || ""} onValueChange={setTargetUser}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona un usuario" /></SelectTrigger>
+                    <SelectContent>
+                      {users.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {(u.full_name ?? u.email)}{u.phone ? ` · ${u.phone}` : " · sin teléfono"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button variant="outline" onClick={onTest} disabled={sendTest.isPending || !config?.id}>
+                  <Send className="w-4 h-4 mr-2" />
+                  {sendTest.isPending ? "Enviando…" : "Enviar mensaje de prueba"}
+                </Button>
+              </div>
+              {testResult && (
+                <p className="text-xs font-mono bg-muted rounded p-2 break-all">{testResult}</p>
+              )}
+            </div>
+
+
 
             {logs.length > 0 && (
               <div className="pt-2">
