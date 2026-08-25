@@ -58,6 +58,8 @@ export interface WhatsappTestResult {
   ok?: boolean;
   skipped?: string;
   error?: string;
+  error_code?: number | null;
+  setup_required?: "allow_recipient_in_meta";
   message_id?: string | null;
   phone?: string;
 }
