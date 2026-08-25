@@ -160,7 +160,13 @@ Deno.serve(async (req) => {
     const result = await res.json().catch(() => ({}));
 
     const metaMessageId = result?.messages?.[0]?.id ?? null;
-    const errorMessage = res.ok ? null : (result?.error?.message ?? `HTTP ${res.status}`);
+    const metaErrorCode = typeof result?.error?.code === "number" ? result.error.code : null;
+    const recipientNotAllowed = metaErrorCode === 131030;
+    const errorMessage = res.ok
+      ? null
+      : recipientNotAllowed
+        ? "El número destinatario no está habilitado en la lista de números permitidos de Meta WhatsApp. Agrégalo y verifícalo en la configuración de la app de Meta, o pasa la cuenta a producción."
+        : (result?.error?.message ?? `HTTP ${res.status}`);
 
 
     await admin.from("whatsapp_log").insert({
@@ -173,7 +179,18 @@ Deno.serve(async (req) => {
       error_message: errorMessage,
     });
 
-    if (!res.ok) return json({ ok: false, error: errorMessage }, 502);
+    // En modo prueba, una restricción de destinatarios es un resultado de
+    // configuración accionable, no una caída de la Edge Function.
+    if (!res.ok && recipientNotAllowed && isTest) {
+      return json({
+        ok: false,
+        error: errorMessage,
+        error_code: metaErrorCode,
+        setup_required: "allow_recipient_in_meta",
+        phone,
+      });
+    }
+    if (!res.ok) return json({ ok: false, error: errorMessage, error_code: metaErrorCode }, 502);
     return json({
       ok: true,
       test: isTest,

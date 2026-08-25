@@ -79,6 +79,10 @@ export function WhatsappConfigSection() {
         const msg = `Enviado a ${res.phone} · ID Meta: ${res.message_id ?? "—"}`;
         setTestResult(msg);
         toast.success("Mensaje de prueba enviado");
+      } else if (res?.setup_required === "allow_recipient_in_meta") {
+        const msg = res.error ?? "El destinatario debe agregarse a la lista de números permitidos de Meta WhatsApp.";
+        setTestResult(msg);
+        toast.error("Destinatario no habilitado en Meta");
       } else {
         const msg = res?.error ?? "Respuesta inesperada";
         setTestResult(msg);
