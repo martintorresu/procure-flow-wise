@@ -13,7 +13,10 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { SEO } from "@/components/SEO";
 import { GENERIC_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isPurchaseType, type ProcessType } from "@/lib/processTypes";
-import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2 } from "lucide-react";
+import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock } from "lucide-react";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
+
 
 const PURCHASE_STEPS = [
   { key: "draft", label: "Resumen", icon: FileText },
