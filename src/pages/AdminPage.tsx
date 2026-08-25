@@ -23,6 +23,8 @@ import { ApiKeysSection } from "@/components/admin/ApiKeysSection";
 import { PermitTypesSection } from "@/components/admin/PermitTypesSection";
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/pdc";
+import { formatStageLabel } from "@/lib/stageLabels";
+
 
 
 const ROLES = [
@@ -176,7 +178,7 @@ export default function AdminPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {SAMPLE_USERS.map((u) => (
               <div key={u.role} className="text-xs border rounded p-2">
-                <div className="font-medium capitalize">{u.role}</div>
+                <div className="font-medium">{u.roleLabel}</div>
                 <div className="text-muted-foreground truncate">{u.email}</div>
               </div>
             ))}

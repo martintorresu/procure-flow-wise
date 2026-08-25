@@ -137,7 +137,7 @@ export default function PermitsPage() {
 
       {/* Filtros */}
       <Card>
-        <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-5 gap-3">
+        <CardContent className="pt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-3">
           <div className="relative">
             <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground" />
             <Input className="pl-8" placeholder="Buscar…" value={q} onChange={(e) => setQ(e.target.value)} />

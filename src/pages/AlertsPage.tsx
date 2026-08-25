@@ -7,6 +7,8 @@ import { Bell, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatStageLabel, humanizeTechnicalText } from "@/lib/stageLabels";
+
 
 export default function AlertsPage() {
   const { data: alerts = [], isLoading, isError, error } = useAlerts();
@@ -101,13 +103,14 @@ export default function AlertsPage() {
                           <span className="text-muted-foreground text-xs font-mono">—</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-xs text-muted-foreground capitalize">{alert.type.replace("_", " ")}</td>
+                      <td className="py-3 px-4 text-xs text-muted-foreground">{formatStageLabel(alert.type)}</td>
                       <td className="py-3 px-4">
                         <span className={`text-xs px-2 py-0.5 rounded-full border-l-4 ${severityColors[alert.severity]}`}>
                           {severityLabels[alert.severity]}
                         </span>
                       </td>
-                      <td className="py-3 px-4 max-w-[300px]">{alert.message}</td>
+                      <td className="py-3 px-4 max-w-[300px]">{humanizeTechnicalText(alert.message)}</td>
+
                       <td className="py-3 px-4">
                         {alert.resolved ? (
                           <span className="text-success text-xs flex items-center gap-1"><CheckCircle className="w-3 h-3" />Resuelta</span>
