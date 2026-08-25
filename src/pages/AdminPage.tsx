@@ -237,11 +237,15 @@ export default function AdminPage() {
               <Input value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} placeholder="12.345.678-9" />
             </div>
 
-            <div className="md:col-span-2">
-              <Button type="submit" disabled={working?.startsWith("user:")}>
+            <div className="md:col-span-2 space-y-2">
+              {subscription.isAtUserLimit && (
+                <p className="text-sm text-destructive">{USER_LIMIT_MESSAGE}</p>
+              )}
+              <Button type="submit" disabled={working?.startsWith("user:") || subscription.isAtUserLimit}>
                 {working?.startsWith("user:") ? "Creando…" : "Crear usuario"}
               </Button>
             </div>
+
           </form>
         </CardContent>
       </Card>
