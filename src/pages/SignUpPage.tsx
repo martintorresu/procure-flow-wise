@@ -148,6 +148,14 @@ export default function SignUpPage() {
               </div>
             </form>
           )}
+          <div className="mt-4 text-center">
+            <Link
+              to="/privacy"
+              className="text-[10px] sm:text-[11px] text-white/60 hover:text-[#7AD9CF] transition-colors underline underline-offset-2"
+            >
+              Política de Privacidad
+            </Link>
+          </div>
         </div>
       </div>
     </div>
