@@ -98,6 +98,9 @@ const App = () => (
             {/* Consentimiento OAuth (MCP) */}
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
+            {/* Página pública de privacidad */}
+            <Route path="/privacy" element={<PrivacyPolicyPage />} />
+
             {/* Rutas protegidas — tenant default */}
             <Route element={<ProtectedRoutes />}>
               <Route path="/" element={<DashboardPage />} />
