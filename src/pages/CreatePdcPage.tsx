@@ -128,6 +128,22 @@ export default function CreatePdcPage() {
         <p className="text-sm text-muted-foreground">Complete los datos del nuevo proceso</p>
       </div>
 
+      {subscription.tier === "free" && (
+        <Card className={subscription.isAtProcessLimit ? "border-l-4 border-l-destructive bg-destructive/5" : "border-l-4 border-l-muted"}>
+          <CardContent className="p-4 flex items-start gap-2 text-sm">
+            <Lock className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
+            <span>
+              <span className="font-medium">
+                {`Plan ${PLAN_LABELS.free} · ${usageLabel(subscription.usage.processes, subscription.limits.maxActiveProcesses, "procesos")}`}
+              </span>
+              {subscription.isAtProcessLimit && <span className="block">{PROCESS_LIMIT_MESSAGE}</span>}
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
+
+
       {parent && (
         <Card className="border-l-4 border-l-accent bg-accent/5">
           <CardContent className="p-4 flex items-center gap-2 text-sm">
