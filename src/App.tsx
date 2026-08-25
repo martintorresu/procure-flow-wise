@@ -11,6 +11,7 @@ import PdcListPage from "@/pages/PdcListPage";
 import CreatePdcPage from "@/pages/CreatePdcPage";
 import EditPdcPage from "@/pages/EditPdcPage";
 import PdcDetailPage from "@/pages/PdcDetailPage";
+import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import AlertsPage from "@/pages/AlertsPage";
 import SignUpPage from "@/pages/SignUpPage";
 import ForgotPasswordPage from "@/pages/ForgotPasswordPage";
