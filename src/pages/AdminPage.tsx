@@ -273,7 +273,9 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
+      <SubscriptionsSection />
       <AlertRulesSection />
+
       <ApprovalMatrixSection />
       <WhatsappConfigSection />
       <TenantUsersContactSection />
