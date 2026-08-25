@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import { type TrafficLight } from "@/types/pdc";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
+
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   compra: "Cp",
