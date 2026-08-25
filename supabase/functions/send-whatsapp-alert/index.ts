@@ -179,9 +179,10 @@ Deno.serve(async (req) => {
       error_message: errorMessage,
     });
 
-    // En modo prueba, una restricción de destinatarios es un resultado de
-    // configuración accionable, no una caída de la Edge Function.
-    if (!res.ok && recipientNotAllowed && isTest) {
+    // La restricción de destinatarios pertenece a la configuración de Meta,
+    // no es una caída de la Edge Function. Se devuelve HTTP 200 para que el
+    // cliente pueda mostrar la acción requerida sin provocar un error 502.
+    if (!res.ok && recipientNotAllowed) {
       return json({
         ok: false,
         error: errorMessage,
