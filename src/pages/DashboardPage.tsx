@@ -22,6 +22,10 @@ import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
 import { DashboardPermitsWidget } from "@/components/DashboardPermitsWidget";
+import { Badge } from "@/components/ui/badge";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { PLAN_LABELS, usageLabel } from "@/lib/plans";
+
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   compra: "Cp",
