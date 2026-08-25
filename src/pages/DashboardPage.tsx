@@ -96,7 +96,16 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-foreground">Bienvenido, {user?.name}</h1>
           <p className="text-sm text-muted-foreground">Resumen de procesos</p>
         </div>
-        <TrafficLightLegend />
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge
+            variant={subscription.tier === "pro" ? "default" : "secondary"}
+            className={subscription.tier === "pro" ? "bg-blue-600 text-white hover:bg-blue-600" : ""}
+          >
+            {`Plan ${PLAN_LABELS[subscription.tier]} · ${usageLabel(subscription.usage.processes, subscription.limits.maxActiveProcesses, "procesos")}`}
+          </Badge>
+          <TrafficLightLegend />
+        </div>
+
       </div>
 
       {isManagerOrAdmin && pendingApprovals.length > 0 && (
