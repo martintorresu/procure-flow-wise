@@ -131,13 +131,13 @@ Deno.serve(async (req) => {
 
 
 
-    const payload = {
+    const buildPayload = (lang: string) => ({
       messaging_product: "whatsapp",
       to: phone,
       type: "template",
       template: {
         name: TEMPLATE_NAME,
-        language: { code: TEMPLATE_LANG },
+        language: { code: lang },
         components: [
           {
             type: "body",
@@ -150,17 +150,26 @@ Deno.serve(async (req) => {
           },
         ],
       },
-    };
-
-    const res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify(payload),
     });
-    const result = await res.json().catch(() => ({}));
+
+    // Meta exige el código de idioma exacto con el que se aprobó la plantilla.
+    // Si devuelve 132001 (no existe la traducción), probamos las variantes de español.
+    const langCandidates = [TEMPLATE_LANG, "es_ES", "es_LA", "es_MX", "es_AR"];
+    let res!: Response;
+    let result: any = {};
+    for (const lang of langCandidates) {
+      res = await fetch(`https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify(buildPayload(lang)),
+      });
+      result = await res.json().catch(() => ({}));
+      if (res.ok || result?.error?.code !== 132001) break;
+    }
 
     const metaMessageId = result?.messages?.[0]?.id ?? null;
     const errorMessage = res.ok ? null : (result?.error?.message ?? `HTTP ${res.status}`);
+
 
     await admin.from("whatsapp_log").insert({
       tenant_id: tenantId,
