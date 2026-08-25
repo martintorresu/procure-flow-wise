@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
 
     await admin.from("whatsapp_log").insert({
       tenant_id: tenantId,
-      alert_id: alertId,
+      alert_id: alertId || null,
       user_id: userId,
       phone,
       status: res.ok ? "sent" : "failed",
@@ -173,7 +173,13 @@ Deno.serve(async (req) => {
     });
 
     if (!res.ok) return json({ ok: false, error: errorMessage }, 502);
-    return json({ ok: true, message_id: metaMessageId, link: `${APP_BASE_URL}/pdc/${alert.pdc_id}` });
+    return json({
+      ok: true,
+      test: isTest,
+      message_id: metaMessageId,
+      phone,
+      link: alert?.pdc_id ? `${APP_BASE_URL}/pdc/${alert.pdc_id}` : null,
+    });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Error desconocido" }, 500);
   }
