@@ -151,9 +151,17 @@ export default function LoginPage() {
           </form>
 
           {/* Footer */}
-          <p className="mt-4 sm:mt-6 text-center text-[10px] sm:text-[11px] text-white/60 tracking-wider">
-            Powered by <span className="text-white/90 font-semibold">InHR</span>
-          </p>
+          <div className="mt-4 sm:mt-6 flex flex-col items-center gap-1.5">
+            <p className="text-center text-[10px] sm:text-[11px] text-white/60 tracking-wider">
+              Powered by <span className="text-white/90 font-semibold">InHR</span>
+            </p>
+            <Link
+              to="/privacy"
+              className="text-[10px] sm:text-[11px] text-white/60 hover:text-[#7AD9CF] transition-colors underline underline-offset-2"
+            >
+              Política de Privacidad
+            </Link>
+          </div>
         </div>
       </div>
     </div>
