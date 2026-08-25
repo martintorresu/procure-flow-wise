@@ -148,6 +148,38 @@ export function WhatsappConfigSection() {
               {save.isPending ? "Guardando…" : "Guardar configuración"}
             </Button>
 
+            <div className="rounded-lg border p-4 space-y-3">
+              <p className="text-sm font-medium">Prueba de envío</p>
+              <p className="text-xs text-muted-foreground">
+                Envía la plantilla <code className="bg-muted px-1 rounded">procurem_alerta</code> con datos de
+                ejemplo al teléfono del destinatario. Requiere la configuración guardada y activa.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-end">
+                <div className="space-y-2 flex-1">
+                  <Label>Destinatario</Label>
+                  <Select value={targetUser || user?.id || ""} onValueChange={setTargetUser}>
+                    <SelectTrigger><SelectValue placeholder="Selecciona un usuario" /></SelectTrigger>
+                    <SelectContent>
+                      {users.map((u) => (
+                        <SelectItem key={u.id} value={u.id}>
+                          {(u.full_name ?? u.email)}{u.phone ? ` · ${u.phone}` : " · sin teléfono"}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button variant="outline" onClick={onTest} disabled={sendTest.isPending || !config?.id}>
+                  <Send className="w-4 h-4 mr-2" />
+                  {sendTest.isPending ? "Enviando…" : "Enviar mensaje de prueba"}
+                </Button>
+              </div>
+              {testResult && (
+                <p className="text-xs font-mono bg-muted rounded p-2 break-all">{testResult}</p>
+              )}
+            </div>
+
+
+
             {logs.length > 0 && (
               <div className="pt-2">
                 <p className="text-xs font-medium mb-2">Últimos envíos</p>
