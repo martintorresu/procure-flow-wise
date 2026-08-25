@@ -45,10 +45,11 @@ Deno.serve(async (req) => {
     if (!caller) return json({ error: "No autorizado" }, 401);
 
     const body = await req.json().catch(() => ({}));
+    const isTest = body?.test === true;
     const alertId = typeof body?.alert_id === "string" ? body.alert_id : "";
-    const userId = typeof body?.user_id === "string" ? body.user_id : "";
+    const userId = typeof body?.user_id === "string" && body.user_id ? body.user_id : (isTest ? caller.id : "");
     const tenantId = typeof body?.tenant_id === "string" ? body.tenant_id : "";
-    if (!alertId || !userId || !tenantId) {
+    if ((!alertId && !isTest) || !userId || !tenantId) {
       return json({ error: "alert_id, user_id y tenant_id son requeridos" }, 400);
     }
 
@@ -61,10 +62,19 @@ Deno.serve(async (req) => {
       return json({ error: "Tenant no autorizado" }, 403);
     }
 
+    // El modo prueba es sólo para administradores del tenant.
+    if (isTest) {
+      const { data: adminRole } = await admin
+        .from("user_roles").select("role").eq("user_id", caller.id).eq("role", "admin").maybeSingle();
+      if (!adminRole) return json({ error: "Sólo un administrador puede enviar pruebas" }, 403);
+    }
+
     const [{ data: alert }, { data: profile }, { data: contact }, { data: config }] = await Promise.all([
-      admin.from("alerts")
-        .select("id, tenant_id, pdc_id, type, message, due_date")
-        .eq("id", alertId).eq("tenant_id", tenantId).maybeSingle(),
+      alertId
+        ? admin.from("alerts")
+            .select("id, tenant_id, pdc_id, type, message, due_date")
+            .eq("id", alertId).eq("tenant_id", tenantId).maybeSingle()
+        : Promise.resolve({ data: null }),
       admin.from("profiles")
         .select("id, full_name, email, tenant_id")
         .eq("id", userId).maybeSingle(),
@@ -76,7 +86,7 @@ Deno.serve(async (req) => {
         .eq("tenant_id", tenantId).maybeSingle(),
     ]);
 
-    if (!alert) return json({ error: "Alerta no encontrada" }, 404);
+    if (!alert && !isTest) return json({ error: "Alerta no encontrada" }, 404);
     if (!profile || profile.tenant_id !== tenantId) return json({ error: "Usuario no encontrado" }, 404);
     if (!config?.enabled) return json({ skipped: "whatsapp_disabled" });
     if (contact?.whatsapp_notifications_enabled === false) return json({ skipped: "user_opted_out" });
@@ -90,6 +100,7 @@ Deno.serve(async (req) => {
     const accessToken = Deno.env.get("META_WHATSAPP_ACCESS_TOKEN") || (config.access_token ?? "");
     const phoneNumberId = config.phone_number_id ?? "";
     if (!accessToken || !phoneNumberId) return json({ error: "Configuración de WhatsApp incompleta" }, 400);
+
 
     let pdcName = "Proceso";
     let currentStage = "Sin etapa";
