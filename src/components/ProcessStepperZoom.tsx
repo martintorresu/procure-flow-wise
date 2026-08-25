@@ -78,7 +78,7 @@ export function ProcessStepperZoom({ steps, activeIndex, progress }: ProcessStep
             : { backgroundColor: "#7DD3FC", boxShadow: "0 0 6px rgba(125,211,252,0.6)" };
 
           return (
-            <div key={s.key} className="relative flex flex-col items-center gap-2">
+            <div key={s.key} className="relative flex min-w-0 flex-col items-center gap-2">
               {showSegment && (
                 <div
                   className="absolute h-1 rounded-full"
