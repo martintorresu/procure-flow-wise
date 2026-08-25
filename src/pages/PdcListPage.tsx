@@ -35,6 +35,8 @@ const LIGHT_GLOW: Record<TrafficLight, string> = {
 export default function PdcListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const subscription = useTenantSubscription();
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
   const [delayedFilter, setDelayedFilter] = useState<boolean>(false);
