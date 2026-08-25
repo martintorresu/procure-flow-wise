@@ -32,6 +32,8 @@ import { useProcessParticipants } from "@/hooks/useProcessParticipants";
 import { InviteExternalDialog } from "@/components/InviteExternalDialog";
 import { ProcessComments } from "@/components/ProcessComments";
 import { ProcessCommitments } from "@/components/ProcessCommitments";
+import { ProcessDocuments } from "@/components/ProcessDocuments";
+
 
 
 function ApproveButton({ pdcId }: { pdcId: string }) {
@@ -299,7 +301,7 @@ export default function PdcDetailPage() {
       {!isExternal && (
       <Tabs defaultValue="summary">
 
-        <TabsList className="grid grid-cols-4 lg:grid-cols-10 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-11 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
           <TabsTrigger value="planning">Planificación</TabsTrigger>
@@ -308,13 +310,19 @@ export default function PdcDetailPage() {
           <TabsTrigger value="vendor">OC / Vendor</TabsTrigger>
           <TabsTrigger value="fat">Prueba de Fábrica</TabsTrigger>
           <TabsTrigger value="logistics">Logística</TabsTrigger>
+          <TabsTrigger value="documents">Documentos</TabsTrigger>
           <TabsTrigger value="commitments">Compromisos</TabsTrigger>
           <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="documents">
+          <ProcessDocuments processId={pdc.id} />
+        </TabsContent>
+
         <TabsContent value="commitments">
           <ProcessCommitments pdcId={pdc.id} />
         </TabsContent>
+
 
         {/* Summary */}
         <TabsContent value="summary">

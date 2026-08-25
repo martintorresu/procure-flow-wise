@@ -995,6 +995,70 @@ export type Database = {
           },
         ]
       }
+      process_documents: {
+        Row: {
+          category: string
+          description: string | null
+          file_name: string
+          file_path: string
+          file_size: number
+          file_type: string
+          id: string
+          process_id: string
+          tenant_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          description?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number
+          file_type: string
+          id?: string
+          process_id: string
+          tenant_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          file_type?: string
+          id?: string
+          process_id?: string
+          tenant_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_documents_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_documents_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_participants: {
         Row: {
           accepted_at: string | null
