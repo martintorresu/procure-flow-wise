@@ -50,6 +50,8 @@ const SAMPLE_USERS = ROLES.map((r) => ({
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
+  const subscription = useTenantSubscription();
+
   const [working, setWorking] = useState<string | null>(null);
   const [demoCount, setDemoCount] = useState<number | null>(null);
 
