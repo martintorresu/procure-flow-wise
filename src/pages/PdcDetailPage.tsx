@@ -22,6 +22,7 @@ import { SEO } from "@/components/SEO";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { ProcessStepperZoom } from "@/components/ProcessStepperZoom";
 import { computeStageProgress } from "@/lib/stageProgress";
+import { formatDate, humanizeTechnicalText } from "@/lib/stageLabels";
 import type { Pdc, PdcMilestone } from "@/types/pdc";
 import { useStageTemplates, stageIcon } from "@/hooks/useStageTemplates";
 import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
@@ -278,8 +279,8 @@ export default function PdcDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-muted-foreground">Categoría:</span> {pdc.category}</div>
-                <div><span className="text-muted-foreground">Creado:</span> {pdc.created_at}</div>
-                <div><span className="text-muted-foreground">Actualizado:</span> {pdc.updated_at}</div>
+                <div><span className="text-muted-foreground">Creado:</span> {formatDate(pdc.created_at)}</div>
+                <div><span className="text-muted-foreground">Actualizado:</span> {formatDate(pdc.updated_at)}</div>
               </div>
             </CardContent>
           </Card>
@@ -325,8 +326,8 @@ export default function PdcDetailPage() {
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div><span className="text-muted-foreground">Categoría:</span> {pdc.category}</div>
-                <div><span className="text-muted-foreground">Creado:</span> {pdc.created_at}</div>
-                <div><span className="text-muted-foreground">Actualizado:</span> {pdc.updated_at}</div>
+                <div><span className="text-muted-foreground">Creado:</span> {formatDate(pdc.created_at)}</div>
+                <div><span className="text-muted-foreground">Actualizado:</span> {formatDate(pdc.updated_at)}</div>
                 <div><span className="text-muted-foreground">Moneda:</span> {pdc.currency}</div>
               </div>
               {alerts.length > 0 && (
@@ -334,7 +335,7 @@ export default function PdcDetailPage() {
                   <h3 className="font-medium mb-2">Alertas activas</h3>
                   {alerts.filter((a) => !a.resolved).map((a) => (
                     <div key={a.id} className={`border-l-4 ${a.severity === "critical" || a.severity === "high" ? "border-l-danger" : "border-l-warning"} bg-muted/30 rounded-r p-3 mb-2`}>
-                      <p className="text-sm">{a.message}</p>
+                      <p className="text-sm">{humanizeTechnicalText(a.message)}</p>
                     </div>
                   ))}
                 </div>
@@ -562,7 +563,7 @@ export default function PdcDetailPage() {
                       {pdc.current_status === "closed" ? "Cerrado satisfactoriamente" : "Cerrado con incidente"}
                     </p>
                   </div>
-                  <div><span className="text-muted-foreground">Última actualización:</span> {pdc.updated_at}</div>
+                  <div><span className="text-muted-foreground">Última actualización:</span> {formatDate(pdc.updated_at)}</div>
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">El proceso aún no se encuentra cerrado.</p>

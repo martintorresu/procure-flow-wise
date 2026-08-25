@@ -16,6 +16,7 @@ import { STATUS_LABELS, CRITICALITY_LABELS, type Criticality, type PdcStatus, ty
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SEO } from "@/components/SEO";
+import { humanizeTechnicalText } from "@/lib/stageLabels";
 import { queryKeys } from "@/lib/queryKeys";
 import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
@@ -310,7 +311,7 @@ export default function DashboardPage() {
                 <div key={alert.id} className={`border-l-4 ${severityColors[alert.severity]} bg-muted/30 rounded-r-md p-3`}>
                   <div className="flex justify-between items-start">
                     <div>
-                      <p className="text-sm font-medium">{alert.message}</p>
+                      <p className="text-sm font-medium">{humanizeTechnicalText(alert.message)}</p>
                       <p className="text-xs text-muted-foreground mt-1">{pdc?.pdc_number ?? "—"} {pdc?.title ? `— ${pdc.title}` : ""}</p>
                     </div>
                     <span className="text-xs text-muted-foreground">{alert.created_at?.slice(0, 10)}</span>
