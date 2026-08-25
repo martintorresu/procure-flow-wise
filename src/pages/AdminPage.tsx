@@ -26,6 +26,9 @@ import { SubscriptionsSection } from "@/components/admin/SubscriptionsSection";
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/pdc";
 import { formatStageLabel } from "@/lib/stageLabels";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { USER_LIMIT_MESSAGE } from "@/lib/plans";
+
 
 
 
