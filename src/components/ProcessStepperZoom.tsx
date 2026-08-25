@@ -92,10 +92,12 @@ export function ProcessStepperZoom({ steps, activeIndex, progress }: ProcessStep
                 <Icon className={isCritical ? "w-8 h-8" : "w-4 h-4"} />
               </div>
               <span
-                className={`z-10 text-center text-[11px] leading-tight ${isCritical ? "font-semibold text-foreground" : "text-muted-foreground"}`}
+                title={s.label}
+                className={`z-10 w-full max-w-full truncate px-0.5 text-center text-[9px] md:text-[10px] leading-tight ${isCritical ? "font-semibold text-foreground" : "text-muted-foreground"}`}
               >
                 {s.label}
               </span>
+
               {isCritical && progress && (
                 <div className="z-10 text-center leading-tight">
                   <p className="text-xs font-bold text-danger">Avance real: {Math.round(progress.real)}%</p>

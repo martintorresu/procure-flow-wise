@@ -56,7 +56,7 @@ export function ProcessStepper({ steps, activeIndex, compact = false }: ProcessS
             : { backgroundColor: "#7DD3FC", boxShadow: "0 0 6px rgba(125,211,252,0.6)" };
 
           return (
-            <div key={s.key} className="flex flex-col items-center gap-2 relative">
+            <div key={s.key} className="flex flex-col items-center gap-2 relative min-w-0 px-0.5" title={s.label}>
               {showSegment && (
                 <div
                   className="absolute h-1 rounded-full"
@@ -70,11 +70,12 @@ export function ProcessStepper({ steps, activeIndex, compact = false }: ProcessS
                 <Icon className={iconSize} />
               </div>
               <span
-                className={`text-[11px] text-center leading-tight z-10 ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}
+                className={`hidden sm:block w-full max-w-full truncate text-[9px] md:text-[10px] text-center leading-tight z-10 ${active ? "font-medium text-foreground" : "text-muted-foreground"}`}
               >
                 {s.label}
               </span>
             </div>
+
           );
         })}
       </div>
