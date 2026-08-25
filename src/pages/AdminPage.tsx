@@ -21,9 +21,14 @@ import { WhatsappConfigSection } from "@/components/admin/WhatsappConfigSection"
 import { TenantUsersContactSection } from "@/components/admin/TenantUsersContactSection";
 import { ApiKeysSection } from "@/components/admin/ApiKeysSection";
 import { PermitTypesSection } from "@/components/admin/PermitTypesSection";
+import { SubscriptionsSection } from "@/components/admin/SubscriptionsSection";
+
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/pdc";
 import { formatStageLabel } from "@/lib/stageLabels";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { USER_LIMIT_MESSAGE } from "@/lib/plans";
+
 
 
 
@@ -48,6 +53,8 @@ const SAMPLE_USERS = ROLES.map((r) => ({
 
 export default function AdminPage() {
   const { user, loading } = useAuth();
+  const subscription = useTenantSubscription();
+
   const [working, setWorking] = useState<string | null>(null);
   const [demoCount, setDemoCount] = useState<number | null>(null);
 
@@ -235,11 +242,15 @@ export default function AdminPage() {
               <Input value={form.rut} onChange={(e) => setForm({ ...form, rut: e.target.value })} placeholder="12.345.678-9" />
             </div>
 
-            <div className="md:col-span-2">
-              <Button type="submit" disabled={working?.startsWith("user:")}>
+            <div className="md:col-span-2 space-y-2">
+              {subscription.isAtUserLimit && (
+                <p className="text-sm text-destructive">{USER_LIMIT_MESSAGE}</p>
+              )}
+              <Button type="submit" disabled={working?.startsWith("user:") || subscription.isAtUserLimit}>
                 {working?.startsWith("user:") ? "Creando…" : "Crear usuario"}
               </Button>
             </div>
+
           </form>
         </CardContent>
       </Card>
@@ -271,7 +282,9 @@ export default function AdminPage() {
         </CardContent>
       </Card>
 
+      <SubscriptionsSection />
       <AlertRulesSection />
+
       <ApprovalMatrixSection />
       <WhatsappConfigSection />
       <TenantUsersContactSection />

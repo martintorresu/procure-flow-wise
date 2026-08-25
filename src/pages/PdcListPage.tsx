@@ -14,6 +14,9 @@ import { Badge } from "@/components/ui/badge";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import { type TrafficLight } from "@/types/pdc";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
+
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   compra: "Cp",
@@ -32,6 +35,8 @@ const LIGHT_GLOW: Record<TrafficLight, string> = {
 export default function PdcListPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const subscription = useTenantSubscription();
+
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
   const [delayedFilter, setDelayedFilter] = useState<boolean>(false);
@@ -76,9 +81,30 @@ export default function PdcListPage() {
             {loading ? "Cargando…" : `${filtered.length} procesos encontrados`}
           </p>
         </div>
-        <Link to="/pdcs/new">
-          <Button><Plus className="w-4 h-4 mr-2" />Crear Proceso</Button>
-        </Link>
+        <div className="flex items-center gap-3">
+          <Badge variant="secondary" className="hidden sm:inline-flex">
+            {`Plan ${PLAN_LABELS[subscription.tier]} · ${usageLabel(subscription.usage.processes, subscription.limits.maxActiveProcesses, "procesos")}`}
+          </Badge>
+          {subscription.isAtProcessLimit ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <Button disabled>
+                      <Plus className="w-4 h-4 mr-2" />Crear Proceso
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">{PROCESS_LIMIT_MESSAGE}</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Link to="/pdcs/new">
+              <Button><Plus className="w-4 h-4 mr-2" />Crear Proceso</Button>
+            </Link>
+          )}
+        </div>
+
       </div>
 
       {/* Filters */}

@@ -22,6 +22,10 @@ import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
 import { DashboardPermitsWidget } from "@/components/DashboardPermitsWidget";
+import { Badge } from "@/components/ui/badge";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { PLAN_LABELS, usageLabel } from "@/lib/plans";
+
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   compra: "Cp",
@@ -45,6 +49,8 @@ export default function DashboardPage() {
   const { data: pdcs = [], isLoading: pdcsLoading } = usePdcs();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
   const approveMutation = useApprovePdc();
+  const subscription = useTenantSubscription();
+
 
   // Prefetch para acelerar navegación a /pdcs (misma key, ya cacheada en realidad)
   useEffect(() => {
@@ -96,7 +102,16 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-foreground">Bienvenido, {user?.name}</h1>
           <p className="text-sm text-muted-foreground">Resumen de procesos</p>
         </div>
-        <TrafficLightLegend />
+        <div className="flex flex-wrap items-center gap-3">
+          <Badge
+            variant={subscription.tier === "pro" ? "default" : "secondary"}
+            className={subscription.tier === "pro" ? "bg-blue-600 text-white hover:bg-blue-600" : ""}
+          >
+            {`Plan ${PLAN_LABELS[subscription.tier]} · ${usageLabel(subscription.usage.processes, subscription.limits.maxActiveProcesses, "procesos")}`}
+          </Badge>
+          <TrafficLightLegend />
+        </div>
+
       </div>
 
       {isManagerOrAdmin && pendingApprovals.length > 0 && (

@@ -1673,18 +1673,24 @@ export type Database = {
           id: string
           name: string
           slug: string
+          subscription_tier: string
+          subscription_updated_at: string
         }
         Insert: {
           created_at?: string
           id?: string
           name: string
           slug: string
+          subscription_tier?: string
+          subscription_updated_at?: string
         }
         Update: {
           created_at?: string
           id?: string
           name?: string
           slug?: string
+          subscription_tier?: string
+          subscription_updated_at?: string
         }
         Relationships: []
       }

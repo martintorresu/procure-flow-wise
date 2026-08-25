@@ -13,7 +13,10 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { SEO } from "@/components/SEO";
 import { GENERIC_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isPurchaseType, type ProcessType } from "@/lib/processTypes";
-import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2 } from "lucide-react";
+import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock } from "lucide-react";
+import { useTenantSubscription } from "@/hooks/useTenantSubscription";
+import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
+
 
 const PURCHASE_STEPS = [
   { key: "draft", label: "Resumen", icon: FileText },
@@ -35,6 +38,8 @@ const GENERIC_STEPS = GENERIC_STAGES.map((s, i) => ({
 export default function CreatePdcPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const subscription = useTenantSubscription();
+
   const [params] = useSearchParams();
   const fromId = params.get("from") ?? undefined;
   const { data: parent } = usePdc(fromId);
@@ -122,6 +127,22 @@ export default function CreatePdcPage() {
         <h1 className="text-2xl font-bold">Crear Proceso</h1>
         <p className="text-sm text-muted-foreground">Complete los datos del nuevo proceso</p>
       </div>
+
+      {subscription.tier === "free" && (
+        <Card className={subscription.isAtProcessLimit ? "border-l-4 border-l-destructive bg-destructive/5" : "border-l-4 border-l-muted"}>
+          <CardContent className="p-4 flex items-start gap-2 text-sm">
+            <Lock className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
+            <span>
+              <span className="font-medium">
+                {`Plan ${PLAN_LABELS.free} · ${usageLabel(subscription.usage.processes, subscription.limits.maxActiveProcesses, "procesos")}`}
+              </span>
+              {subscription.isAtProcessLimit && <span className="block">{PROCESS_LIMIT_MESSAGE}</span>}
+            </span>
+          </CardContent>
+        </Card>
+      )}
+
+
 
       {parent && (
         <Card className="border-l-4 border-l-accent bg-accent/5">
@@ -238,11 +259,12 @@ export default function CreatePdcPage() {
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button type="submit" disabled={submitting}>
+              <Button type="submit" disabled={submitting || subscription.isAtProcessLimit}>
                 {submitting ? "Creando…" : "Crear Proceso"}
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate("/pdcs")}>Cancelar</Button>
             </div>
+
           </form>
         </CardContent>
       </Card>
