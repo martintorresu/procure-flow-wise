@@ -22,6 +22,7 @@ import { TenantUsersContactSection } from "@/components/admin/TenantUsersContact
 import { ApiKeysSection } from "@/components/admin/ApiKeysSection";
 import { PermitTypesSection } from "@/components/admin/PermitTypesSection";
 import { SubscriptionsSection } from "@/components/admin/SubscriptionsSection";
+import { ContingenciesSection } from "@/components/admin/ContingenciesSection";
 
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/pdc";
