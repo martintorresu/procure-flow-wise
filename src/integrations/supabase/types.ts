@@ -995,6 +995,74 @@ export type Database = {
           },
         ]
       }
+      process_contingencies: {
+        Row: {
+          child_process_id: string
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          execution_mode: string
+          id: string
+          parent_process_id: string
+          reason: string
+          status: string
+          tenant_id: string
+        }
+        Insert: {
+          child_process_id: string
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          execution_mode: string
+          id?: string
+          parent_process_id: string
+          reason: string
+          status?: string
+          tenant_id: string
+        }
+        Update: {
+          child_process_id?: string
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          execution_mode?: string
+          id?: string
+          parent_process_id?: string
+          reason?: string
+          status?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_contingencies_child_process_id_fkey"
+            columns: ["child_process_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_contingencies_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_contingencies_parent_process_id_fkey"
+            columns: ["parent_process_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_contingencies_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_documents: {
         Row: {
           category: string
@@ -1401,6 +1469,7 @@ export type Database = {
           et_document_code: string | null
           id: string
           name: string
+          paused_by_contingency: string | null
           pdc_number: string
           predecessor_process_id: string | null
           process_type: string
@@ -1432,6 +1501,7 @@ export type Database = {
           et_document_code?: string | null
           id?: string
           name: string
+          paused_by_contingency?: string | null
           pdc_number?: string
           predecessor_process_id?: string | null
           process_type?: string
@@ -1463,6 +1533,7 @@ export type Database = {
           et_document_code?: string | null
           id?: string
           name?: string
+          paused_by_contingency?: string | null
           pdc_number?: string
           predecessor_process_id?: string | null
           process_type?: string
@@ -1480,6 +1551,13 @@ export type Database = {
             columns: ["engineering_responsible"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "purchase_processes_paused_by_contingency_fkey"
+            columns: ["paused_by_contingency"]
+            isOneToOne: false
+            referencedRelation: "process_contingencies"
             referencedColumns: ["id"]
           },
           {
