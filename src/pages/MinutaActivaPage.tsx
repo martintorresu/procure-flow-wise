@@ -341,7 +341,9 @@ export default function MinutaActivaPage() {
               Configura la reunión y captura los compromisos con tu voz. El sistema los detectará automáticamente.
             </p>
             <div className="space-y-2">
-              <Label htmlFor="minuta-title">Título de la reunión *</Label>
+              <Label htmlFor="minuta-title">
+                Título de la reunión <span className="text-danger">*</span>
+              </Label>
               <Input
                 id="minuta-title"
                 value={meetingTitle}
@@ -350,31 +352,43 @@ export default function MinutaActivaPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minuta-date">Fecha</Label>
+              <Label htmlFor="minuta-date">
+                Fecha <span className="text-danger">*</span>
+              </Label>
               <Input id="minuta-date" type="date" value={meetingDate} onChange={(e) => setMeetingDate(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Proceso vinculado (opcional)</Label>
+              <Label>
+                Proceso vinculado <span className="text-danger">*</span>
+              </Label>
               <Select value={presetPdcId ?? "none"} onValueChange={(v) => setPresetPdcId(v === "none" ? null : v)}>
-                <SelectTrigger>
+                <SelectTrigger className={!presetPdcId ? "border-danger/50" : undefined}>
                   <SelectValue placeholder="Vincular todos los compromisos a un proceso" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sin proceso por defecto</SelectItem>
+                  <SelectItem value="none">Selecciona un proceso</SelectItem>
                   {processes.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <ParticipantsPicker value={participants} onChange={setParticipants} />
+
             {!voice.isSupported && (
               <p className="text-xs text-warning bg-warning/10 border border-warning/30 rounded-md p-2">
                 Tu navegador no soporta reconocimiento de voz. Se habilitará la entrada manual de texto.
               </p>
             )}
-            <Button size="lg" className="w-full" onClick={startCapture}>
+            <Button size="lg" className="w-full" onClick={startCapture} disabled={!setupValid}>
               🎙️ Iniciar Captura
             </Button>
+            {!setupValid && (
+              <p className="text-xs text-muted-foreground text-center">
+                Completa título (mín. 3 caracteres), fecha, proceso y al menos un participante.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
