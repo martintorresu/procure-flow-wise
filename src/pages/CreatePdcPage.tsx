@@ -90,8 +90,16 @@ export default function CreatePdcPage() {
       toast.error("Sesión expirada. Vuelva a iniciar sesión.");
       return;
     }
+    // Refuerzo del límite de plan también ante acceso directo por URL.
+    if (subscription.isAtProcessLimit) {
+      toast.error(PROCESS_LIMIT_MESSAGE);
+      return;
+    }
 
     try {
+      // SECURITY: tenant_id is resolved server-side via RLS policy using auth.uid()
+      // The PLACEHOLDER_TENANT pattern is used; the actual tenant is set by trigger
+      // TODO: La columna created_by debería tener DEFAULT auth.uid() en la migración SQL
       const data = await createPdc.mutateAsync({
         name: form.title,
         project: form.project,
@@ -108,6 +116,7 @@ export default function CreatePdcPage() {
         responsible_name: form.responsible_name || null,
         created_by: user.id,
       });
+
       toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
       // Los procesos tipo "permiso" continúan en Permisología para completar el trámite
       if (form.process_type === "permiso") {
