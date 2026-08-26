@@ -43,6 +43,8 @@ export interface VoiceCapture {
   stop: () => void;
   pause: () => void;
   resume: () => void;
+  /** Detiene y limpia transcript/errores para una nueva captura */
+  reset: () => void;
   /** Agrega texto manual al transcript acumulado */
   appendText: (text: string) => void;
 }
