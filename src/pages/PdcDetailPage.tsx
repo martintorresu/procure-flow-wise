@@ -367,7 +367,7 @@ export default function PdcDetailPage() {
       {!isExternal && (
       <Tabs defaultValue="summary">
 
-        <TabsList className="grid grid-cols-4 lg:grid-cols-11 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-12 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
           <TabsTrigger value="planning">Planificación</TabsTrigger>
@@ -378,11 +378,17 @@ export default function PdcDetailPage() {
           <TabsTrigger value="logistics">Logística</TabsTrigger>
           <TabsTrigger value="documents">Documentos</TabsTrigger>
           <TabsTrigger value="commitments">Compromisos</TabsTrigger>
+          <TabsTrigger value="contingencies">Contingencias</TabsTrigger>
           <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="contingencies">
+          <ProcessContingencies processId={pdc.id} canManage={canBifurcate} />
+        </TabsContent>
+
         <TabsContent value="documents">
           <ProcessDocuments processId={pdc.id} />
+
         </TabsContent>
 
         <TabsContent value="commitments">
