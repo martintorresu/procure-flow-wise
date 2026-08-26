@@ -1891,6 +1891,16 @@ export type Database = {
     }
     Functions: {
       claim_process_invitations: { Args: never; Returns: number }
+      create_contingency: {
+        Args: {
+          p_child_criticality?: string
+          p_child_name: string
+          p_execution_mode: string
+          p_parent_process_id: string
+          p_reason: string
+        }
+        Returns: Json
+      }
       generate_pdc_number: { Args: never; Returns: string }
       process_number_prefix: { Args: { _type: string }; Returns: string }
       role_can_access_stage: {
