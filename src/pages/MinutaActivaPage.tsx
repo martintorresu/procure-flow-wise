@@ -443,6 +443,9 @@ export default function MinutaActivaPage() {
                 Completa título (mín. 3 caracteres), fecha, proceso y al menos un participante.
               </p>
             )}
+            <Button variant="ghost" size="sm" className="w-full" onClick={() => setPhase("dashboard")}>
+              Volver al panel
+            </Button>
           </CardContent>
         </Card>
       </div>
