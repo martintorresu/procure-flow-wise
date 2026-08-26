@@ -63,6 +63,7 @@ export interface PdcRow {
   process_type: string | null;
   project_id: string | null;
   predecessor_process_id: string | null;
+  paused_by_contingency: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
