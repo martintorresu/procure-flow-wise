@@ -524,7 +524,7 @@ export default function MinutaActivaPage() {
         <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
           <QualityGauge score={quality.score} threshold={qualityThreshold} />
           <div className="flex-1 w-full">
-            <QualityChecklist items={quality.items} />
+            <QualityChecklist items={quality.breakdown} />
           </div>
         </CardContent>
       </Card>
