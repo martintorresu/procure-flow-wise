@@ -42,6 +42,12 @@ export default function PdcListPage() {
   const [delayedFilter, setDelayedFilter] = useState<boolean>(false);
   const [search, setSearch] = useState("");
   const { data: pdcs = [], isLoading: loading } = usePdcs();
+  const { data: contingencies = [] } = useAllContingencies();
+  const parallelParents = new Set(
+    contingencies
+      .filter((c) => c.status === "active" && c.execution_mode === "parallel_effort")
+      .map((c) => c.parent_process_id),
+  );
 
   useEffect(() => {
     const criticality = searchParams.get("criticality");
