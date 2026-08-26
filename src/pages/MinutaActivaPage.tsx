@@ -386,9 +386,14 @@ export default function MinutaActivaPage() {
             </div>
           </div>
           <CardContent className="p-5 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Configura la reunión y captura los compromisos con tu voz. El sistema los detectará automáticamente.
-            </p>
+            <div className="flex items-center gap-4 rounded-lg border border-border p-3">
+              <QualityGauge score={quality.score} threshold={qualityThreshold} size={72} />
+              <p className="text-sm text-muted-foreground">
+                Configura la reunión y captura los compromisos con tu voz. El indicador sube a
+                medida que completas el estándar.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="minuta-title">
                 Título de la reunión <span className="text-danger">*</span>
