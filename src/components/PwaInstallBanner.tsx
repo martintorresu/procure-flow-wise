@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -27,6 +28,7 @@ function isStandalone(): boolean {
 /** Banner sutil de instalación PWA (solo móvil, con dismissal de 30 días). */
 export function PwaInstallBanner() {
   const isMobile = useIsMobile();
+  const location = useLocation();
   const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -49,6 +51,11 @@ export function PwaInstallBanner() {
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
   }, [isMobile]);
+
+  // No superponer controles críticos (barra de grabación / FAB)
+  const hideOnRoutes = ["/minuta"];
+  const shouldHide = hideOnRoutes.some((r) => location.pathname.startsWith(r) || location.pathname.includes(r));
+  if (shouldHide) return null;
 
   if (!visible) return null;
 
