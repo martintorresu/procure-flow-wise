@@ -290,6 +290,7 @@ export default function AdminPage() {
       <WhatsappConfigSection />
       <TenantUsersContactSection />
       <ApiKeysSection />
+      <ContingenciesSection />
       <PermitTypesSection />
       <StageTemplatesSection />
       <EtFieldsAdminSection />
