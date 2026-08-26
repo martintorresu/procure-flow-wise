@@ -59,6 +59,8 @@ export function useVoiceCapture(): VoiceCapture {
   const recogRef = useRef<SpeechRecognitionLike | null>(null);
   const manualStopRef = useRef(false);
   const pausedRef = useRef(false);
+  const silentRestartsRef = useRef(0);
+  const MAX_SILENT_RESTARTS = 5;
 
   const buildRecognition = useCallback(() => {
     const Ctor = getCtor();
