@@ -188,28 +188,82 @@ export default function PdcDetailPage() {
             <Badge variant="outline" className="text-xs">Acceso externo · solo lectura</Badge>
           ) : (
             <>
-              {showChainButton && (
+              {showChainButton && !isPaused && (
                 <Link to={`/pdcs/new?from=${pdc.id}`}>
                   <Button size="sm" className="gap-2">
                     <Link2 className="w-4 h-4" /> Crear proceso de continuación
                   </Button>
                 </Link>
               )}
+              {canBifurcate && user && !isPaused && (
+                <ContingencyDialog pdc={pdc} createdBy={user.id} />
+              )}
               {isAdmin && pdc.tenant_id && user && (
                 <InviteExternalDialog processId={pdc.id} tenantId={pdc.tenant_id} invitedBy={user.id} />
               )}
               {isAdmin && (
-                <Link to={`/pdcs/${pdc.id}/edit`}>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Pencil className="w-4 h-4" /> Editar
-                  </Button>
-                </Link>
+                isPaused ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button variant="outline" size="sm" className="gap-2" disabled>
+                            <Pencil className="w-4 h-4" /> Editar
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs">
+                        Proceso pausado por contingencia
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Link to={`/pdcs/${pdc.id}/edit`}>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Pencil className="w-4 h-4" /> Editar
+                    </Button>
+                  </Link>
+                )
               )}
             </>
           )}
         </div>
 
       </div>
+
+      {isPaused && pausingContingency && (
+        <Card className="border-l-4 border-l-amber-500 bg-amber-500/5">
+          <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                ⏸️ Proceso pausado por contingencia
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {pausingContingency.reason} · Iniciada {timeAgo(pausingContingency.created_at)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link to={`/pdcs/${pausingContingency.child_process_id}`}>
+                <Button variant="outline" size="sm">Ver contingencia</Button>
+              </Link>
+              {canBifurcate && (
+                <Button
+                  size="sm"
+                  disabled={completeContingency.isPending}
+                  onClick={() =>
+                    completeContingency.mutate(pausingContingency.id, {
+                      onSuccess: () => toast.success("Contingencia completada. Proceso reanudado."),
+                      onError: (e: Error) => toast.error(e.message),
+                    })
+                  }
+                >
+                  Completar y reanudar
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {pdc.approval_status === "pending" && (
         <Card className="border-l-4 border-l-warning bg-warning/5">
@@ -226,6 +280,7 @@ export default function PdcDetailPage() {
           </CardContent>
         </Card>
       )}
+
 
       {/* Key info cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
