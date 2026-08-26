@@ -236,7 +236,7 @@ export default function PdcListPage() {
 
                   <div className="hidden sm:block text-right shrink-0">
                     <div className="font-mono text-sm font-medium text-foreground">
-                      {pdc.currency} {pdc.estimated_amount.toLocaleString()}
+                      {pdc.currency} {(pdc.estimated_amount ?? 0).toLocaleString("es-CL")}
                     </div>
                     <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Monto Est.</div>
                   </div>

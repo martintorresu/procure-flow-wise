@@ -95,12 +95,14 @@ const DAY_MS = 86_400_000;
 /** Días restantes hasta una fecha ISO (YYYY-MM-DD), en base a hoy. */
 export function daysUntil(dateIso: string | null | undefined): number | null {
   if (!dateIso) return null;
-  const target = new Date(`${dateIso}T00:00:00`);
+  // UTC explícito: evita corrimientos de un día según el huso del navegador.
+  const target = new Date(`${dateIso}T00:00:00Z`);
   if (Number.isNaN(target.getTime())) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const today = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
   return Math.round((target.getTime() - today.getTime()) / DAY_MS);
 }
+
 
 /** Etiqueta e indicador visual del vencimiento de un permiso. */
 export function expiryMeta(

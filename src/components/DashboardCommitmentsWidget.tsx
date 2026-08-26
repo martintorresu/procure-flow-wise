@@ -14,9 +14,10 @@ export function DashboardCommitmentsWidget() {
   const { user } = useAuth();
   const { data: commitments = [], isLoading } = useCommitments();
 
-  const mine = commitments.filter(
-    (c) => OPEN.includes(c.status) && (!user?.id || c.responsible_user_id === user.id),
-  );
+  const mine = user?.id
+    ? commitments.filter((c) => OPEN.includes(c.status) && c.responsible_user_id === user.id)
+    : [];
+
   const overdue = mine.filter((c) => dueMeta(c.due_date, c.status).overdue);
   const urgent = [...mine]
     .sort((a, b) => (a.due_date ?? "9999").localeCompare(b.due_date ?? "9999"))

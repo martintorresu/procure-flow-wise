@@ -334,12 +334,16 @@ export async function syncPermitAlerts(permits: Permit[]): Promise<number> {
 /** Dispara la sincronización de alertas una vez por montaje cuando hay datos. */
 export function usePermitAlertSync(permits: Permit[] | undefined) {
   const qc = useQueryClient();
-  const done = useRef(false);
+  // Sincroniza una sola vez por conjunto de permisos (evita escrituras en cada render).
+  const syncedRef = useRef<string>("");
   useEffect(() => {
-    if (done.current || !permits || permits.length === 0) return;
-    done.current = true;
+    if (!permits || permits.length === 0) return;
+    const permitIds = permits.map((p) => p.id).sort().join(",");
+    if (syncedRef.current === permitIds) return;
+    syncedRef.current = permitIds;
     syncPermitAlerts(permits).then((n) => {
       if (n > 0) qc.invalidateQueries({ queryKey: ["alerts"] });
     });
   }, [permits, qc]);
 }
+

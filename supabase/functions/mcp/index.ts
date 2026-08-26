@@ -79,7 +79,8 @@ var list_processes_default = defineTool({
     if (criticality) query = query.eq("criticality", criticality);
     if (stage) query = query.eq("current_stage", stage);
     if (process_type) query = query.eq("process_type", process_type);
-    if (search) query = query.or(`name.ilike.%${search}%,pdc_number.ilike.%${search}%`);
+    const safeSearch = search?.replace(/[.,()]/g, "");
+    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,pdc_number.ilike.%${safeSearch}%`);
     const { data, error } = await query;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
@@ -174,7 +175,8 @@ var list_projects_default = defineTool4({
     }
     const supabase = supabaseForUser(ctx);
     let query = supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(limit ?? 25);
-    if (search) query = query.ilike("name", `%${search}%`);
+    const safeSearch = search?.replace(/[.,()]/g, "");
+    if (safeSearch) query = query.ilike("name", `%${safeSearch}%`);
     const { data, error } = await query;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {

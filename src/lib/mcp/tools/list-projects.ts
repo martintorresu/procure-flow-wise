@@ -17,7 +17,8 @@ export default defineTool({
     }
     const supabase = supabaseForUser(ctx);
     let query = supabase.from("projects").select("*").order("created_at", { ascending: false }).limit(limit ?? 25);
-    if (search) query = query.ilike("name", `%${search}%`);
+    const safeSearch = search?.replace(/[.,()]/g, "");
+    if (safeSearch) query = query.ilike("name", `%${safeSearch}%`);
 
     const { data, error } = await query;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };

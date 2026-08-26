@@ -31,7 +31,9 @@ export default defineTool({
     if (criticality) query = query.eq("criticality", criticality);
     if (stage) query = query.eq("current_stage", stage);
     if (process_type) query = query.eq("process_type", process_type);
-    if (search) query = query.or(`name.ilike.%${search}%,pdc_number.ilike.%${search}%`);
+    // Sanitiza metacaracteres de PostgREST para evitar inyección de filtros.
+    const safeSearch = search?.replace(/[.,()]/g, "");
+    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,pdc_number.ilike.%${safeSearch}%`);
 
     const { data, error } = await query;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
