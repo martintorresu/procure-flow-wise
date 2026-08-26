@@ -32,7 +32,7 @@ import {
   type ParsedCommitment,
 } from "@/lib/commitments";
 
-type Phase = "setup" | "capture" | "review";
+type Phase = "dashboard" | "setup" | "capture" | "review";
 
 interface DraftRow extends ParsedCommitment {
   userId: string | null;
