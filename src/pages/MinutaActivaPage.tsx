@@ -194,13 +194,44 @@ export default function MinutaActivaPage() {
       { text: "", responsible: "", dueDate: null, priority: null, pdcReference: "", userId: null, pdcId: presetPdcId, included: true },
     ]);
 
+  /* ------------------- Estándar de Minuta: calidad ------------------- */
+  const includedDrafts = useMemo(
+    () => draft.filter((d) => d.included && d.text.trim()),
+    [draft],
+  );
+
+  const quality = useMemo(
+    () =>
+      calculateQualityScore(
+        {
+          hasProject: !!presetPdcId || includedDrafts.some((d) => !!d.pdcId),
+          hasMeetingDate: !!meetingDate,
+          participantCount: participants.length,
+          commitments: includedDrafts.map((d) => ({
+            hasResponsible: !!d.userId || !!d.responsible.trim(),
+            hasDueDate: !!d.dueDate,
+            dueDateWithinMax: isWithinMaxDelivery(meetingDate || null, d.dueDate, maxDeliveryDays),
+          })),
+        },
+        maxDeliveryDays,
+      ),
+    [includedDrafts, presetPdcId, meetingDate, participants.length, maxDeliveryDays],
+  );
+
+  const qualityOk = quality.score >= qualityThreshold;
+
   const handleImport = async () => {
-    const selected = draft.filter((d) => d.included && d.text.trim());
+    const selected = includedDrafts;
     if (!selected.length) {
       toast.error("No hay compromisos seleccionados para importar");
       return;
     }
-    const payload: NewCommitment[] = selected.map((d) => ({
+    if (!qualityOk) {
+      toast.error(`La calidad mínima requerida es ${qualityThreshold}%.`);
+      return;
+    }
+
+    const basePayload: NewCommitment[] = selected.map((d) => ({
       commitment_text: d.text.trim(),
       responsible_user_id: d.userId,
       responsible_name: d.userId ? ((users.find((u) => u.id === d.userId)?.full_name ?? d.responsible) || null) : (d.responsible || null),
@@ -209,28 +240,52 @@ export default function MinutaActivaPage() {
       priority: d.priority,
       meeting_title: meetingTitle.trim(),
       meeting_date: meetingDate || null,
-      raw_json: { source: "minuta_activa", parsed: d },
+      raw_json: { source: "minuta_activa", parsed: d, quality_score: quality.score },
     }));
 
     if (!isOnline) {
-      enqueueCommitments(payload, meetingTitle.trim());
+      enqueueCommitments(basePayload, meetingTitle.trim());
       toast.info("📴 Sin conexión. Los compromisos se enviarán automáticamente cuando vuelva Internet.");
+      setFinalScore(quality.score);
+      setImportedCount(basePayload.length);
       if (isStandaloneApp) setImportDone(true);
       else navigate("/commitments");
       return;
     }
 
     try {
+      let sessionId: string | null = null;
+      try {
+        sessionId = await createSession.mutateAsync({
+          title: meetingTitle.trim(),
+          meetingDate: meetingDate || todayISO,
+          pdcId: presetPdcId,
+          qualityScore: quality.score,
+          participants: participants.map((p) => ({
+            userId: p.userId,
+            guestName: p.isGuest ? p.name : null,
+            guestEmail: p.isGuest ? p.email : null,
+            guestCompany: p.isGuest ? p.company : null,
+            isGuest: p.isGuest,
+          })),
+        });
+      } catch (e) {
+        console.warn("[minuta] no se pudo crear la sesión:", e);
+      }
+
+      const payload = basePayload.map((p) => ({ ...p, meeting_session_id: sessionId }));
       const res = await importMutation.mutateAsync(payload);
       const notified = payload.filter((p) => p.responsible_user_id).length;
       toast.success(
         `✅ ${res.inserted} compromiso${res.inserted === 1 ? "" : "s"} importado${res.inserted === 1 ? "" : "s"}. Se enviaron alertas WhatsApp a ${notified} responsable${notified === 1 ? "" : "s"}.`,
       );
+      setFinalScore(quality.score);
+      setImportedCount(res.inserted);
       if (isStandaloneApp) setImportDone(true);
       else navigate("/commitments");
     } catch {
       // Fallback: si falla online, guardar en cola offline para reintento automático
-      enqueueCommitments(payload, meetingTitle.trim());
+      enqueueCommitments(basePayload, meetingTitle.trim());
       toast.error("Error al importar. Los compromisos se guardaron localmente y se enviarán automáticamente.");
     }
   };
@@ -254,8 +309,11 @@ export default function MinutaActivaPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
         <CheckCircle2 className="w-16 h-16 text-success" />
         <h2 className="text-xl font-bold">¡Compromisos importados!</h2>
+        <QualityGauge score={finalScore} size={110} />
         <p className="text-sm text-muted-foreground text-center">
-          Los compromisos fueron registrados y las alertas WhatsApp enviadas a los responsables.
+          {importedCount} compromiso{importedCount === 1 ? "" : "s"} registrado
+          {importedCount === 1 ? "" : "s"} con {finalScore}% de calidad. Se enviaron alertas
+          WhatsApp a los responsables.
         </p>
         <Button size="lg" onClick={startNewCapture}>
           🎙️ Nueva captura
