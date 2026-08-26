@@ -70,7 +70,11 @@ export function SubscriptionsSection() {
                       <TableCell className="text-right">
                         <Select
                           value={t.subscription_tier}
-                          onValueChange={(v) =>
+                          onValueChange={(v) => {
+                            if (v === "free" && t.subscription_tier === "pro" &&
+                              !confirm("¿Degradar a Free? Los procesos activos que excedan el límite serán archivados.")) {
+                              return;
+                            }
                             update.mutate(
                               { id: t.id, tier: v as SubscriptionTier },
                               {
@@ -78,8 +82,8 @@ export function SubscriptionsSection() {
                                   toast.success(`${t.name} ahora está en plan ${PLAN_LABELS[v as SubscriptionTier]}`),
                                 onError: (e: Error) => toast.error(e.message),
                               },
-                            )
-                          }
+                            );
+                          }}
                         >
                           <SelectTrigger className="ml-auto w-[120px]">
                             <SelectValue />

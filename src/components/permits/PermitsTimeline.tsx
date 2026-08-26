@@ -73,11 +73,13 @@ export function PermitsTimeline({ permits, onSelect }: { permits: Permit[]; onSe
 
         <div className="relative">
           {/* Línea de hoy */}
-          <div
-            className="absolute top-0 bottom-0 w-px bg-accent/70 z-10"
-            style={{ left: `calc(220px + (100% - 220px) * ${(todayLeft / 100).toFixed(4)})` }}
-            aria-hidden
-          />
+          {/* Mismo sistema de coordenadas que las barras: contenedor alineado al área flex-1 */}
+          <div className="pointer-events-none absolute inset-y-0 left-[220px] right-0" aria-hidden>
+            <div
+              className="absolute top-0 bottom-0 w-px bg-accent/70 z-10"
+              style={{ left: `${todayLeft}%` }}
+            />
+          </div>
           {rows.items.map(({ permit, start, end }) => {
             const left = ((start - min) / span) * 100;
             const width = Math.max(((end - start) / span) * 100, 1.5);

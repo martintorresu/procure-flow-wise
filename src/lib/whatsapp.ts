@@ -52,11 +52,16 @@ export async function notifyWhatsappByRole(params: {
       .eq("tenant_id", params.tenantId);
 
 
-    await Promise.all(
-      (profiles ?? []).map((p) =>
-        notifyWhatsappAlert({ alertId: params.alertId, userId: p.id, tenantId: params.tenantId }),
-      ),
-    );
+    // Enviar en lotes de 5 para no exceder los rate limits de la API de Meta.
+    const targets = profiles ?? [];
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < targets.length; i += BATCH_SIZE) {
+      await Promise.all(
+        targets.slice(i, i + BATCH_SIZE).map((p) =>
+          notifyWhatsappAlert({ alertId: params.alertId, userId: p.id, tenantId: params.tenantId }),
+        ),
+      );
+    }
 
   } catch (e) {
     console.warn("[whatsapp] no se pudieron resolver destinatarios:", e);

@@ -70,6 +70,7 @@ export default function CommitmentsPage() {
   const [fPdc, setFPdc] = useState("all");
   const [fMeetingDate, setFMeetingDate] = useState("");
   const [grouped, setGrouped] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(50);
 
   const handleParse = () => {
     const parsed = mode === "transcript" ? parseTranscriptText(text) : parseCommitmentsText(text);
@@ -382,8 +383,21 @@ export default function CommitmentsPage() {
           </div>
 
           {!grouped && (
-            <div className="overflow-x-auto">
-              <CommitmentsTable commitments={filtered} processes={processes} isLoading={isLoading} />
+            <div className="space-y-3">
+              <div className="overflow-x-auto">
+                <CommitmentsTable
+                  commitments={filtered.slice(0, visibleCount)}
+                  processes={processes}
+                  isLoading={isLoading}
+                />
+              </div>
+              {filtered.length > visibleCount && (
+                <div className="flex justify-center">
+                  <Button variant="outline" onClick={() => setVisibleCount((v) => v + 50)}>
+                    Mostrar más ({filtered.length - visibleCount} restantes)
+                  </Button>
+                </div>
+              )}
             </div>
           )}
 
