@@ -70,6 +70,7 @@ export interface NewCommitment {
   priority: CommitmentPriority | null;
   meeting_title: string | null;
   meeting_date: string | null;
+  meeting_session_id?: string | null;
   raw_json?: unknown;
 }
 

@@ -659,6 +659,125 @@ export type Database = {
           },
         ]
       }
+      minuta_participants: {
+        Row: {
+          created_at: string
+          guest_company: string | null
+          guest_email: string | null
+          guest_name: string | null
+          id: string
+          is_guest: boolean
+          meeting_session_id: string
+          tenant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          guest_company?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          is_guest?: boolean
+          meeting_session_id: string
+          tenant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          guest_company?: string | null
+          guest_email?: string | null
+          guest_name?: string | null
+          id?: string
+          is_guest?: boolean
+          meeting_session_id?: string
+          tenant_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minuta_participants_meeting_session_id_fkey"
+            columns: ["meeting_session_id"]
+            isOneToOne: false
+            referencedRelation: "minuta_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minuta_participants_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minuta_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      minuta_sessions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          meeting_date: string
+          pdc_id: string | null
+          quality_score: number
+          status: string
+          tenant_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meeting_date: string
+          pdc_id?: string | null
+          quality_score?: number
+          status?: string
+          tenant_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meeting_date?: string
+          pdc_id?: string | null
+          quality_score?: number
+          status?: string
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "minuta_sessions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minuta_sessions_pdc_id_fkey"
+            columns: ["pdc_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minuta_sessions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permit_documents: {
         Row: {
           document_type: string | null
@@ -914,6 +1033,7 @@ export type Database = {
           due_date: string | null
           id: string
           meeting_date: string | null
+          meeting_session_id: string | null
           meeting_title: string | null
           notes: string | null
           pdc_id: string | null
@@ -933,6 +1053,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           meeting_date?: string | null
+          meeting_session_id?: string | null
           meeting_title?: string | null
           notes?: string | null
           pdc_id?: string | null
@@ -952,6 +1073,7 @@ export type Database = {
           due_date?: string | null
           id?: string
           meeting_date?: string | null
+          meeting_session_id?: string | null
           meeting_title?: string | null
           notes?: string | null
           pdc_id?: string | null
@@ -970,6 +1092,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_commitments_meeting_session_id_fkey"
+            columns: ["meeting_session_id"]
+            isOneToOne: false
+            referencedRelation: "minuta_sessions"
             referencedColumns: ["id"]
           },
           {
@@ -1740,6 +1869,41 @@ export type Database = {
             foreignKeyName: "technical_specs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_settings: {
+        Row: {
+          created_at: string
+          id: string
+          minuta_max_delivery_days: number
+          minuta_quality_threshold: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          minuta_max_delivery_days?: number
+          minuta_quality_threshold?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          minuta_max_delivery_days?: number
+          minuta_quality_threshold?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_settings_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },

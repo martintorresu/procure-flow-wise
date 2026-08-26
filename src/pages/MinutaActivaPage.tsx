@@ -13,8 +13,15 @@ import { Mic, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, Wi
 import { SEO } from "@/components/SEO";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/hooks/useCommitments";
-import { useTenantUsers } from "@/hooks/useTenantUsers";
+import { useTenantUsers, useMyProfile } from "@/hooks/useTenantUsers";
 import { useOnlineStatus } from "@/hooks/useOfflineSync";
+import { useMinutaConfig } from "@/hooks/useMinutaConfig";
+import { useCreateMinutaSession } from "@/hooks/useMinutaSession";
+import { useAuth } from "@/contexts/AuthContext";
+import { QualityGauge } from "@/components/minuta/QualityGauge";
+import { QualityChecklist } from "@/components/minuta/QualityChecklist";
+import { ParticipantsPicker, type MinutaParticipant } from "@/components/minuta/ParticipantsPicker";
+import { calculateQualityScore, isWithinMaxDelivery } from "@/lib/minutaQuality";
 import { enqueueCommitments } from "@/lib/offlineQueue";
 import {
   matchProcess,
@@ -45,7 +52,11 @@ export default function MinutaActivaPage() {
   const { data: processes = [] } = useProcessOptions();
   const { data: users = [] } = useTenantUsers();
   const importMutation = useImportCommitments();
+  const createSession = useCreateMinutaSession();
   const voice = useVoiceCapture();
+  const { user } = useAuth();
+  const { data: myProfile } = useMyProfile(user?.id);
+  const { qualityThreshold, maxDeliveryDays } = useMinutaConfig();
 
   // PWA dedicada (minuta.html): sin sidebar ni navegación a /commitments
   const isStandaloneApp =
@@ -53,12 +64,37 @@ export default function MinutaActivaPage() {
 
   const [phase, setPhase] = useState<Phase>("setup");
   const [importDone, setImportDone] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
+  const [importedCount, setImportedCount] = useState(0);
 
   // Fase 1
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [meetingTitle, setMeetingTitle] = useState("");
   const [meetingDate, setMeetingDate] = useState(todayISO);
   const [presetPdcId, setPresetPdcId] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<MinutaParticipant[]>([]);
+
+  // El creador se agrega automáticamente como participante
+  useEffect(() => {
+    if (!myProfile) return;
+    setParticipants((prev) =>
+      prev.some((p) => p.userId === myProfile.id)
+        ? prev
+        : [
+            {
+              key: myProfile.id,
+              userId: myProfile.id,
+              name: myProfile.full_name ?? myProfile.email,
+              role: myProfile.area,
+              email: myProfile.email,
+              company: null,
+              isGuest: false,
+              locked: true,
+            },
+            ...prev,
+          ],
+    );
+  }, [myProfile]);
 
   // Fase 2
   const [elapsed, setElapsed] = useState(0);
@@ -91,9 +127,12 @@ export default function MinutaActivaPage() {
     return parts.join("\n");
   }, [voice.transcript, manualText]);
 
+  const setupValid =
+    meetingTitle.trim().length >= 3 && !!meetingDate && !!presetPdcId && participants.length > 0;
+
   const startCapture = async () => {
-    if (!meetingTitle.trim()) {
-      toast.error("Ingresa un título para la reunión");
+    if (!setupValid) {
+      toast.error("Completa título, fecha, proceso y al menos un participante");
       return;
     }
     setPhase("capture");
@@ -155,13 +194,44 @@ export default function MinutaActivaPage() {
       { text: "", responsible: "", dueDate: null, priority: null, pdcReference: "", userId: null, pdcId: presetPdcId, included: true },
     ]);
 
+  /* ------------------- Estándar de Minuta: calidad ------------------- */
+  const includedDrafts = useMemo(
+    () => draft.filter((d) => d.included && d.text.trim()),
+    [draft],
+  );
+
+  const quality = useMemo(
+    () =>
+      calculateQualityScore(
+        {
+          hasProject: !!presetPdcId || includedDrafts.some((d) => !!d.pdcId),
+          hasMeetingDate: !!meetingDate,
+          participantCount: participants.length,
+          commitments: includedDrafts.map((d) => ({
+            hasResponsible: !!d.userId || !!d.responsible.trim(),
+            hasDueDate: !!d.dueDate,
+            dueDateWithinMax: isWithinMaxDelivery(meetingDate || null, d.dueDate, maxDeliveryDays),
+          })),
+        },
+        maxDeliveryDays,
+      ),
+    [includedDrafts, presetPdcId, meetingDate, participants.length, maxDeliveryDays],
+  );
+
+  const qualityOk = quality.score >= qualityThreshold;
+
   const handleImport = async () => {
-    const selected = draft.filter((d) => d.included && d.text.trim());
+    const selected = includedDrafts;
     if (!selected.length) {
       toast.error("No hay compromisos seleccionados para importar");
       return;
     }
-    const payload: NewCommitment[] = selected.map((d) => ({
+    if (!qualityOk) {
+      toast.error(`La calidad mínima requerida es ${qualityThreshold}%.`);
+      return;
+    }
+
+    const basePayload: NewCommitment[] = selected.map((d) => ({
       commitment_text: d.text.trim(),
       responsible_user_id: d.userId,
       responsible_name: d.userId ? ((users.find((u) => u.id === d.userId)?.full_name ?? d.responsible) || null) : (d.responsible || null),
@@ -170,28 +240,52 @@ export default function MinutaActivaPage() {
       priority: d.priority,
       meeting_title: meetingTitle.trim(),
       meeting_date: meetingDate || null,
-      raw_json: { source: "minuta_activa", parsed: d },
+      raw_json: { source: "minuta_activa", parsed: d, quality_score: quality.score },
     }));
 
     if (!isOnline) {
-      enqueueCommitments(payload, meetingTitle.trim());
+      enqueueCommitments(basePayload, meetingTitle.trim());
       toast.info("📴 Sin conexión. Los compromisos se enviarán automáticamente cuando vuelva Internet.");
+      setFinalScore(quality.score);
+      setImportedCount(basePayload.length);
       if (isStandaloneApp) setImportDone(true);
       else navigate("/commitments");
       return;
     }
 
     try {
+      let sessionId: string | null = null;
+      try {
+        sessionId = await createSession.mutateAsync({
+          title: meetingTitle.trim(),
+          meetingDate: meetingDate || todayISO,
+          pdcId: presetPdcId,
+          qualityScore: quality.score,
+          participants: participants.map((p) => ({
+            userId: p.userId,
+            guestName: p.isGuest ? p.name : null,
+            guestEmail: p.isGuest ? p.email : null,
+            guestCompany: p.isGuest ? p.company : null,
+            isGuest: p.isGuest,
+          })),
+        });
+      } catch (e) {
+        console.warn("[minuta] no se pudo crear la sesión:", e);
+      }
+
+      const payload = basePayload.map((p) => ({ ...p, meeting_session_id: sessionId }));
       const res = await importMutation.mutateAsync(payload);
       const notified = payload.filter((p) => p.responsible_user_id).length;
       toast.success(
         `✅ ${res.inserted} compromiso${res.inserted === 1 ? "" : "s"} importado${res.inserted === 1 ? "" : "s"}. Se enviaron alertas WhatsApp a ${notified} responsable${notified === 1 ? "" : "s"}.`,
       );
+      setFinalScore(quality.score);
+      setImportedCount(res.inserted);
       if (isStandaloneApp) setImportDone(true);
       else navigate("/commitments");
     } catch {
       // Fallback: si falla online, guardar en cola offline para reintento automático
-      enqueueCommitments(payload, meetingTitle.trim());
+      enqueueCommitments(basePayload, meetingTitle.trim());
       toast.error("Error al importar. Los compromisos se guardaron localmente y se enviarán automáticamente.");
     }
   };
@@ -215,8 +309,11 @@ export default function MinutaActivaPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
         <CheckCircle2 className="w-16 h-16 text-success" />
         <h2 className="text-xl font-bold">¡Compromisos importados!</h2>
+        <QualityGauge score={finalScore} size={110} />
         <p className="text-sm text-muted-foreground text-center">
-          Los compromisos fueron registrados y las alertas WhatsApp enviadas a los responsables.
+          {importedCount} compromiso{importedCount === 1 ? "" : "s"} registrado
+          {importedCount === 1 ? "" : "s"} con {finalScore}% de calidad. Se enviaron alertas
+          WhatsApp a los responsables.
         </p>
         <Button size="lg" onClick={startNewCapture}>
           🎙️ Nueva captura
@@ -244,7 +341,9 @@ export default function MinutaActivaPage() {
               Configura la reunión y captura los compromisos con tu voz. El sistema los detectará automáticamente.
             </p>
             <div className="space-y-2">
-              <Label htmlFor="minuta-title">Título de la reunión *</Label>
+              <Label htmlFor="minuta-title">
+                Título de la reunión <span className="text-danger">*</span>
+              </Label>
               <Input
                 id="minuta-title"
                 value={meetingTitle}
@@ -253,31 +352,43 @@ export default function MinutaActivaPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="minuta-date">Fecha</Label>
+              <Label htmlFor="minuta-date">
+                Fecha <span className="text-danger">*</span>
+              </Label>
               <Input id="minuta-date" type="date" value={meetingDate} onChange={(e) => setMeetingDate(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Proceso vinculado (opcional)</Label>
+              <Label>
+                Proceso vinculado <span className="text-danger">*</span>
+              </Label>
               <Select value={presetPdcId ?? "none"} onValueChange={(v) => setPresetPdcId(v === "none" ? null : v)}>
-                <SelectTrigger>
+                <SelectTrigger className={!presetPdcId ? "border-danger/50" : undefined}>
                   <SelectValue placeholder="Vincular todos los compromisos a un proceso" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Sin proceso por defecto</SelectItem>
+                  <SelectItem value="none">Selecciona un proceso</SelectItem>
                   {processes.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <ParticipantsPicker value={participants} onChange={setParticipants} />
+
             {!voice.isSupported && (
               <p className="text-xs text-warning bg-warning/10 border border-warning/30 rounded-md p-2">
                 Tu navegador no soporta reconocimiento de voz. Se habilitará la entrada manual de texto.
               </p>
             )}
-            <Button size="lg" className="w-full" onClick={startCapture}>
+            <Button size="lg" className="w-full" onClick={startCapture} disabled={!setupValid}>
               🎙️ Iniciar Captura
             </Button>
+            {!setupValid && (
+              <p className="text-xs text-muted-foreground text-center">
+                Completa título (mín. 3 caracteres), fecha, proceso y al menos un participante.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -409,6 +520,15 @@ export default function MinutaActivaPage() {
         </p>
       </header>
 
+      <Card>
+        <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
+          <QualityGauge score={quality.score} threshold={qualityThreshold} />
+          <div className="flex-1 w-full">
+            <QualityChecklist items={quality.breakdown} />
+          </div>
+        </CardContent>
+      </Card>
+
       {!isOnline && (
         <p className="text-sm text-warning bg-warning/10 border border-warning/30 rounded-md p-3 flex items-center gap-2">
           <WifiOff className="w-4 h-4" /> Estás sin conexión. Al importar, los compromisos quedarán en cola y se enviarán automáticamente.
@@ -529,13 +649,24 @@ export default function MinutaActivaPage() {
         className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 pt-3"
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
-        <div className="max-w-2xl mx-auto flex items-center gap-2">
-          <Button variant="outline" onClick={addManualDraft}>
-            <Plus className="w-4 h-4 mr-1" /> Agregar compromiso manual
-          </Button>
-          <Button className="flex-1" onClick={handleImport} disabled={importMutation.isPending || selectedCount === 0}>
-            {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
-          </Button>
+        <div className="max-w-2xl mx-auto space-y-2">
+          {!qualityOk && (
+            <p className="text-xs text-center text-danger">
+              Calidad {quality.score}% · se requiere al menos {qualityThreshold}% para importar.
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={addManualDraft}>
+              <Plus className="w-4 h-4 mr-1" /> Agregar compromiso manual
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleImport}
+              disabled={importMutation.isPending || selectedCount === 0 || !qualityOk}
+            >
+              {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
+            </Button>
+          </div>
         </div>
       </div>
 
