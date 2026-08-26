@@ -13,6 +13,7 @@ export function QualityGauge({ score, threshold, size = 120 }: Props) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   const color = qualityColor(clamped);
+  const reached = typeof threshold === "number" && clamped >= threshold;
 
   return (
     <div className="flex flex-col items-center gap-1">
@@ -21,7 +22,7 @@ export function QualityGauge({ score, threshold, size = 120 }: Props) {
         height={size}
         role="img"
         aria-label={`Calidad de la minuta: ${clamped}%`}
-        className="-rotate-90"
+        className={`-rotate-90 transition-all duration-500 ${reached ? "drop-shadow-[0_0_10px_hsl(var(--success)/0.55)]" : ""}`}
       >
         <circle
           cx={size / 2}
@@ -41,9 +42,10 @@ export function QualityGauge({ score, threshold, size = 120 }: Props) {
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c - (c * clamped) / 100}
-          style={{ transition: "stroke-dashoffset 400ms ease, stroke 300ms ease" }}
+          style={{ transition: "stroke-dashoffset 500ms ease, stroke 500ms ease" }}
         />
       </svg>
+
       <div className="-mt-[calc(50%+0.5rem)] mb-[calc(50%-1rem)] flex flex-col items-center pointer-events-none">
         <span className="text-2xl font-bold tabular-nums" style={{ color }}>
           {clamped}%
