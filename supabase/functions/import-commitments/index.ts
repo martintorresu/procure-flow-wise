@@ -183,24 +183,32 @@ Deno.serve(async (req) => {
 
     await admin.from("api_keys").update({ last_used_at: new Date().toISOString() }).eq("id", keyRow.id);
 
-    // Alertas in-app para responsables identificados (no bloquean la importación)
-    const alertRows = (inserted ?? [])
-      .filter((r) => !!r.responsible_user_id)
-      .map((r) => ({
-        tenant_id: tenantId,
-        pdc_id: r.pdc_id,
-        type: "commitment",
-        severity: "medium",
-        message: `Nuevo compromiso: ${String(r.commitment_text).slice(0, 180)}`,
-        due_date: r.due_date,
-        resolved: false,
-      }));
-    let alertIds: string[] = [];
-    if (alertRows.length) {
-      const { data: alerts, error: aErr } = await admin.from("alerts").insert(alertRows).select("id");
-      if (aErr) console.warn("[import-commitments] alertas:", aErr.message);
-      else alertIds = (alerts ?? []).map((a) => a.id as string);
+    // Alertas in-app para responsables identificados (no bloquean la importación).
+    // Se insertan una a una para correlacionar sin ambigüedad alerta ↔ destinatario
+    // (el orden de un INSERT ... RETURNING múltiple no está garantizado).
+    const targets = (inserted ?? []).filter((r) => !!r.responsible_user_id);
+    const notifications: { alertId: string; userId: string }[] = [];
+    for (const r of targets) {
+      const { data: alert, error: aErr } = await admin
+        .from("alerts")
+        .insert({
+          tenant_id: tenantId,
+          pdc_id: r.pdc_id,
+          type: "commitment",
+          severity: "medium",
+          message: `Nuevo compromiso: ${String(r.commitment_text).slice(0, 180)}`,
+          due_date: r.due_date,
+          resolved: false,
+        })
+        .select("id")
+        .maybeSingle();
+      if (aErr) {
+        console.warn("[import-commitments] alertas:", aErr.message);
+        continue;
+      }
+      if (alert?.id) notifications.push({ alertId: alert.id as string, userId: r.responsible_user_id as string });
     }
+    const alertIds = notifications.map((n) => n.alertId);
 
     // WhatsApp (best-effort)
     try {
@@ -209,10 +217,9 @@ Deno.serve(async (req) => {
         .select("enabled")
         .eq("tenant_id", tenantId)
         .maybeSingle();
-      if (waCfg?.enabled && alertIds.length) {
-        const targets = (inserted ?? []).filter((r) => !!r.responsible_user_id);
+      if (waCfg?.enabled && notifications.length) {
         await Promise.all(
-          alertIds.map((alertId, i) =>
+          notifications.map((n) =>
             fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-whatsapp-alert`, {
               method: "POST",
               headers: {
@@ -220,8 +227,8 @@ Deno.serve(async (req) => {
                 Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
               },
               body: JSON.stringify({
-                alert_id: alertId,
-                user_id: targets[i]?.responsible_user_id,
+                alert_id: n.alertId,
+                user_id: n.userId,
                 tenant_id: tenantId,
               }),
             }).catch(() => null),
@@ -231,6 +238,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       console.warn("[import-commitments] whatsapp:", e);
     }
+
 
     return json({
       imported: inserted?.length ?? 0,
