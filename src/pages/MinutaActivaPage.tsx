@@ -13,8 +13,15 @@ import { Mic, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, Wi
 import { SEO } from "@/components/SEO";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/hooks/useCommitments";
-import { useTenantUsers } from "@/hooks/useTenantUsers";
+import { useTenantUsers, useMyProfile } from "@/hooks/useTenantUsers";
 import { useOnlineStatus } from "@/hooks/useOfflineSync";
+import { useMinutaConfig } from "@/hooks/useMinutaConfig";
+import { useCreateMinutaSession } from "@/hooks/useMinutaSession";
+import { useAuth } from "@/contexts/AuthContext";
+import { QualityGauge } from "@/components/minuta/QualityGauge";
+import { QualityChecklist } from "@/components/minuta/QualityChecklist";
+import { ParticipantsPicker, type MinutaParticipant } from "@/components/minuta/ParticipantsPicker";
+import { calculateQualityScore, isWithinMaxDelivery } from "@/lib/minutaQuality";
 import { enqueueCommitments } from "@/lib/offlineQueue";
 import {
   matchProcess,
