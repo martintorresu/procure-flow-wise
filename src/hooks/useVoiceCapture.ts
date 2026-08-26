@@ -78,6 +78,7 @@ export function useVoiceCapture(): VoiceCapture {
         if (r.isFinal) finals += r[0].transcript + " ";
         else interim += r[0].transcript;
       }
+      if (finals || interim) silentRestartsRef.current = 0;
       if (finals) setTranscript((prev) => (prev ? prev.trimEnd() + " " : "") + finals.trim() + "\n");
       setInterimText(interim);
     };
@@ -86,6 +87,12 @@ export function useVoiceCapture(): VoiceCapture {
       setInterimText("");
       // Reconexión automática: el navegador corta por silencio; reiniciar si no fue stop/pausa manual
       if (!manualStopRef.current && !pausedRef.current) {
+        silentRestartsRef.current += 1;
+        if (silentRestartsRef.current >= MAX_SILENT_RESTARTS) {
+          setError("No se detecta audio. Verifica que el micrófono esté activo.");
+          setIsListening(false);
+          return;
+        }
         try {
           rec.start();
           return;
@@ -95,6 +102,7 @@ export function useVoiceCapture(): VoiceCapture {
       }
       setIsListening(false);
     };
+
 
     rec.onerror = (e) => {
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
@@ -123,6 +131,7 @@ export function useVoiceCapture(): VoiceCapture {
     }
     manualStopRef.current = false;
     pausedRef.current = false;
+    silentRestartsRef.current = 0;
     setIsPaused(false);
     const rec = buildRecognition();
     if (!rec) return;
