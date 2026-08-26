@@ -29,7 +29,13 @@ export async function notifyWhatsappByRole(params: {
   tenantId: string;
   role: string;
 }): Promise<void> {
+  if (!params.tenantId) {
+    console.warn("[whatsapp] tenantId requerido para resolver destinatarios");
+    return;
+  }
   try {
+    // SECURITY: user_roles no tiene tenant_id; el aislamiento por tenant se aplica
+    // al cruzar los user_id con profiles filtrados por params.tenantId (RLS + filtro explícito).
     const { data: roleRows } = await supabase
       .from("user_roles")
       .select("user_id")
@@ -44,6 +50,7 @@ export async function notifyWhatsappByRole(params: {
       .select("id, tenant_id")
       .in("id", ids)
       .eq("tenant_id", params.tenantId);
+
 
     await Promise.all(
       (profiles ?? []).map((p) =>
