@@ -33,6 +33,11 @@ import { InviteExternalDialog } from "@/components/InviteExternalDialog";
 import { ProcessComments } from "@/components/ProcessComments";
 import { ProcessCommitments } from "@/components/ProcessCommitments";
 import { ProcessDocuments } from "@/components/ProcessDocuments";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ContingencyDialog } from "@/components/ContingencyDialog";
+import { ProcessContingencies } from "@/components/ProcessContingencies";
+import { useCompleteContingency, useContingenciesByProcess } from "@/hooks/useProcessContingencies";
+import { canManageContingencies, timeAgo } from "@/lib/contingencies";
 
 
 
