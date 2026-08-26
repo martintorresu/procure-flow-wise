@@ -20,8 +20,13 @@ export function TierBadge({ tier }: { tier: SubscriptionTier }) {
 }
 
 export function SubscriptionsSection() {
+  const { user } = useAuth();
   const { data: tenants = [], isLoading } = useTenantSubscriptions();
   const update = useUpdateTenantTier();
+
+  // SECURITY: además de las políticas RLS, la sección sólo se muestra a administradores.
+  if (user?.role !== "admin") return null;
+
 
   return (
     <Card>
