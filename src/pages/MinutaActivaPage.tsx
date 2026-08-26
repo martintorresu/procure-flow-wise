@@ -32,7 +32,7 @@ import {
   type ParsedCommitment,
 } from "@/lib/commitments";
 
-type Phase = "setup" | "capture" | "review";
+type Phase = "dashboard" | "setup" | "capture" | "review";
 
 interface DraftRow extends ParsedCommitment {
   userId: string | null;
@@ -62,7 +62,7 @@ export default function MinutaActivaPage() {
   const isStandaloneApp =
     typeof window !== "undefined" && window.location.pathname.includes("minuta.html");
 
-  const [phase, setPhase] = useState<Phase>("setup");
+  const [phase, setPhase] = useState<Phase>("dashboard");
   const [importDone, setImportDone] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const [importedCount, setImportedCount] = useState(0);
@@ -220,6 +220,16 @@ export default function MinutaActivaPage() {
 
   const qualityOk = quality.score >= qualityThreshold;
 
+  /** Carátula: todos los criterios pendientes (0%). */
+  const blankQuality = useMemo(
+    () =>
+      calculateQualityScore(
+        { hasProject: false, hasMeetingDate: false, participantCount: 0, commitments: [] },
+        maxDeliveryDays,
+      ),
+    [maxDeliveryDays],
+  );
+
   const handleImport = async () => {
     const selected = includedDrafts;
     if (!selected.length) {
@@ -293,7 +303,7 @@ export default function MinutaActivaPage() {
   const startNewCapture = () => {
     voice.reset();
     setImportDone(false);
-    setPhase("setup");
+    setPhase("dashboard");
     setDraft([]);
     setRawTranscript("");
     setNoDetected(false);
@@ -301,6 +311,8 @@ export default function MinutaActivaPage() {
     setManualText("");
     setElapsed(0);
     setStartedAt(null);
+    setPresetPdcId(null);
+    setParticipants((prev) => prev.filter((p) => p.locked));
   };
 
   /* --------------------- ÉXITO (PWA dedicada) --------------------- */
@@ -309,7 +321,7 @@ export default function MinutaActivaPage() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
         <CheckCircle2 className="w-16 h-16 text-success" />
         <h2 className="text-xl font-bold">¡Compromisos importados!</h2>
-        <QualityGauge score={finalScore} size={110} />
+        <QualityGauge score={finalScore} threshold={qualityThreshold} size={130} />
         <p className="text-sm text-muted-foreground text-center">
           {importedCount} compromiso{importedCount === 1 ? "" : "s"} registrado
           {importedCount === 1 ? "" : "s"} con {finalScore}% de calidad. Se enviaron alertas
@@ -321,6 +333,43 @@ export default function MinutaActivaPage() {
       </div>
     );
   }
+
+  /* ------------------------------ FASE 0 ------------------------------ */
+  if (phase === "dashboard") {
+    return (
+      <div className="max-w-lg mx-auto pt-6 animate-fade-in">
+        <SEO title="Minuta Activa | Pro.Curem Flow" description="Captura compromisos de reunión con voz desde terreno." path="/minuta" />
+        <Card className="overflow-hidden">
+          <div className="h-24 flex items-end px-5 pb-3" style={{ background: "var(--sidebar-gradient)" }}>
+            <div className="flex items-center gap-2 text-sidebar-foreground">
+              <Mic className="w-5 h-5" />
+              <h1 className="text-lg font-bold">Minuta Activa</h1>
+            </div>
+          </div>
+          <CardContent className="p-6 space-y-6">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <QualityGauge score={blankQuality.score} threshold={qualityThreshold} size={180} />
+              <h2 className="text-base font-semibold">Estándar de Minuta</h2>
+              <p className="text-sm text-muted-foreground max-w-sm">
+                Completa cada criterio durante la reunión. El indicador se actualiza en tiempo real
+                y habilita el envío al alcanzar el mínimo de {qualityThreshold}%.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-border p-4">
+              <QualityChecklist items={blankQuality.breakdown} />
+            </div>
+
+            <Button size="lg" className="w-full" onClick={() => setPhase("setup")}>
+              🎙️ Iniciar Minuta
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+
 
 
 
@@ -337,9 +386,14 @@ export default function MinutaActivaPage() {
             </div>
           </div>
           <CardContent className="p-5 space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Configura la reunión y captura los compromisos con tu voz. El sistema los detectará automáticamente.
-            </p>
+            <div className="flex items-center gap-4 rounded-lg border border-border p-3">
+              <QualityGauge score={quality.score} threshold={qualityThreshold} size={72} />
+              <p className="text-sm text-muted-foreground">
+                Configura la reunión y captura los compromisos con tu voz. El indicador sube a
+                medida que completas el estándar.
+              </p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="minuta-title">
                 Título de la reunión <span className="text-danger">*</span>
@@ -389,6 +443,9 @@ export default function MinutaActivaPage() {
                 Completa título (mín. 3 caracteres), fecha, proceso y al menos un participante.
               </p>
             )}
+            <Button variant="ghost" size="sm" className="w-full" onClick={() => setPhase("dashboard")}>
+              Volver al panel
+            </Button>
           </CardContent>
         </Card>
       </div>
