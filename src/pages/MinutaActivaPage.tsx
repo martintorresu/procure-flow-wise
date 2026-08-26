@@ -52,7 +52,11 @@ export default function MinutaActivaPage() {
   const { data: processes = [] } = useProcessOptions();
   const { data: users = [] } = useTenantUsers();
   const importMutation = useImportCommitments();
+  const createSession = useCreateMinutaSession();
   const voice = useVoiceCapture();
+  const { user } = useAuth();
+  const { data: myProfile } = useMyProfile(user?.id);
+  const { qualityThreshold, maxDeliveryDays } = useMinutaConfig();
 
   // PWA dedicada (minuta.html): sin sidebar ni navegación a /commitments
   const isStandaloneApp =
@@ -60,12 +64,37 @@ export default function MinutaActivaPage() {
 
   const [phase, setPhase] = useState<Phase>("setup");
   const [importDone, setImportDone] = useState(false);
+  const [finalScore, setFinalScore] = useState(0);
+  const [importedCount, setImportedCount] = useState(0);
 
   // Fase 1
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [meetingTitle, setMeetingTitle] = useState("");
   const [meetingDate, setMeetingDate] = useState(todayISO);
   const [presetPdcId, setPresetPdcId] = useState<string | null>(null);
+  const [participants, setParticipants] = useState<MinutaParticipant[]>([]);
+
+  // El creador se agrega automáticamente como participante
+  useEffect(() => {
+    if (!myProfile) return;
+    setParticipants((prev) =>
+      prev.some((p) => p.userId === myProfile.id)
+        ? prev
+        : [
+            {
+              key: myProfile.id,
+              userId: myProfile.id,
+              name: myProfile.full_name ?? myProfile.email,
+              role: myProfile.area,
+              email: myProfile.email,
+              company: null,
+              isGuest: false,
+              locked: true,
+            },
+            ...prev,
+          ],
+    );
+  }, [myProfile]);
 
   // Fase 2
   const [elapsed, setElapsed] = useState(0);
