@@ -220,6 +220,16 @@ export default function MinutaActivaPage() {
 
   const qualityOk = quality.score >= qualityThreshold;
 
+  /** Carátula: todos los criterios pendientes (0%). */
+  const blankQuality = useMemo(
+    () =>
+      calculateQualityScore(
+        { hasProject: false, hasMeetingDate: false, participantCount: 0, commitments: [] },
+        maxDeliveryDays,
+      ),
+    [maxDeliveryDays],
+  );
+
   const handleImport = async () => {
     const selected = includedDrafts;
     if (!selected.length) {
