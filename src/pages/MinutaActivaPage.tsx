@@ -520,6 +520,15 @@ export default function MinutaActivaPage() {
         </p>
       </header>
 
+      <Card>
+        <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
+          <QualityGauge score={quality.score} threshold={qualityThreshold} />
+          <div className="flex-1 w-full">
+            <QualityChecklist items={quality.items} />
+          </div>
+        </CardContent>
+      </Card>
+
       {!isOnline && (
         <p className="text-sm text-warning bg-warning/10 border border-warning/30 rounded-md p-3 flex items-center gap-2">
           <WifiOff className="w-4 h-4" /> Estás sin conexión. Al importar, los compromisos quedarán en cola y se enviarán automáticamente.
