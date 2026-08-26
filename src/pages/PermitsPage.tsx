@@ -246,7 +246,16 @@ export default function PermitsPage() {
         open={dialogOpen}
         onOpenChange={(v) => {
           setDialogOpen(v);
-          if (!v && prefillPdc) setSearchParams({}, { replace: true });
+          if (!v && prefillPdc) {
+            setSearchParams(
+              (prev) => {
+                prev.delete("pdc");
+                prev.delete("project");
+                return prev;
+              },
+              { replace: true },
+            );
+          }
         }}
         permit={editing}
         defaultPdcId={editing ? undefined : prefillPdc}
