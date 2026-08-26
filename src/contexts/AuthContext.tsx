@@ -180,12 +180,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
+    setError(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, session, loading, login, signUp, logout, isAuthenticated: !!session }}
+      value={{ user, session, loading, error, login, signUp, logout, isAuthenticated: !!session }}
     >
+
       {children}
     </AuthContext.Provider>
   );
