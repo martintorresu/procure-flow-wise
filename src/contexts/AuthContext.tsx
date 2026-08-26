@@ -162,7 +162,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { resolveTenant } = await import("@/config/tenants");
     const tenant = resolveTenant(window.location.pathname, window.location.hostname);
     const nextParam = new URLSearchParams(window.location.search).get("next");
-    const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : "/";
+    // Allowlist de destinos internos: evita open redirect vía ?next=
+    const ALLOWED_PATHS = ["/dashboard", "/t/", "/pdcs", "/permits", "/commitments", "/admin"];
+    const isValidNext =
+      !!nextParam && /^\/(?!\/)/.test(nextParam) && ALLOWED_PATHS.some((p) => nextParam.startsWith(p));
+    const safeNext = isValidNext ? nextParam! : "/";
+
     const redirectUrl = `${window.location.origin}${safeNext}`;
     const { error } = await supabase.auth.signUp({
       email,
