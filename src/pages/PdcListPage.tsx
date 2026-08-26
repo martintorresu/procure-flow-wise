@@ -11,6 +11,7 @@ import { Plus, Search, FileText, X, Check, AlertTriangle, Link2 } from "lucide-r
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
+import { useAllContingencies } from "@/hooks/useProcessContingencies";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import { type TrafficLight } from "@/types/pdc";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -42,6 +43,12 @@ export default function PdcListPage() {
   const [delayedFilter, setDelayedFilter] = useState<boolean>(false);
   const [search, setSearch] = useState("");
   const { data: pdcs = [], isLoading: loading } = usePdcs();
+  const { data: contingencies = [] } = useAllContingencies();
+  const parallelParents = new Set(
+    contingencies
+      .filter((c) => c.status === "active" && c.execution_mode === "parallel_effort")
+      .map((c) => c.parent_process_id),
+  );
 
   useEffect(() => {
     const criticality = searchParams.get("criticality");
@@ -231,7 +238,18 @@ export default function PdcListPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <StatusBadge status={pdc.current_status} colorizeByStage />
                       <CriticalityBadge level={pdc.criticality} />
+                      {pdc.paused_by_contingency && (
+                        <Badge variant="outline" className="border-amber-500/50 text-amber-700 dark:text-amber-300">
+                          ⏸️ Pausado por contingencia
+                        </Badge>
+                      )}
+                      {parallelParents.has(pdc.id) && (
+                        <Badge variant="outline" className="border-blue-500/50 text-blue-700 dark:text-blue-300">
+                          🔀 Contingencia en paralelo
+                        </Badge>
+                      )}
                     </div>
+
                   </div>
 
                   <div className="hidden sm:block text-right shrink-0">

@@ -23,4 +23,6 @@ export const queryKeys = {
   stageTemplates: (processType: string) => ["stage_templates", processType] as const,
   etFieldSchema: (section?: number) => ["et_field_schema", section] as const,
   etFieldSchemas: () => ["et_field_schemas"] as const,
+  contingencies: () => ["contingencies"] as const,
+  contingenciesByProcess: (processId: string) => ["contingencies", processId] as const,
 } as const;

@@ -33,6 +33,11 @@ import { InviteExternalDialog } from "@/components/InviteExternalDialog";
 import { ProcessComments } from "@/components/ProcessComments";
 import { ProcessCommitments } from "@/components/ProcessCommitments";
 import { ProcessDocuments } from "@/components/ProcessDocuments";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ContingencyDialog } from "@/components/ContingencyDialog";
+import { ProcessContingencies } from "@/components/ProcessContingencies";
+import { useCompleteContingency, useContingenciesByProcess } from "@/hooks/useProcessContingencies";
+import { canManageContingencies, timeAgo } from "@/lib/contingencies";
 
 
 
@@ -122,12 +127,18 @@ export default function PdcDetailPage() {
   const { data: allAlerts = [] } = useAlerts();
   const { data: stageTemplates = [] } = useStageTemplates(pdc?.process_type);
   const { data: participants = [] } = useProcessParticipants(pdc?.id);
+  const { data: contingencies = [] } = useContingenciesByProcess(pdc?.id);
+  const completeContingency = useCompleteContingency();
 
   // ¿El usuario actual es un participante externo (no pertenece al tenant dueño)?
   const myParticipation = participants.find((p) => p.user_id === user?.id && p.status === "accepted");
   const isInternal = !!user?.tenantId && !!pdc?.tenant_id && user.tenantId === pdc.tenant_id;
   const isExternal = !!myParticipation && !isInternal;
   const canComment = isInternal || myParticipation?.permission_level === "comment";
+  const canBifurcate = isInternal && canManageContingencies(user?.role);
+  const isPaused = !!pdc?.paused_by_contingency;
+  const pausingContingency = contingencies.find((c) => c.id === pdc?.paused_by_contingency);
+
 
 
   if (loading) {
@@ -188,28 +199,82 @@ export default function PdcDetailPage() {
             <Badge variant="outline" className="text-xs">Acceso externo · solo lectura</Badge>
           ) : (
             <>
-              {showChainButton && (
+              {showChainButton && !isPaused && (
                 <Link to={`/pdcs/new?from=${pdc.id}`}>
                   <Button size="sm" className="gap-2">
                     <Link2 className="w-4 h-4" /> Crear proceso de continuación
                   </Button>
                 </Link>
               )}
+              {canBifurcate && user && !isPaused && (
+                <ContingencyDialog pdc={pdc} createdBy={user.id} />
+              )}
               {isAdmin && pdc.tenant_id && user && (
                 <InviteExternalDialog processId={pdc.id} tenantId={pdc.tenant_id} invitedBy={user.id} />
               )}
               {isAdmin && (
-                <Link to={`/pdcs/${pdc.id}/edit`}>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Pencil className="w-4 h-4" /> Editar
-                  </Button>
-                </Link>
+                isPaused ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>
+                          <Button variant="outline" size="sm" className="gap-2" disabled>
+                            <Pencil className="w-4 h-4" /> Editar
+                          </Button>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent className="text-xs">
+                        Proceso pausado por contingencia
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <Link to={`/pdcs/${pdc.id}/edit`}>
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Pencil className="w-4 h-4" /> Editar
+                    </Button>
+                  </Link>
+                )
               )}
             </>
           )}
         </div>
 
       </div>
+
+      {isPaused && pausingContingency && (
+        <Card className="border-l-4 border-l-amber-500 bg-amber-500/5">
+          <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                ⏸️ Proceso pausado por contingencia
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {pausingContingency.reason} · Iniciada {timeAgo(pausingContingency.created_at)}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link to={`/pdcs/${pausingContingency.child_process_id}`}>
+                <Button variant="outline" size="sm">Ver contingencia</Button>
+              </Link>
+              {canBifurcate && (
+                <Button
+                  size="sm"
+                  disabled={completeContingency.isPending}
+                  onClick={() =>
+                    completeContingency.mutate(pausingContingency.id, {
+                      onSuccess: () => toast.success("Contingencia completada. Proceso reanudado."),
+                      onError: (e: Error) => toast.error(e.message),
+                    })
+                  }
+                >
+                  Completar y reanudar
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {pdc.approval_status === "pending" && (
         <Card className="border-l-4 border-l-warning bg-warning/5">
@@ -226,6 +291,7 @@ export default function PdcDetailPage() {
           </CardContent>
         </Card>
       )}
+
 
       {/* Key info cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -301,7 +367,7 @@ export default function PdcDetailPage() {
       {!isExternal && (
       <Tabs defaultValue="summary">
 
-        <TabsList className="grid grid-cols-4 lg:grid-cols-11 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-12 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
           <TabsTrigger value="planning">Planificación</TabsTrigger>
@@ -312,11 +378,17 @@ export default function PdcDetailPage() {
           <TabsTrigger value="logistics">Logística</TabsTrigger>
           <TabsTrigger value="documents">Documentos</TabsTrigger>
           <TabsTrigger value="commitments">Compromisos</TabsTrigger>
+          <TabsTrigger value="contingencies">Contingencias</TabsTrigger>
           <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="contingencies">
+          <ProcessContingencies processId={pdc.id} canManage={canBifurcate} />
+        </TabsContent>
+
         <TabsContent value="documents">
           <ProcessDocuments processId={pdc.id} />
+
         </TabsContent>
 
         <TabsContent value="commitments">

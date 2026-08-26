@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
 import { DashboardPermitsWidget } from "@/components/DashboardPermitsWidget";
+import { DashboardContingenciesWidget } from "@/components/DashboardContingenciesWidget";
 import { Badge } from "@/components/ui/badge";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, usageLabel } from "@/lib/plans";
@@ -167,7 +168,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DashboardCommitmentsWidget />
         <DashboardPermitsWidget />
+        <DashboardContingenciesWidget />
       </div>
+
 
       {/* Active processes as separated cards */}
       <Card className="overflow-hidden">
