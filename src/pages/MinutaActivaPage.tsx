@@ -127,9 +127,12 @@ export default function MinutaActivaPage() {
     return parts.join("\n");
   }, [voice.transcript, manualText]);
 
+  const setupValid =
+    meetingTitle.trim().length >= 3 && !!meetingDate && !!presetPdcId && participants.length > 0;
+
   const startCapture = async () => {
-    if (!meetingTitle.trim()) {
-      toast.error("Ingresa un título para la reunión");
+    if (!setupValid) {
+      toast.error("Completa título, fecha, proceso y al menos un participante");
       return;
     }
     setPhase("capture");
