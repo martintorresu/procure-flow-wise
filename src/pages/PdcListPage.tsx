@@ -231,7 +231,18 @@ export default function PdcListPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <StatusBadge status={pdc.current_status} colorizeByStage />
                       <CriticalityBadge level={pdc.criticality} />
+                      {pdc.paused_by_contingency && (
+                        <Badge variant="outline" className="border-amber-500/50 text-amber-700 dark:text-amber-300">
+                          ⏸️ Pausado por contingencia
+                        </Badge>
+                      )}
+                      {parallelParents.has(pdc.id) && (
+                        <Badge variant="outline" className="border-blue-500/50 text-blue-700 dark:text-blue-300">
+                          🔀 Contingencia en paralelo
+                        </Badge>
+                      )}
                     </div>
+
                   </div>
 
                   <div className="hidden sm:block text-right shrink-0">
