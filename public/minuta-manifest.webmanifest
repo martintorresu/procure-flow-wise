@@ -1,0 +1,17 @@
+{
+  "name": "Minuta Activa",
+  "short_name": "Minuta",
+  "description": "Captura compromisos de reunión con voz desde tu teléfono",
+  "theme_color": "#1e3a5f",
+  "background_color": "#0f172a",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/minuta.html",
+  "start_url": "/minuta.html",
+  "categories": ["business", "productivity"],
+  "icons": [
+    { "src": "/minuta-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/minuta-512x512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/minuta-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -47,7 +47,12 @@ export default function MinutaActivaPage() {
   const importMutation = useImportCommitments();
   const voice = useVoiceCapture();
 
+  // PWA dedicada (minuta.html): sin sidebar ni navegación a /commitments
+  const isStandaloneApp =
+    typeof window !== "undefined" && window.location.pathname.includes("minuta.html");
+
   const [phase, setPhase] = useState<Phase>("setup");
+  const [importDone, setImportDone] = useState(false);
 
   // Fase 1
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
@@ -171,7 +176,8 @@ export default function MinutaActivaPage() {
     if (!isOnline) {
       enqueueCommitments(payload, meetingTitle.trim());
       toast.info("📴 Sin conexión. Los compromisos se enviarán automáticamente cuando vuelva Internet.");
-      navigate("/commitments");
+      if (isStandaloneApp) setImportDone(true);
+      else navigate("/commitments");
       return;
     }
 
@@ -181,13 +187,45 @@ export default function MinutaActivaPage() {
       toast.success(
         `✅ ${res.inserted} compromiso${res.inserted === 1 ? "" : "s"} importado${res.inserted === 1 ? "" : "s"}. Se enviaron alertas WhatsApp a ${notified} responsable${notified === 1 ? "" : "s"}.`,
       );
-      navigate("/commitments");
+      if (isStandaloneApp) setImportDone(true);
+      else navigate("/commitments");
     } catch {
       // Fallback: si falla online, guardar en cola offline para reintento automático
       enqueueCommitments(payload, meetingTitle.trim());
       toast.error("Error al importar. Los compromisos se guardaron localmente y se enviarán automáticamente.");
     }
   };
+
+  const startNewCapture = () => {
+    voice.reset();
+    setImportDone(false);
+    setPhase("setup");
+    setDraft([]);
+    setRawTranscript("");
+    setNoDetected(false);
+    setMeetingTitle("");
+    setManualText("");
+    setElapsed(0);
+    setStartedAt(null);
+  };
+
+  /* --------------------- ÉXITO (PWA dedicada) --------------------- */
+  if (importDone) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
+        <CheckCircle2 className="w-16 h-16 text-success" />
+        <h2 className="text-xl font-bold">¡Compromisos importados!</h2>
+        <p className="text-sm text-muted-foreground text-center">
+          Los compromisos fueron registrados y las alertas WhatsApp enviadas a los responsables.
+        </p>
+        <Button size="lg" onClick={startNewCapture}>
+          🎙️ Nueva captura
+        </Button>
+      </div>
+    );
+  }
+
+
 
   /* ------------------------------ FASE 1 ------------------------------ */
   if (phase === "setup") {

@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globIgnores: ["**/minuta.html", "**/minuta-sw.js", "**/minuta-manifest.webmanifest"],
         // Navegaciones: NetworkFirst (nunca cache-first para HTML)
         navigateFallback: null,
         runtimeCaching: [
@@ -69,6 +70,14 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  build: {
+    rollupOptions: {
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        minuta: path.resolve(__dirname, "minuta.html"),
+      },
+    },
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
