@@ -289,6 +289,7 @@ export default function AdminPage() {
 
       <ApprovalMatrixSection />
       <WhatsappConfigSection />
+      <MinutaConfigSection />
       <TenantUsersContactSection />
       <ApiKeysSection />
       <ContingenciesSection />
