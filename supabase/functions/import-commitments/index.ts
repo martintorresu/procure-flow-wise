@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
       }
       if (alert?.id) notifications.push({ alertId: alert.id as string, userId: r.responsible_user_id as string });
     }
-    const alertIds = notifications.map((n) => n.alertId);
+    
 
     // WhatsApp (best-effort)
     try {
