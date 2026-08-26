@@ -62,7 +62,7 @@ export default function MinutaActivaPage() {
   const isStandaloneApp =
     typeof window !== "undefined" && window.location.pathname.includes("minuta.html");
 
-  const [phase, setPhase] = useState<Phase>("setup");
+  const [phase, setPhase] = useState<Phase>("dashboard");
   const [importDone, setImportDone] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const [importedCount, setImportedCount] = useState(0);
