@@ -443,12 +443,42 @@ export default function CommitmentsPage() {
 
           {!grouped && (
             <div className="space-y-3">
-              <div className="overflow-x-auto">
+              <div className="hidden sm:block overflow-x-auto">
                 <CommitmentsTable
                   commitments={filtered.slice(0, visibleCount)}
                   processes={processes}
                   isLoading={isLoading}
                 />
+              </div>
+              {/* Cards móviles */}
+              <div className="sm:hidden space-y-3">
+                {isLoading && <p className="text-sm text-muted-foreground text-center py-6">Cargando…</p>}
+                {!isLoading && filtered.slice(0, visibleCount).map((c) => {
+                  const meta = dueMeta(c.due_date, c.status);
+                  const statusLabel = COMMITMENT_STATUSES.find((s) => s.value === c.status)?.label ?? c.status;
+                  const proc = processes.find((p) => p.id === c.pdc_id);
+                  return (
+                    <div key={c.id} className="border rounded-lg p-3 space-y-1.5 bg-card">
+                      <p className="text-sm font-medium">{c.commitment_text}</p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span>{c.responsible_name ?? "Sin responsable"}</span>
+                        {proc && <span className="font-mono">{proc.pdc_number}</span>}
+                        {c.due_date && (
+                          <span className={meta.overdue ? "text-danger font-semibold" : undefined}>
+                            Límite: {c.due_date}{meta.overdue ? " · vencido" : ""}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px]">{statusLabel}</Badge>
+                        {c.priority && <Badge variant="outline" className="text-[10px] capitalize">{c.priority}</Badge>}
+                      </div>
+                    </div>
+                  );
+                })}
+                {!isLoading && filtered.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-6">Sin compromisos.</p>
+                )}
               </div>
               {filtered.length > visibleCount && (
                 <div className="flex justify-center">
