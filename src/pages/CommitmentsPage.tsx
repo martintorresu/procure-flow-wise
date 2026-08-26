@@ -11,7 +11,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { ChevronDown, ListChecks, MessagesSquare, Wand2 } from "lucide-react";
+import { ChevronDown, ListChecks, MessagesSquare, Wand2, Mic, SlidersHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { SEO } from "@/components/SEO";
 import { CommitmentsTable } from "@/components/CommitmentsTable";
 import { MeetingToActionHero } from "@/components/MeetingToActionHero";
@@ -71,6 +74,8 @@ export default function CommitmentsPage() {
   const [fMeetingDate, setFMeetingDate] = useState("");
   const [grouped, setGrouped] = useState(false);
   const [visibleCount, setVisibleCount] = useState(50);
+  const isMobile = useIsMobile();
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const handleParse = () => {
     const parsed = mode === "transcript" ? parseTranscriptText(text) : parseCommitmentsText(text);
@@ -350,7 +355,12 @@ export default function CommitmentsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-4">
+          {isMobile && (
+            <Button variant="outline" size="sm" className="w-full" onClick={() => setFiltersOpen(true)}>
+              <SlidersHorizontal className="w-4 h-4 mr-1" /> Filtros
+            </Button>
+          )}
+          <div className={`gap-3 sm:grid-cols-4 ${isMobile ? "hidden" : "grid"}`}>
             <Select value={fStatus} onValueChange={setFStatus}>
               <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
