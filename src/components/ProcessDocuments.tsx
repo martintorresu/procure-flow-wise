@@ -101,6 +101,7 @@ export function ProcessDocuments({ processId }: { processId: string }) {
   };
 
   const handleDelete = (doc: ProcessDocument) => {
+    if (!confirm(`¿Eliminar "${doc.file_name}"? Esta acción no se puede deshacer.`)) return;
     remove.mutate(doc, {
       onSuccess: () => toast.success("Documento eliminado"),
       onError: (e: Error) => toast.error(e.message),
@@ -243,7 +244,7 @@ export function ProcessDocuments({ processId }: { processId: string }) {
                         variant="ghost"
                         size="sm"
                         className="text-destructive hover:text-destructive"
-                        disabled={remove.isPending}
+                        disabled={remove.isPending && remove.variables?.id === doc.id}
                         onClick={() => handleDelete(doc)}
                       >
                         <Trash2 className="h-4 w-4" />

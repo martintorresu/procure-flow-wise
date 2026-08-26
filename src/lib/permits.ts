@@ -126,10 +126,10 @@ export function expiryMeta(
     };
   }
   if (days === 0) return { days, overdue: false, label: "Vence hoy", className: "text-danger font-semibold" };
-  if (days <= 7) return { days, overdue: false, label: `Vence en ${days} días`, className: "text-danger font-medium" };
-  if (days <= 30) return { days, overdue: false, label: `Vence en ${days} días`, className: "text-warning font-medium" };
-  if (days <= 60) return { days, overdue: false, label: `Vence en ${days} días`, className: "text-warning" };
-  return { days, overdue: false, label: `Vence en ${days} días`, className: "text-muted-foreground" };
+  if (days <= 7) return { days, overdue: false, label: `Vence en ${days} ${days === 1 ? "día" : "días"}`, className: "text-danger font-medium" };
+  if (days <= 30) return { days, overdue: false, label: `Vence en ${days} ${days === 1 ? "día" : "días"}`, className: "text-warning font-medium" };
+  if (days <= 60) return { days, overdue: false, label: `Vence en ${days} ${days === 1 ? "día" : "días"}`, className: "text-warning" };
+  return { days, overdue: false, label: `Vence en ${days} ${days === 1 ? "día" : "días"}`, className: "text-muted-foreground" };
 }
 
 /** Suma días a una fecha ISO y devuelve ISO (YYYY-MM-DD). */

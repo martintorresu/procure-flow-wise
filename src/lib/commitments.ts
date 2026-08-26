@@ -25,16 +25,23 @@ export function norm(s: string): string {
 }
 
 /** Acepta YYYY-MM-DD, DD/MM/YYYY, DD-MM-YY… Devuelve ISO (YYYY-MM-DD) o null. */
+/** Devuelve la fecha ISO solo si es un calendario válido (rechaza 31/02, mes 13, etc.). */
+function isoIfReal(yyyy: string, mm: string, dd: string): string | null {
+  const d = new Date(`${yyyy}-${mm}-${dd}T00:00:00Z`);
+  if (Number.isNaN(d.getTime()) || d.getUTCDate() !== parseInt(dd, 10)) return null;
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 export function parseFlexibleDate(value?: string | null): string | null {
   if (!value) return null;
   const s = value.trim();
   if (!s) return null;
   let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
-  if (m) return `${m[1]}-${m[2].padStart(2, "0")}-${m[3].padStart(2, "0")}`;
+  if (m) return isoIfReal(m[1], m[2].padStart(2, "0"), m[3].padStart(2, "0"));
   m = s.match(/^(\d{1,2})[/\-.](\d{1,2})[/\-.](\d{2,4})$/);
   if (m) {
     const yy = m[3].length === 2 ? `20${m[3]}` : m[3];
-    return `${yy}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}`;
+    return isoIfReal(yy, m[2].padStart(2, "0"), m[1].padStart(2, "0"));
   }
   return null;
 }
