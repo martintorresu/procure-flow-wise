@@ -171,6 +171,17 @@ export function useVoiceCapture(): VoiceCapture {
     }
   }, []);
 
+  const reset = useCallback(() => {
+    manualStopRef.current = true;
+    pausedRef.current = false;
+    recogRef.current?.abort();
+    setIsListening(false);
+    setIsPaused(false);
+    setTranscript("");
+    setInterimText("");
+    setError(null);
+  }, []);
+
   const appendText = useCallback((text: string) => {
     const t = text.trim();
     if (!t) return;
@@ -185,5 +196,5 @@ export function useVoiceCapture(): VoiceCapture {
     [],
   );
 
-  return { isSupported, isListening, isPaused, transcript, interimText, error, start, stop, pause, resume, appendText };
+  return { isSupported, isListening, isPaused, transcript, interimText, error, start, stop, pause, resume, reset, appendText };
 }

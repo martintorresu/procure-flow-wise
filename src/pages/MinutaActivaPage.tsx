@@ -197,7 +197,7 @@ export default function MinutaActivaPage() {
   };
 
   const startNewCapture = () => {
-    voice.stop();
+    voice.reset();
     setImportDone(false);
     setPhase("setup");
     setDraft([]);
