@@ -649,13 +649,24 @@ export default function MinutaActivaPage() {
         className="fixed bottom-0 left-0 right-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 pt-3"
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
-        <div className="max-w-2xl mx-auto flex items-center gap-2">
-          <Button variant="outline" onClick={addManualDraft}>
-            <Plus className="w-4 h-4 mr-1" /> Agregar compromiso manual
-          </Button>
-          <Button className="flex-1" onClick={handleImport} disabled={importMutation.isPending || selectedCount === 0}>
-            {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
-          </Button>
+        <div className="max-w-2xl mx-auto space-y-2">
+          {!qualityOk && (
+            <p className="text-xs text-center text-danger">
+              Calidad {quality.score}% · se requiere al menos {qualityThreshold}% para importar.
+            </p>
+          )}
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={addManualDraft}>
+              <Plus className="w-4 h-4 mr-1" /> Agregar compromiso manual
+            </Button>
+            <Button
+              className="flex-1"
+              onClick={handleImport}
+              disabled={importMutation.isPending || selectedCount === 0 || !qualityOk}
+            >
+              {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
+            </Button>
+          </div>
         </div>
       </div>
 
