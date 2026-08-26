@@ -94,6 +94,7 @@ export function rowToPdc(r: PdcRow): Pdc {
     process_type: (r.process_type as Pdc["process_type"]) ?? "compra",
     project_id: r.project_id ?? null,
     predecessor_process_id: r.predecessor_process_id ?? null,
+    paused_by_contingency: r.paused_by_contingency ?? null,
   };
 }
 
