@@ -167,7 +167,9 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DashboardCommitmentsWidget />
         <DashboardPermitsWidget />
+        <DashboardContingenciesWidget />
       </div>
+
 
       {/* Active processes as separated cards */}
       <Card className="overflow-hidden">
