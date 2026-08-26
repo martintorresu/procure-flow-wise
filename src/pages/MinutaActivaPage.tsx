@@ -47,7 +47,12 @@ export default function MinutaActivaPage() {
   const importMutation = useImportCommitments();
   const voice = useVoiceCapture();
 
+  // PWA dedicada (minuta.html): sin sidebar ni navegación a /commitments
+  const isStandaloneApp =
+    typeof window !== "undefined" && window.location.pathname.includes("minuta.html");
+
   const [phase, setPhase] = useState<Phase>("setup");
+  const [importDone, setImportDone] = useState(false);
 
   // Fase 1
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
