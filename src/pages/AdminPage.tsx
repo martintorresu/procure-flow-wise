@@ -23,6 +23,7 @@ import { ApiKeysSection } from "@/components/admin/ApiKeysSection";
 import { PermitTypesSection } from "@/components/admin/PermitTypesSection";
 import { SubscriptionsSection } from "@/components/admin/SubscriptionsSection";
 import { ContingenciesSection } from "@/components/admin/ContingenciesSection";
+import { MinutaConfigSection } from "@/components/admin/MinutaConfigSection";
 
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/pdc";
