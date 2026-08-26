@@ -30,44 +30,58 @@ Deno.serve(async (req) => {
     });
 
   try {
-    const authHeader = req.headers.get("Authorization") ?? "";
+    const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) return json({ error: "No autorizado" }, 401);
+    const token = authHeader.slice("Bearer ".length).trim();
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const { data: userData } = await userClient.auth.getUser();
-    const caller = userData?.user;
-    if (!caller) return json({ error: "No autorizado" }, 401);
+    // Llamadas internas desde otras edge functions usan el service role key,
+    // que no es un JWT de usuario válido para getUser().
+    const isServiceRole = !!SERVICE_KEY && token === SERVICE_KEY;
 
     const body = await req.json().catch(() => ({}));
     const isTest = body?.test === true;
     const alertId = typeof body?.alert_id === "string" ? body.alert_id : "";
-    const userId = typeof body?.user_id === "string" && body.user_id ? body.user_id : (isTest ? caller.id : "");
     const tenantId = typeof body?.tenant_id === "string" ? body.tenant_id : "";
+
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    let caller: { id: string } | null = null;
+    if (!isServiceRole) {
+      const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data: userData } = await userClient.auth.getUser();
+      caller = userData?.user ?? null;
+      if (!caller) return json({ error: "No autorizado" }, 401);
+    }
+
+    const userId = typeof body?.user_id === "string" && body.user_id
+      ? body.user_id
+      : (isTest && caller ? caller.id : "");
     if ((!alertId && !isTest) || !userId || !tenantId) {
       return json({ error: "alert_id, user_id y tenant_id son requeridos" }, 400);
     }
 
-    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    if (caller) {
+      // El caller debe pertenecer al mismo tenant que la alerta.
+      const { data: callerProfile } = await admin
+        .from("profiles").select("tenant_id").eq("id", caller.id).maybeSingle();
+      if (!callerProfile || callerProfile.tenant_id !== tenantId) {
+        return json({ error: "Tenant no autorizado" }, 403);
+      }
 
-    // El caller debe pertenecer al mismo tenant que la alerta.
-    const { data: callerProfile } = await admin
-      .from("profiles").select("tenant_id").eq("id", caller.id).maybeSingle();
-    if (!callerProfile || callerProfile.tenant_id !== tenantId) {
-      return json({ error: "Tenant no autorizado" }, 403);
+      // El modo prueba es sólo para administradores del tenant.
+      if (isTest) {
+        const { data: adminRole } = await admin
+          .from("user_roles").select("role").eq("user_id", caller.id).eq("role", "admin").maybeSingle();
+        if (!adminRole) return json({ error: "Sólo un administrador puede enviar pruebas" }, 403);
+      }
     }
 
-    // El modo prueba es sólo para administradores del tenant.
-    if (isTest) {
-      const { data: adminRole } = await admin
-        .from("user_roles").select("role").eq("user_id", caller.id).eq("role", "admin").maybeSingle();
-      if (!adminRole) return json({ error: "Sólo un administrador puede enviar pruebas" }, 403);
-    }
 
     const [{ data: alert }, { data: profile }, { data: contact }, { data: config }] = await Promise.all([
       alertId

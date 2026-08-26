@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PLAN_LIMITS, PLAN_LABELS, usageLabel, type SubscriptionTier } from "@/lib/plans";
 import { useTenantSubscriptions, useUpdateTenantTier } from "@/hooks/useTenantSubscription";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function TierBadge({ tier }: { tier: SubscriptionTier }) {
   return tier === "pro" ? (
@@ -20,8 +21,13 @@ export function TierBadge({ tier }: { tier: SubscriptionTier }) {
 }
 
 export function SubscriptionsSection() {
+  const { user } = useAuth();
   const { data: tenants = [], isLoading } = useTenantSubscriptions();
   const update = useUpdateTenantTier();
+
+  // SECURITY: además de las políticas RLS, la sección sólo se muestra a administradores.
+  if (user?.role !== "admin") return null;
+
 
   return (
     <Card>
