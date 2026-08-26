@@ -66,6 +66,7 @@ Deno.serve(async (req) => {
       return json({ error: "alert_id, user_id y tenant_id son requeridos" }, 400);
     }
 
+    let callerIsAdmin = false;
     if (caller) {
       // El caller debe pertenecer al mismo tenant que la alerta.
       const { data: callerProfile } = await admin
@@ -74,11 +75,13 @@ Deno.serve(async (req) => {
         return json({ error: "Tenant no autorizado" }, 403);
       }
 
+      const { data: adminRole } = await admin
+        .from("user_roles").select("role").eq("user_id", caller.id).eq("role", "admin").maybeSingle();
+      callerIsAdmin = !!adminRole;
+
       // El modo prueba es sólo para administradores del tenant.
-      if (isTest) {
-        const { data: adminRole } = await admin
-          .from("user_roles").select("role").eq("user_id", caller.id).eq("role", "admin").maybeSingle();
-        if (!adminRole) return json({ error: "Sólo un administrador puede enviar pruebas" }, 403);
+      if (isTest && !callerIsAdmin) {
+        return json({ error: "Sólo un administrador puede enviar pruebas" }, 403);
       }
     }
 
@@ -102,12 +105,35 @@ Deno.serve(async (req) => {
 
     if (!alert && !isTest) return json({ error: "Alerta no encontrada" }, 404);
     if (!profile || profile.tenant_id !== tenantId) return json({ error: "Usuario no encontrado" }, 404);
+
+    // Un usuario no admin sólo puede disparar notificaciones de procesos con los que
+    // tiene relación (o dirigidas a sí mismo). Evita usar el envío como canal abierto.
+    if (caller && !callerIsAdmin && alert) {
+      let related = caller.id === userId;
+      if (!related && alert.pdc_id) {
+        const [{ data: proc }, { data: participant }] = await Promise.all([
+          admin.from("purchase_processes")
+            .select("id, created_by, engineering_responsible")
+            .eq("id", alert.pdc_id).eq("tenant_id", tenantId).maybeSingle(),
+          admin.from("process_participants")
+            .select("id").eq("process_id", alert.pdc_id).eq("user_id", caller.id).maybeSingle(),
+        ]);
+        related = !!participant ||
+          proc?.created_by === caller.id ||
+          proc?.engineering_responsible === caller.id;
+      }
+      if (!related) return json({ error: "No autorizado para notificar este proceso" }, 403);
+    }
+
     if (!config?.enabled) return json({ skipped: "whatsapp_disabled" });
     if (contact?.whatsapp_notifications_enabled === false) return json({ skipped: "user_opted_out" });
 
     const phone = (contact?.phone ?? "").trim();
     if (!phone) return json({ skipped: "no_phone" });
     if (!E164.test(phone)) return json({ skipped: "invalid_phone" });
+    // PII: nunca devolver el número completo al cliente.
+    const maskedPhone = phone.slice(0, -4).replace(/\d/g, "*") + phone.slice(-4);
+
 
 
     // Token: variable de entorno global (preferida) o el guardado en la config del tenant.
