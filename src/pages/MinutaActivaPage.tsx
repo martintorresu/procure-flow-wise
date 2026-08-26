@@ -159,7 +159,7 @@ export default function MinutaActivaPage() {
     const payload: NewCommitment[] = selected.map((d) => ({
       commitment_text: d.text.trim(),
       responsible_user_id: d.userId,
-      responsible_name: d.userId ? (users.find((u) => u.id === d.userId)?.full_name ?? d.responsible || null) : d.responsible || null,
+      responsible_name: d.userId ? ((users.find((u) => u.id === d.userId)?.full_name ?? d.responsible) || null) : (d.responsible || null),
       pdc_id: d.pdcId,
       due_date: d.dueDate,
       priority: d.priority,
