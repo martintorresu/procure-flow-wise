@@ -23,6 +23,7 @@ import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
 import { DashboardPermitsWidget } from "@/components/DashboardPermitsWidget";
 import { DashboardContingenciesWidget } from "@/components/DashboardContingenciesWidget";
+import { DashboardMinutaWidget } from "@/components/DashboardMinutaWidget";
 import { Badge } from "@/components/ui/badge";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, usageLabel } from "@/lib/plans";
@@ -166,6 +167,7 @@ export default function DashboardPage() {
 
       {/* Compromisos pendientes del usuario */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DashboardMinutaWidget />
         <DashboardCommitmentsWidget />
         <DashboardPermitsWidget />
         <DashboardContingenciesWidget />
