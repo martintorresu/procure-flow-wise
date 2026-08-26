@@ -122,12 +122,18 @@ export default function PdcDetailPage() {
   const { data: allAlerts = [] } = useAlerts();
   const { data: stageTemplates = [] } = useStageTemplates(pdc?.process_type);
   const { data: participants = [] } = useProcessParticipants(pdc?.id);
+  const { data: contingencies = [] } = useContingenciesByProcess(pdc?.id);
+  const completeContingency = useCompleteContingency();
 
   // ¿El usuario actual es un participante externo (no pertenece al tenant dueño)?
   const myParticipation = participants.find((p) => p.user_id === user?.id && p.status === "accepted");
   const isInternal = !!user?.tenantId && !!pdc?.tenant_id && user.tenantId === pdc.tenant_id;
   const isExternal = !!myParticipation && !isInternal;
   const canComment = isInternal || myParticipation?.permission_level === "comment";
+  const canBifurcate = isInternal && canManageContingencies(user?.role);
+  const isPaused = !!pdc?.paused_by_contingency;
+  const pausingContingency = contingencies.find((c) => c.id === pdc?.paused_by_contingency);
+
 
 
   if (loading) {
