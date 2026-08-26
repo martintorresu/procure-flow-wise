@@ -11,7 +11,10 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { ChevronDown, ListChecks, MessagesSquare, Wand2 } from "lucide-react";
+import { ChevronDown, ListChecks, MessagesSquare, Wand2, Mic, SlidersHorizontal } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { SEO } from "@/components/SEO";
 import { CommitmentsTable } from "@/components/CommitmentsTable";
 import { MeetingToActionHero } from "@/components/MeetingToActionHero";
@@ -71,6 +74,8 @@ export default function CommitmentsPage() {
   const [fMeetingDate, setFMeetingDate] = useState("");
   const [grouped, setGrouped] = useState(false);
   const [visibleCount, setVisibleCount] = useState(50);
+  const isMobile = useIsMobile();
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const handleParse = () => {
     const parsed = mode === "transcript" ? parseTranscriptText(text) : parseCommitmentsText(text);
@@ -180,6 +185,55 @@ export default function CommitmentsPage() {
       </header>
 
       <MeetingToActionHero />
+
+      {/* FAB móvil: Minuta Activa */}
+      <Link
+        to="/minuta"
+        aria-label="Abrir Minuta Activa"
+        className="sm:hidden fixed bottom-6 right-4 z-40 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center hover:scale-105 transition-transform"
+        style={{ bottom: "calc(1.5rem + env(safe-area-inset-bottom))" }}
+      >
+        <Mic className="w-6 h-6" />
+      </Link>
+
+      {/* Sheet de filtros móvil */}
+      <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+        <SheetContent side="bottom" className="h-auto max-h-[80vh]">
+          <SheetHeader><SheetTitle>Filtros</SheetTitle></SheetHeader>
+          <div className="mt-4 grid gap-3">
+            <Select value={fStatus} onValueChange={setFStatus}>
+              <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los estados</SelectItem>
+                {COMMITMENT_STATUSES.map((s) => (
+                  <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={fResponsible} onValueChange={setFResponsible}>
+              <SelectTrigger><SelectValue placeholder="Responsable" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los responsables</SelectItem>
+                {responsibles.map((r) => (
+                  <SelectItem key={r} value={r}>{r}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={fPdc} onValueChange={setFPdc}>
+              <SelectTrigger><SelectValue placeholder="Proceso" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los procesos</SelectItem>
+                <SelectItem value="none">Sin vincular</SelectItem>
+                {processes.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input type="date" value={fMeetingDate} onChange={(e) => setFMeetingDate(e.target.value)} />
+            <Button onClick={() => setFiltersOpen(false)}>Aplicar filtros</Button>
+          </div>
+        </SheetContent>
+      </Sheet>
 
       <Card>
         <CardHeader>
@@ -350,7 +404,12 @@ export default function CommitmentsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 sm:grid-cols-4">
+          {isMobile && (
+            <Button variant="outline" size="sm" className="w-full" onClick={() => setFiltersOpen(true)}>
+              <SlidersHorizontal className="w-4 h-4 mr-1" /> Filtros
+            </Button>
+          )}
+          <div className={`gap-3 sm:grid-cols-4 ${isMobile ? "hidden" : "grid"}`}>
             <Select value={fStatus} onValueChange={setFStatus}>
               <SelectTrigger><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
@@ -384,12 +443,42 @@ export default function CommitmentsPage() {
 
           {!grouped && (
             <div className="space-y-3">
-              <div className="overflow-x-auto">
+              <div className="hidden sm:block overflow-x-auto">
                 <CommitmentsTable
                   commitments={filtered.slice(0, visibleCount)}
                   processes={processes}
                   isLoading={isLoading}
                 />
+              </div>
+              {/* Cards móviles */}
+              <div className="sm:hidden space-y-3">
+                {isLoading && <p className="text-sm text-muted-foreground text-center py-6">Cargando…</p>}
+                {!isLoading && filtered.slice(0, visibleCount).map((c) => {
+                  const meta = dueMeta(c.due_date, c.status);
+                  const statusLabel = COMMITMENT_STATUSES.find((s) => s.value === c.status)?.label ?? c.status;
+                  const proc = processes.find((p) => p.id === c.pdc_id);
+                  return (
+                    <div key={c.id} className="border rounded-lg p-3 space-y-1.5 bg-card">
+                      <p className="text-sm font-medium">{c.commitment_text}</p>
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                        <span>{c.responsible_name ?? "Sin responsable"}</span>
+                        {proc && <span className="font-mono">{proc.pdc_number}</span>}
+                        {c.due_date && (
+                          <span className={meta.overdue ? "text-danger font-semibold" : undefined}>
+                            Límite: {c.due_date}{meta.overdue ? " · vencido" : ""}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="text-[10px]">{statusLabel}</Badge>
+                        {c.priority && <Badge variant="outline" className="text-[10px] capitalize">{c.priority}</Badge>}
+                      </div>
+                    </div>
+                  );
+                })}
+                {!isLoading && filtered.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-6">Sin compromisos.</p>
+                )}
               </div>
               {filtered.length > visibleCount && (
                 <div className="flex justify-center">
