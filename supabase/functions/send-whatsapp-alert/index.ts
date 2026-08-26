@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
         error: errorMessage,
         error_code: metaErrorCode,
         setup_required: "allow_recipient_in_meta",
-        phone,
+        phone: maskedPhone,
       });
     }
     if (!res.ok) return json({ ok: false, error: errorMessage, error_code: metaErrorCode }, 502);
@@ -236,7 +236,7 @@ Deno.serve(async (req) => {
       ok: true,
       test: isTest,
       message_id: metaMessageId,
-      phone,
+      phone: maskedPhone,
       link: alert?.pdc_id ? `${APP_BASE_URL}/pdc/${alert.pdc_id}` : null,
     });
   } catch (e) {
