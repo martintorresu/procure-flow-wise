@@ -26,7 +26,11 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
+// HMR-safe: reutiliza la misma instancia de contexto entre recargas en caliente
+// para evitar "useAuth must be inside AuthProvider" con módulos duplicados.
+const g = globalThis as unknown as { __authContext?: React.Context<AuthContextType | null> };
+const AuthContext = g.__authContext ?? createContext<AuthContextType | null>(null);
+g.__authContext = AuthContext;
 
 /** Construye el objeto User del dominio a partir de la sesión + profile + roles. */
 async function buildDomainUser(
