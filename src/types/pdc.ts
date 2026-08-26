@@ -48,6 +48,8 @@ export interface Pdc {
   project_id?: string | null;
   /** Proceso del que este es continuación. */
   predecessor_process_id?: string | null;
+  /** Id de la contingencia que mantiene pausado este proceso (Modo A). */
+  paused_by_contingency?: string | null;
 }
 
 export interface PdcMilestone {
