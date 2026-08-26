@@ -11,6 +11,7 @@ import { Plus, Search, FileText, X, Check, AlertTriangle, Link2 } from "lucide-r
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
+import { useAllContingencies } from "@/hooks/useProcessContingencies";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import { type TrafficLight } from "@/types/pdc";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
