@@ -93,114 +93,41 @@ export interface CreateContingencyInput {
   createdBy: string;
 }
 
-/** Crea el proceso hijo, la bifurcación, la alerta y pausa el padre si aplica. */
+/** Crea el proceso hijo, la bifurcación, la alerta y pausa el padre de forma atómica (RPC). */
 export function useCreateContingency() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateContingencyInput) => {
-      const { data: parent, error: parentErr } = await supabase
-        .from("purchase_processes")
-        .select("id, name, tenant_id, currency, required_on_site_date, requesting_area")
-        .eq("id", input.parentProcessId)
-        .single();
-      if (parentErr) throw new Error(parentErr.message);
-
-      // 1. Proceso hijo (hereda criticidad y proyecto del padre).
-      const { data: child, error: childErr } = await supabase
-        .from("purchase_processes")
-        .insert({
-          name: input.title,
-          project: input.project,
-          project_id: input.projectId,
-          process_type: "personalizado",
-          predecessor_process_id: input.parentProcessId,
-          description: `Contingencia del proceso ${parent.name}: ${input.reason}`,
-          criticality: CRIT_FE_TO_DB[input.criticality],
-          currency: parent.currency ?? "USD",
-          required_on_site_date: parent.required_on_site_date,
-          requesting_area: parent.requesting_area || "Sin especificar",
-          created_by: input.createdBy,
-          tenant_id: parent.tenant_id, // reforzado por trigger/RLS
-        })
-        .select("id, pdc_number, name")
-        .single();
-      if (childErr) throw new Error(childErr.message);
-
-      // 2. Bifurcación
-      const { data: contingency, error: contErr } = await supabase
-        .from("process_contingencies")
-        .insert({
-          parent_process_id: input.parentProcessId,
-          child_process_id: child.id,
-          execution_mode: input.executionMode,
-          reason: input.reason,
-          created_by: input.createdBy,
-          tenant_id: parent.tenant_id, // reforzado por trigger/RLS
-        })
-        .select("id")
-        .single();
-      if (contErr) throw new Error(contErr.message);
-
-      // 3. Pausa del padre en Modo A
-      if (input.executionMode === "pause_and_attend") {
-        const { error: pauseErr } = await supabase
-          .from("purchase_processes")
-          .update({ paused_by_contingency: contingency.id })
-          .eq("id", input.parentProcessId);
-        if (pauseErr) throw new Error(pauseErr.message);
-      }
-
-      // 4. Alerta in-app
-      await supabase.from("alerts").insert({
-        pdc_id: input.parentProcessId,
-        type: "contingency",
-        severity: input.executionMode === "pause_and_attend" ? "high" : "medium",
-        message:
-          input.executionMode === "pause_and_attend"
-            ? `⏸️ El proceso ${parent.name} ha sido pausado por contingencia: ${input.reason}`
-            : `🔀 Se ha creado una contingencia en paralelo para ${parent.name}: ${input.reason}`,
-        created_by: input.createdBy,
-        tenant_id: parent.tenant_id,
+      const { data, error } = await supabase.rpc("create_contingency", {
+        p_parent_process_id: input.parentProcessId,
+        p_execution_mode: input.executionMode,
+        p_reason: input.reason,
+        p_child_name: input.title,
+        p_child_criticality: CRIT_FE_TO_DB[input.criticality],
       });
-
-      return { contingencyId: contingency.id, childProcessId: child.id, childNumber: child.pdc_number };
+      if (error) throw new Error(error.message);
+      const res = data as unknown as {
+        contingency_id: string;
+        child_process_id: string;
+        child_number: string;
+      };
+      return {
+        contingencyId: res.contingency_id,
+        childProcessId: res.child_process_id,
+        childNumber: res.child_number,
+      };
     },
     onSuccess: () => invalidate(qc),
   });
 }
 
+/** El trigger de BD despausa el padre y crea la alerta de reanudación. */
 async function closeContingency(id: string, status: "completed" | "cancelled") {
-  const { data: cont, error } = await supabase
+  const { error } = await supabase
     .from("process_contingencies")
-    .select("id, parent_process_id, execution_mode, tenant_id, parent:purchase_processes!process_contingencies_parent_process_id_fkey(name)")
-    .eq("id", id)
-    .single();
-  if (error) throw new Error(error.message);
-
-  const { error: updErr } = await supabase
-    .from("process_contingencies")
-    .update({ status, completed_at: new Date().toISOString() })
+    .update({ status })
     .eq("id", id);
-  if (updErr) throw new Error(updErr.message);
-
-  if (cont.execution_mode === "pause_and_attend") {
-    const { error: resumeErr } = await supabase
-      .from("purchase_processes")
-      .update({ paused_by_contingency: null })
-      .eq("id", cont.parent_process_id);
-    if (resumeErr) throw new Error(resumeErr.message);
-
-    if (status === "completed") {
-      const parentName = (cont as unknown as { parent?: { name?: string } }).parent?.name ?? "padre";
-      await supabase.from("alerts").insert({
-        pdc_id: cont.parent_process_id,
-        type: "contingency",
-        severity: "low",
-        message: `▶️ El proceso ${parentName} se ha reanudado tras completar la contingencia.`,
-        tenant_id: cont.tenant_id,
-      });
-    }
-  }
+  if (error) throw new Error(error.message);
 }
 
 /** Marca la contingencia como completada y reanuda el padre si estaba pausado. */
@@ -220,3 +147,4 @@ export function useCancelContingency() {
     onSuccess: () => invalidate(qc),
   });
 }
+
