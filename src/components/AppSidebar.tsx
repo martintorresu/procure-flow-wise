@@ -4,21 +4,50 @@ import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
   Package, Shield, FolderKanban, UserCog, MessagesSquare, FileCheck, Mic
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTenant } from "@/config/tenants";
 import { useAlerts } from "@/hooks/useAlerts";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+interface NavItem {
+  to: string;
+  icon: LucideIcon;
+  label: string;
+}
 
-const baseNavItems = [
-  { to: "/", icon: LayoutDashboard, label: "Panel de Control" },
-  { to: "/pdcs", icon: FileText, label: "Procesos" },
-  { to: "/projects", icon: FolderKanban, label: "Proyectos" },
-  { to: "/pdcs/new", icon: Plus, label: "Crear Proceso" },
-  { to: "/commitments", icon: MessagesSquare, label: "Compromisos de Reunión" },
-  { to: "/minuta", icon: Mic, label: "Minuta Activa" },
-  { to: "/permits", icon: FileCheck, label: "Permisología" },
-  { to: "/alerts", icon: Bell, label: "Alertas" },
+interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+const navSections: NavSection[] = [
+  {
+    label: "GESTIÓN",
+    items: [
+      { to: "/", icon: LayoutDashboard, label: "Panel de Control" },
+      { to: "/alerts", icon: Bell, label: "Alertas" },
+      { to: "/commitments", icon: MessagesSquare, label: "Compromisos" },
+      { to: "/minuta", icon: Mic, label: "Minuta Activa" },
+    ],
+  },
+  {
+    label: "PROCESOS",
+    items: [
+      { to: "/pdcs", icon: FileText, label: "Procesos" },
+      { to: "/pdcs/new", icon: Plus, label: "Crear Proceso" },
+      { to: "/projects", icon: FolderKanban, label: "Proyectos" },
+    ],
+  },
+  {
+    label: "MÓDULOS",
+    items: [
+      { to: "/permits", icon: FileCheck, label: "Permisología" },
+    ],
+  },
+];
+
+const baseBottomItems: NavItem[] = [
   { to: "/profile", icon: UserCog, label: "Mi perfil" },
 ];
 
@@ -41,9 +70,51 @@ export default function AppSidebar() {
   const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical" || a.severity === "high").length;
   const totalAlerts = unresolvedAlerts.length;
 
-  const navItems = user?.role === "admin"
-    ? [...baseNavItems, { to: "/admin", icon: Shield, label: "Administración" }]
-    : baseNavItems;
+  const bottomItems: NavItem[] = user?.role === "admin"
+    ? [...baseBottomItems, { to: "/admin", icon: Shield, label: "Administración" }]
+    : baseBottomItems;
+
+  const renderItem = (item: NavItem) => {
+    const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+    const isAlerts = item.to === "/alerts";
+    const badgeCount = isAlerts ? totalAlerts : 0;
+    const badgeIsCritical = isAlerts && criticalCount > 0;
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
+          isActive
+            ? "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/40 text-sidebar-foreground font-semibold shadow-md shadow-sidebar-primary/20"
+            : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground hover:translate-x-0.5"
+        }`}
+      >
+        {isActive && (
+          <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full bg-sidebar-primary shadow-[0_0_10px_hsl(var(--sidebar-primary))]" />
+        )}
+        <span className="relative">
+          <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-sidebar-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-primary"}`} />
+          {badgeCount > 0 && collapsed && (
+            <span
+              aria-label={`${badgeCount} alertas pendientes`}
+              className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white ${badgeIsCritical ? "bg-danger animate-pulse-slow" : "bg-warning"}`}
+            >
+              {badgeCount > 9 ? "9+" : badgeCount}
+            </span>
+          )}
+        </span>
+        {!collapsed && <span className="truncate flex-1">{item.label}</span>}
+        {!collapsed && badgeCount > 0 && (
+          <span
+            aria-label={`${badgeCount} alertas pendientes`}
+            className={`ml-auto min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center text-white ${badgeIsCritical ? "bg-danger animate-pulse-slow" : "bg-warning"}`}
+          >
+            {badgeCount}
+          </span>
+        )}
+      </Link>
+    );
+  };
 
   return (
     <aside
@@ -76,48 +147,25 @@ export default function AppSidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="relative flex-1 min-h-0 overflow-y-auto py-4 space-y-1 px-2">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
-          const isAlerts = item.to === "/alerts";
-          const badgeCount = isAlerts ? totalAlerts : 0;
-          const badgeIsCritical = isAlerts && criticalCount > 0;
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
-                isActive
-                  ? "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/40 text-sidebar-foreground font-semibold shadow-md shadow-sidebar-primary/20"
-                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40 hover:text-sidebar-foreground hover:translate-x-0.5"
-              }`}
-            >
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 h-7 w-1 rounded-r-full bg-sidebar-primary shadow-[0_0_10px_hsl(var(--sidebar-primary))]" />
+      <nav className="relative flex-1 min-h-0 overflow-y-auto py-4 px-2 flex flex-col">
+        <div className="space-y-4 flex-1">
+          {navSections.map((section) => (
+            <div key={section.label}>
+              {!collapsed && section.label && (
+                <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/40 px-3 mb-1">
+                  {section.label}
+                </p>
               )}
-              <span className="relative">
-                <item.icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? "text-sidebar-primary" : "text-sidebar-foreground/70 group-hover:text-sidebar-primary"}`} />
-                {badgeCount > 0 && collapsed && (
-                  <span
-                    aria-label={`${badgeCount} alertas pendientes`}
-                    className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full text-[10px] font-bold flex items-center justify-center text-white ${badgeIsCritical ? "bg-danger animate-pulse-slow" : "bg-warning"}`}
-                  >
-                    {badgeCount > 9 ? "9+" : badgeCount}
-                  </span>
-                )}
-              </span>
-              {!collapsed && <span className="truncate flex-1">{item.label}</span>}
-              {!collapsed && badgeCount > 0 && (
-                <span
-                  aria-label={`${badgeCount} alertas pendientes`}
-                  className={`ml-auto min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold flex items-center justify-center text-white ${badgeIsCritical ? "bg-danger animate-pulse-slow" : "bg-warning"}`}
-                >
-                  {badgeCount}
-                </span>
+              {collapsed && section.label && (
+                <div className="mx-auto w-6 border-t border-sidebar-border/30 my-2" />
               )}
-            </Link>
-          );
-        })}
+              <div className="space-y-1">{section.items.map(renderItem)}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Items de fondo */}
+        <div className="mt-auto pt-2 space-y-1">{bottomItems.map(renderItem)}</div>
       </nav>
 
       {/* User */}

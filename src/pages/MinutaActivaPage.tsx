@@ -14,7 +14,7 @@ import { SEO } from "@/components/SEO";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/hooks/useCommitments";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
-import { useOfflineSync } from "@/hooks/useOfflineSync";
+import { useOnlineStatus } from "@/hooks/useOfflineSync";
 import { enqueueCommitments } from "@/lib/offlineQueue";
 import {
   matchProcess,
@@ -41,7 +41,7 @@ function formatTimer(seconds: number): string {
 
 export default function MinutaActivaPage() {
   const navigate = useNavigate();
-  const { isOnline } = useOfflineSync();
+  const isOnline = useOnlineStatus();
   const { data: processes = [] } = useProcessOptions();
   const { data: users = [] } = useTenantUsers();
   const importMutation = useImportCommitments();
@@ -169,7 +169,7 @@ export default function MinutaActivaPage() {
     }));
 
     if (!isOnline) {
-      enqueueCommitments(payload);
+      enqueueCommitments(payload, meetingTitle.trim());
       toast.info("📴 Sin conexión. Los compromisos se enviarán automáticamente cuando vuelva Internet.");
       navigate("/commitments");
       return;
@@ -182,8 +182,10 @@ export default function MinutaActivaPage() {
         `✅ ${res.inserted} compromiso${res.inserted === 1 ? "" : "s"} importado${res.inserted === 1 ? "" : "s"}. Se enviaron alertas WhatsApp a ${notified} responsable${notified === 1 ? "" : "s"}.`,
       );
       navigate("/commitments");
-    } catch (e) {
-      toast.error((e as Error).message);
+    } catch {
+      // Fallback: si falla online, guardar en cola offline para reintento automático
+      enqueueCommitments(payload, meetingTitle.trim());
+      toast.error("Error al importar. Los compromisos se guardaron localmente y se enviarán automáticamente.");
     }
   };
 

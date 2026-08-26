@@ -135,6 +135,7 @@ export function useImportCommitments() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: commitmentKeys.all });
       qc.invalidateQueries({ queryKey: ["alerts"] });
+      qc.invalidateQueries({ queryKey: ["minuta-week-count"] });
     },
   });
 }
