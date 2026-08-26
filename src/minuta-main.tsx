@@ -32,7 +32,7 @@ if (typeof window !== "undefined" && "serviceWorker" in navigator && import.meta
       .catch(() => {});
   } else {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/minuta-sw.js", { scope: "/" }).catch((e) => {
+      navigator.serviceWorker.register("/minuta-sw.js", { scope: "/minuta.html" }).catch((e) => {
         console.warn("[minuta-pwa] SW registration failed:", e);
       });
     });
