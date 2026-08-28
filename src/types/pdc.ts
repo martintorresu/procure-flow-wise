@@ -39,10 +39,6 @@ export interface Pdc {
   /** Tenant dueño del proceso. */
   tenant_id?: string | null;
 
-  /** Estado de aprobación cuando una regla bloqueó el avance. */
-  approval_status?: "pending" | "approved" | "rejected" | null;
-  approval_required_role?: string | null;
-  approval_target_stage?: string | null;
   /** Tipo de proceso: compra | licitacion | contrato | permiso | personalizado. */
   process_type?: "compra" | "licitacion" | "contrato" | "permiso" | "personalizado";
   /** Proyecto normalizado (tabla projects). */

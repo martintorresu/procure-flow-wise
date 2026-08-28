@@ -56,9 +56,6 @@ export interface PdcRow {
   et_document_code: string | null;
   engineering_responsible: string | null;
   responsible_name: string | null;
-  approval_status: string | null;
-  approval_required_role: string | null;
-  approval_target_stage: string | null;
   process_type: string | null;
   project_id: string | null;
   predecessor_process_id: string | null;
@@ -87,10 +84,6 @@ export function rowToPdc(r: PdcRow): Pdc {
     updated_at: r.updated_at,
     current_stage: r.current_stage as DbStage,
     tenant_id: (r as PdcRow & { tenant_id?: string }).tenant_id ?? null,
-
-    approval_status: (r.approval_status as Pdc["approval_status"]) ?? null,
-    approval_required_role: r.approval_required_role ?? null,
-    approval_target_stage: r.approval_target_stage ?? null,
     process_type: (r.process_type as Pdc["process_type"]) ?? "compra",
     project_id: r.project_id ?? null,
     predecessor_process_id: r.predecessor_process_id ?? null,
