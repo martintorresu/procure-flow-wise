@@ -30,14 +30,12 @@ import { USER_LIMIT_MESSAGE } from "@/lib/plans";
 
 
 
-const ROLES = [
-  { value: "admin", label: "Admin" },
-  { value: "ingenieria", label: "Ingeniería" },
-  { value: "programacion", label: "Programación" },
-  { value: "compras", label: "Compras" },
-  { value: "gerente", label: "Gerente" },
-  { value: "planificacion", label: "Planificación" },
-  { value: "logistica", label: "Logística" },
+/** Niveles de acceso globales (no son cargos: el cargo es descriptivo y va aparte). */
+const ROLES: { value: UserRole; label: string; hint: string }[] = [
+  { value: "admin", label: "Administrador", hint: "Todo, incluida configuración del tenant, usuarios y niveles de acceso" },
+  { value: "gestor", label: "Gestor", hint: "Crea y edita procesos, marca estados de etapa, crea y envía minutas, invita participantes" },
+  { value: "colaborador", label: "Colaborador", hint: "Trabaja dentro de procesos existentes: comenta, sube documentos, registra avances y participa en minutas" },
+  { value: "lector", label: "Lector", hint: "Solo consulta" },
 ];
 
 const SAMPLE_USERS = ROLES.map((r) => ({
