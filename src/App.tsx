@@ -120,10 +120,10 @@ const App = () => (
             {/* Rutas protegidas — por tenant */}
             <Route path="/t/:tenantSlug" element={<ProtectedRoutes />}>
               <Route index element={<DashboardPage />} />
-              <Route path="processes" element={<ProcessListPage />} />
-              <Route path="processes/new" element={<CreateProcessPage />} />
-              <Route path="processes/:id/edit" element={<EditProcessPage />} />
-              <Route path="processes/:id" element={<ProcessDetailPage />} />
+              <Route path="procesos" element={<ProcessListPage />} />
+              <Route path="procesos/new" element={<CreateProcessPage />} />
+              <Route path="procesos/:id/edit" element={<EditProcessPage />} />
+              <Route path="procesos/:id" element={<ProcessDetailPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="projects/:id" element={<ProjectChainPage />} />
               <Route path="alerts" element={<AlertsPage />} />
@@ -133,7 +133,12 @@ const App = () => (
               <Route path="admin" element={<AdminPage />} />
             </Route>
 
+            {/* Redirecciones desde las rutas antiguas /pdcs → /procesos */}
+            <Route path="/pdcs/*" element={<LegacyProcessRedirect />} />
+            <Route path="/t/:tenantSlug/pdcs/*" element={<LegacyProcessRedirect />} />
+
             <Route path="*" element={<NotFound />} />
+
           </Routes>
         </BrowserRouter>
       </AuthProvider>
