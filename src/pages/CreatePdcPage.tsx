@@ -13,8 +13,9 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { PURCHASE_STEPS } from "@/lib/processStages";
 import { SEO } from "@/components/SEO";
-import { GENERIC_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isPurchaseType, type ProcessType } from "@/lib/processTypes";
-import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock } from "lucide-react";
+import { GENERIC_STAGES, OBRA_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isObraType, isPurchaseType, type ProcessType } from "@/lib/processTypes";
+import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock, HardHat, Hammer, Building2, Layers, PaintRoller, MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
 
@@ -25,6 +26,14 @@ const GENERIC_STEPS = GENERIC_STAGES.map((s, i) => ({
   label: s.label,
   icon: [FileText, ClipboardList, Wrench, Check][i],
 }));
+
+const OBRA_ICONS = [FileText, Truck, MapPin, Layers, Building2, Ship, Wrench, PaintRoller, FlaskConical, Check];
+const OBRA_STEPS = OBRA_STAGES.map((s, i) => ({
+  key: s.key,
+  label: s.label,
+  icon: OBRA_ICONS[i],
+}));
+
 
 export default function CreatePdcPage() {
   const navigate = useNavigate();
