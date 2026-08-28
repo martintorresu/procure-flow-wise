@@ -113,11 +113,8 @@ export default function CreateProcessPage() {
       });
 
       // Los procesos preestablecidos reciben sus 10 etapas
-      if (isObra || isLicitacion || isContrato) {
-        const { error: stagesError } = await supabase.rpc(
-          isObra ? "seed_obra_stages" : isLicitacion ? "seed_licitacion_stages" : "seed_administracion_contrato_stages",
-          { p_process_id: data.id },
-        );
+      if (seedRpc) {
+        const { error: stagesError } = await supabase.rpc(seedRpc, { p_process_id: data.id });
         if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
       }
       toast.success(`Proceso ${data.process_number} creado exitosamente`);
