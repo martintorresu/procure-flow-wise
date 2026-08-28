@@ -1,3 +1,4 @@
+import { useProjects } from "@/hooks/useProjects";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { GitBranch } from "lucide-react";
@@ -25,15 +26,20 @@ export function ContingenciesSection() {
   const [fStatus, setFStatus] = useState("all");
   const [fProject, setFProject] = useState("all");
 
+  const { data: allProjects = [] } = useProjects();
+  const projectNameById = useMemo(
+    () => Object.fromEntries(allProjects.map((p) => [p.id, p.name])),
+    [allProjects],
+  );
   const projects = useMemo(
-    () => Array.from(new Set(contingencies.map((c) => c.parent?.project).filter(Boolean) as string[])),
+    () => Array.from(new Set(contingencies.map((c) => c.parent?.project_id).filter(Boolean) as string[])),
     [contingencies],
   );
 
   const rows = contingencies.filter((c) => {
     if (fMode !== "all" && c.execution_mode !== fMode) return false;
     if (fStatus !== "all" && c.status !== fStatus) return false;
-    if (fProject !== "all" && c.parent?.project !== fProject) return false;
+    if (fProject !== "all" && c.parent?.project_id !== fProject) return false;
     return true;
   });
 
@@ -75,7 +81,7 @@ export function ContingenciesSection() {
             <SelectTrigger><SelectValue placeholder="Proyecto" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos los proyectos</SelectItem>
-              {projects.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+              {projects.map((p) => <SelectItem key={p} value={p}>{projectNameById[p] ?? "Sin proyecto"}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
