@@ -62,7 +62,9 @@ export interface InviteInput {
   externalRole: ExternalRole;
   permissionLevel: Exclude<PermissionLevel, "upload">;
   invitedBy: string;
+  positionId?: string | null;
 }
+
 
 /** Dispara el email de invitación. No lanza: el envío es best-effort. */
 export async function sendInviteEmail(participantId: string): Promise<{ ok: boolean; error?: string }> {
