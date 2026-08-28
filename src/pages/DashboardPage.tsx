@@ -28,6 +28,7 @@ const TYPE_INITIALS: Record<ProcessType, string> = {
   licitacion: "Lt",
   contrato: "Ct",
   obra: "Ob",
+  compra_industrial: "Ci",
   personalizado: "Ps",
 };
 

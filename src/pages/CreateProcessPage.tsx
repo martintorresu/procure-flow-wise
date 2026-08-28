@@ -13,11 +13,13 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { SEO } from "@/components/SEO";
 import {
   ADMINISTRACION_CONTRATO_STAGES,
+  COMPRA_INDUSTRIAL_STAGES,
   LICITACION_STAGES,
   OBRA_STAGES,
   PROCESS_TYPES,
   PROCESS_TYPE_LABELS,
   isAdministracionContratoType,
+  isCompraIndustrialType,
   isLicitacionType,
   isObraType,
   type ProcessType,
@@ -62,6 +64,7 @@ export default function CreateProcessPage() {
   const isObra = isObraType(form.process_type);
   const isLicitacion = isLicitacionType(form.process_type);
   const isContrato = isAdministracionContratoType(form.process_type);
+  const isCompraIndustrial = isCompraIndustrialType(form.process_type);
 
   const presetStages = isObra
     ? OBRA_STAGES
@@ -69,7 +72,19 @@ export default function CreateProcessPage() {
       ? LICITACION_STAGES
       : isContrato
         ? ADMINISTRACION_CONTRATO_STAGES
-        : null;
+        : isCompraIndustrial
+          ? COMPRA_INDUSTRIAL_STAGES
+          : null;
+
+  const seedRpc = isObra
+    ? "seed_obra_stages"
+    : isLicitacion
+      ? "seed_licitacion_stages"
+      : isContrato
+        ? "seed_administracion_contrato_stages"
+        : isCompraIndustrial
+          ? "seed_compra_industrial_stages"
+          : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -98,11 +113,8 @@ export default function CreateProcessPage() {
       });
 
       // Los procesos preestablecidos reciben sus 10 etapas
-      if (isObra || isLicitacion || isContrato) {
-        const { error: stagesError } = await supabase.rpc(
-          isObra ? "seed_obra_stages" : isLicitacion ? "seed_licitacion_stages" : "seed_administracion_contrato_stages",
-          { p_process_id: data.id },
-        );
+      if (seedRpc) {
+        const { error: stagesError } = await supabase.rpc(seedRpc, { p_process_id: data.id });
         if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
       }
       toast.success(`Proceso ${data.process_number} creado exitosamente`);
@@ -149,7 +161,9 @@ export default function CreateProcessPage() {
         <Card>
           <CardContent className="p-6 space-y-3">
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Etapas preestablecidas ({presetStages.length})
+              {isCompraIndustrial
+                ? `Flujo de compra industrial (${presetStages.length} etapas preestablecidas)`
+                : `Etapas preestablecidas (${presetStages.length})`}
             </p>
             <ol className="grid gap-1 text-sm sm:grid-cols-2">
               {presetStages.map((s, i) => (

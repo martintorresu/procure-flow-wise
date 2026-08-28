@@ -13,8 +13,8 @@ export interface Process {
   /** Tenant dueño del proceso. */
   tenant_id?: string | null;
 
-  /** Tipo de proceso: licitacion | contrato | obra | personalizado. */
-  process_type?: "licitacion" | "contrato" | "obra" | "personalizado";
+  /** Tipo de proceso: licitacion | contrato | obra | compra_industrial | personalizado. */
+  process_type?: "licitacion" | "contrato" | "obra" | "compra_industrial" | "personalizado";
   /** Proyecto normalizado (tabla projects). */
   project_id?: string | null;
   /** Proceso del que este es continuación. */

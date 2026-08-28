@@ -1069,6 +1069,10 @@ export type Database = {
         Args: { p_process_id: string }
         Returns: number
       }
+      seed_compra_industrial_stages: {
+        Args: { p_process_id: string }
+        Returns: number
+      }
       seed_licitacion_stages: {
         Args: { p_process_id: string }
         Returns: number
