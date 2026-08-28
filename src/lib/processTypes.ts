@@ -1,9 +1,10 @@
-export type ProcessType = "licitacion" | "contrato" | "obra" | "personalizado";
+export type ProcessType = "licitacion" | "contrato" | "obra" | "compra_industrial" | "personalizado";
 
 export const PROCESS_TYPES: ProcessType[] = [
   "obra",
   "licitacion",
   "contrato",
+  "compra_industrial",
   "personalizado",
 ];
 
@@ -11,6 +12,7 @@ export const PROCESS_TYPE_LABELS: Record<ProcessType, string> = {
   licitacion: "Licitación",
   contrato: "Administración de Contrato",
   obra: "Ejecución de Obra",
+  compra_industrial: "Compra Industrial",
   personalizado: "Personalizado",
 };
 
@@ -22,6 +24,24 @@ export const isLicitacionType = (t?: string | null): boolean => t === "licitacio
 
 /** True si el proceso usa el flujo preestablecido de Administración de Contrato (10 etapas). */
 export const isAdministracionContratoType = (t?: string | null): boolean => t === "contrato";
+
+/** True si el proceso usa el flujo preestablecido de Compra Industrial (10 etapas). */
+export const isCompraIndustrialType = (t?: string | null): boolean => t === "compra_industrial";
+
+/** Etapas preestablecidas del proceso "Compra Industrial". */
+export const COMPRA_INDUSTRIAL_STAGES = [
+  { key: "requerimiento_tecnico", label: "Definición del Requerimiento Técnico" },
+  { key: "ofertas", label: "Solicitud y Evaluación de Ofertas" },
+  { key: "adjudicacion_oc", label: "Adjudicación y Orden de Compra" },
+  { key: "ingenieria_proveedor", label: "Ingeniería y Documentación del Proveedor" },
+  { key: "fabricacion", label: "Fabricación y Seguimiento" },
+  { key: "inspeccion_fat", label: "Inspección, Calidad y FAT" },
+  { key: "despacho", label: "Preparación y Autorización de Despacho" },
+  { key: "transporte", label: "Transporte y Seguimiento Logístico" },
+  { key: "recepcion_destino", label: "Recepción e Inspección en Destino" },
+  { key: "cierre_compra", label: "Cierre Técnico, Documental y Comercial" },
+] as const;
+
 
 /** Etapas preestablecidas del proceso "Administración de Contrato". */
 export const ADMINISTRACION_CONTRATO_STAGES = [
