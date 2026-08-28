@@ -103,10 +103,6 @@ export default function MinutaActivaPage() {
   // Etapas del proceso vinculado (dependiente del proceso seleccionado)
   const { data: stages = [] } = useProcessStages(presetProcessId ?? undefined);
   const sortedStages = useMemo(() => sortStagesForPicker(stages), [stages]);
-  const stageById = useMemo(
-    () => new Map(stages.map((s) => [s.id, s] as const)),
-    [stages],
-  );
 
   // Al cambiar el proceso se limpia la etapa seleccionada
   useEffect(() => {
