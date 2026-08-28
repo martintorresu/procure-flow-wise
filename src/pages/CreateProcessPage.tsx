@@ -161,7 +161,9 @@ export default function CreateProcessPage() {
         <Card>
           <CardContent className="p-6 space-y-3">
             <p className="text-xs text-muted-foreground uppercase tracking-wide">
-              Etapas preestablecidas ({presetStages.length})
+              {isCompraIndustrial
+                ? `Flujo de compra industrial (${presetStages.length} etapas preestablecidas)`
+                : `Etapas preestablecidas (${presetStages.length})`}
             </p>
             <ol className="grid gap-1 text-sm sm:grid-cols-2">
               {presetStages.map((s, i) => (
