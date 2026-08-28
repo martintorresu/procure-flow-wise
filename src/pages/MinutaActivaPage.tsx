@@ -17,6 +17,7 @@ import { useTenantUsers, useMyProfile } from "@/hooks/useTenantUsers";
 import { useOnlineStatus } from "@/hooks/useOfflineSync";
 import { useMinutaConfig } from "@/hooks/useMinutaConfig";
 import { useCreateMinutaSession } from "@/hooks/useMinutaSession";
+import { useProcessStages, sortStagesForPicker } from "@/hooks/useProcessStages";
 import { useAuth } from "@/contexts/AuthContext";
 import { QualityGauge } from "@/components/minuta/QualityGauge";
 import { QualityChecklist } from "@/components/minuta/QualityChecklist";
@@ -37,6 +38,8 @@ type Phase = "dashboard" | "setup" | "capture" | "review";
 interface DraftRow extends ParsedCommitment {
   userId: string | null;
   pdcId: string | null;
+  stageId: string | null;
+  activityRef: string | null;
   included: boolean;
 }
 
@@ -72,6 +75,7 @@ export default function MinutaActivaPage() {
   const [meetingTitle, setMeetingTitle] = useState("");
   const [meetingDate, setMeetingDate] = useState(todayISO);
   const [presetPdcId, setPresetPdcId] = useState<string | null>(null);
+  const [presetStageId, setPresetStageId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<MinutaParticipant[]>([]);
 
   // El creador se agrega automáticamente como participante
@@ -95,6 +99,26 @@ export default function MinutaActivaPage() {
           ],
     );
   }, [myProfile]);
+
+  // Etapas del proceso vinculado (dependiente del proceso seleccionado)
+  const { data: stages = [] } = useProcessStages(presetPdcId ?? undefined);
+  const sortedStages = useMemo(() => sortStagesForPicker(stages), [stages]);
+  const stageById = useMemo(
+    () => new Map(stages.map((s) => [s.id, s] as const)),
+    [stages],
+  );
+
+  // Al cambiar el proceso se limpia la etapa seleccionada
+  useEffect(() => {
+    setPresetStageId(null);
+  }, [presetPdcId]);
+
+  // Preselección automática si hay exactamente una etapa en curso
+  useEffect(() => {
+    if (presetStageId) return;
+    const active = stages.filter((s) => s.status === "in_progress");
+    if (active.length === 1) setPresetStageId(active[0].id);
+  }, [stages, presetStageId]);
 
   // Fase 2
   const [elapsed, setElapsed] = useState(0);
@@ -128,11 +152,15 @@ export default function MinutaActivaPage() {
   }, [voice.transcript, manualText]);
 
   const setupValid =
-    meetingTitle.trim().length >= 3 && !!meetingDate && !!presetPdcId && participants.length > 0;
+    meetingTitle.trim().length >= 3 &&
+    !!meetingDate &&
+    !!presetPdcId &&
+    !!presetStageId &&
+    participants.length > 0;
 
   const startCapture = async () => {
     if (!setupValid) {
-      toast.error("Completa título, fecha, proceso y al menos un participante");
+      toast.error("Completa título, fecha, proceso, etapa y al menos un participante");
       return;
     }
     setPhase("capture");
@@ -156,6 +184,8 @@ export default function MinutaActivaPage() {
         ...p,
         userId: u?.id ?? null,
         pdcId: proc?.id ?? presetPdcId,
+        stageId: presetStageId,
+        activityRef: null,
         included: true,
       };
     });
@@ -191,7 +221,18 @@ export default function MinutaActivaPage() {
   const addManualDraft = () =>
     setDraft((prev) => [
       ...prev,
-      { text: "", responsible: "", dueDate: null, priority: null, pdcReference: "", userId: null, pdcId: presetPdcId, included: true },
+      {
+        text: "",
+        responsible: "",
+        dueDate: null,
+        priority: null,
+        pdcReference: "",
+        userId: null,
+        pdcId: presetPdcId,
+        stageId: presetStageId,
+        activityRef: null,
+        included: true,
+      },
     ]);
 
   /* ------------------- Estándar de Minuta: calidad ------------------- */
@@ -205,6 +246,7 @@ export default function MinutaActivaPage() {
       calculateQualityScore(
         {
           hasProject: !!presetPdcId || includedDrafts.some((d) => !!d.pdcId),
+          hasStage: !!presetStageId,
           hasMeetingDate: !!meetingDate,
           participantCount: participants.length,
           commitments: includedDrafts.map((d) => ({
@@ -215,7 +257,7 @@ export default function MinutaActivaPage() {
         },
         maxDeliveryDays,
       ),
-    [includedDrafts, presetPdcId, meetingDate, participants.length, maxDeliveryDays],
+    [includedDrafts, presetPdcId, presetStageId, meetingDate, participants.length, maxDeliveryDays],
   );
 
   const qualityOk = quality.score >= qualityThreshold;
@@ -224,7 +266,7 @@ export default function MinutaActivaPage() {
   const blankQuality = useMemo(
     () =>
       calculateQualityScore(
-        { hasProject: false, hasMeetingDate: false, participantCount: 0, commitments: [] },
+        { hasProject: false, hasStage: false, hasMeetingDate: false, participantCount: 0, commitments: [] },
         maxDeliveryDays,
       ),
     [maxDeliveryDays],
@@ -240,12 +282,18 @@ export default function MinutaActivaPage() {
       toast.error(`La calidad mínima requerida es ${qualityThreshold}%.`);
       return;
     }
+    if (selected.some((d) => !d.stageId)) {
+      toast.error("Cada compromiso debe tener una etapa asignada.");
+      return;
+    }
 
     const basePayload: NewCommitment[] = selected.map((d) => ({
       commitment_text: d.text.trim(),
       responsible_user_id: d.userId,
       responsible_name: d.userId ? ((users.find((u) => u.id === d.userId)?.full_name ?? d.responsible) || null) : (d.responsible || null),
       pdc_id: d.pdcId,
+      stage_id: d.stageId,
+      activity_ref: d.activityRef,
       due_date: d.dueDate,
       priority: d.priority,
       meeting_title: meetingTitle.trim(),
@@ -270,6 +318,7 @@ export default function MinutaActivaPage() {
           title: meetingTitle.trim(),
           meetingDate: meetingDate || todayISO,
           pdcId: presetPdcId,
+          processStageId: presetStageId,
           qualityScore: quality.score,
           participants: participants.map((p) => ({
             userId: p.userId,
@@ -316,6 +365,7 @@ export default function MinutaActivaPage() {
     setElapsed(0);
     setStartedAt(null);
     setPresetPdcId(null);
+    setPresetStageId(null);
     setParticipants((prev) => prev.filter((p) => p.locked));
   };
 
@@ -432,6 +482,32 @@ export default function MinutaActivaPage() {
               </Select>
             </div>
 
+            <div className="space-y-2">
+              <Label>
+                Etapa principal de la reunión <span className="text-danger">*</span>
+              </Label>
+              <Select
+                value={presetStageId ?? "none"}
+                onValueChange={(v) => setPresetStageId(v === "none" ? null : v)}
+                disabled={!presetPdcId}
+              >
+                <SelectTrigger className={!presetStageId ? "border-danger/50" : undefined}>
+                  <SelectValue placeholder={presetPdcId ? "Selecciona una etapa" : "Selecciona primero un proceso"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Selecciona una etapa</SelectItem>
+                  {sortedStages.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.status === "in_progress" ? "🔵 " : ""}{s.sort_order}. {s.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {presetPdcId && sortedStages.length === 0 && (
+                <p className="text-xs text-muted-foreground">Este proceso aún no tiene etapas definidas.</p>
+              )}
+            </div>
+
             <ParticipantsPicker value={participants} onChange={setParticipants} />
 
             {!voice.isSupported && (
@@ -444,7 +520,7 @@ export default function MinutaActivaPage() {
             </Button>
             {!setupValid && (
               <p className="text-xs text-muted-foreground text-center">
-                Completa título (mín. 3 caracteres), fecha, proceso y al menos un participante.
+                Completa título (mín. 3 caracteres), fecha, proceso, etapa principal y al menos un participante.
               </p>
             )}
             <Button variant="ghost" size="sm" className="w-full" onClick={() => setPhase("dashboard")}>
@@ -673,6 +749,43 @@ export default function MinutaActivaPage() {
                     <SelectItem value="none">Sin proceso</SelectItem>
                     {processes.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Etapa <span className="text-danger">*</span></Label>
+                <Select
+                  value={d.stageId ?? "none"}
+                  onValueChange={(v) => updateDraft(i, { stageId: v === "none" ? null : v, activityRef: null })}
+                >
+                  <SelectTrigger className={!d.stageId ? "border-danger/50 bg-danger/5" : undefined}>
+                    <SelectValue placeholder="Sin etapa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin etapa</SelectItem>
+                    {sortedStages.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.status === "in_progress" ? "🔵 " : ""}{s.sort_order}. {s.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Actividad (opcional)</Label>
+                <Select
+                  value={d.activityRef ?? "none"}
+                  onValueChange={(v) => updateDraft(i, { activityRef: v === "none" ? null : v })}
+                  disabled={!d.stageId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Sin actividad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sin actividad</SelectItem>
+                    {(d.stageId ? stageById.get(d.stageId)?.activities.tasks ?? [] : []).map((t) => (
+                      <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
