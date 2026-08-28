@@ -44,11 +44,13 @@ export default function ProfilePage() {
         rut: rut.trim() || null,
         whatsapp_notifications_enabled: waEnabled,
       });
+      await updatePosition.mutateAsync({ id: user!.id, default_position_id: positionId });
       toast.success("Perfil actualizado");
     } catch (e) {
       toast.error((e as Error).message);
     }
   };
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
