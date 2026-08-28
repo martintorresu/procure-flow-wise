@@ -6,24 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Paperclip, Trash2 } from "lucide-react";
 import {
   useCreatePermit,
   useUpdatePermit,
   usePermitTypes,
-  usePermitDocuments,
-  useAddPermitDocument,
-  useDeletePermitDocument,
   type Permit,
 } from "@/hooks/usePermits";
+import { PermitDocumentsSection } from "@/components/permits/PermitDocumentsSection";
 import { useProjects } from "@/hooks/useProjects";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
 import { useProcessOptions } from "@/hooks/useCommitments";
 import {
   PERMIT_STATUSES,
   PERMIT_STATUS_LABELS,
-  PERMIT_DOCUMENT_TYPES,
-  PERMIT_DOCUMENT_TYPE_LABELS,
   addDaysIso,
   type PermitStatus,
 } from "@/lib/permits";
