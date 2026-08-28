@@ -3,7 +3,7 @@ import type { StepperStep } from "@/components/ProcessStepper";
 interface ProcessStepperZoomProps {
   steps: StepperStep[];
   activeIndex: number;
-  /** Avance calculado desde purchase_milestones; si es null no se muestra el bloque. */
+  /** Avance opcional; si es null no se muestra el bloque. */
   progress?: { real: number; scheduled: number } | null;
 }
 

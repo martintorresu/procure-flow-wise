@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, ShieldCheck, Link2, Check, X } from "lucide-react";
+import { FileText, AlertTriangle, Clock, TrendingUp, ArrowRight, Bell, Link2, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -61,7 +61,6 @@ export default function DashboardPage() {
   const delayedPdcs = pdcs.filter((p) => getTrafficLight(p) === "red");
   const criticalPdcs = pdcs.filter((p) => p.criticality === "high");
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
-  const isManagerOrAdmin = user?.role === "gerente" || user?.role === "admin";
 
   const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
   const [statusFilter, setStatusFilter] = useState<PdcStatus | "all">("all");
