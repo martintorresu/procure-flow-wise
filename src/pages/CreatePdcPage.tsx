@@ -13,7 +13,7 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { PURCHASE_STEPS } from "@/lib/processStages";
 import { SEO } from "@/components/SEO";
-import { GENERIC_STAGES, LICITACION_STAGES, OBRA_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isLicitacionType, isObraType, isPurchaseType, type ProcessType } from "@/lib/processTypes";
+import { ADMINISTRACION_CONTRATO_STAGES, GENERIC_STAGES, LICITACION_STAGES, OBRA_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isAdministracionContratoType, isLicitacionType, isObraType, isPurchaseType, type ProcessType } from "@/lib/processTypes";
 import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock, Building2, Layers, PaintRoller, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
@@ -39,6 +39,13 @@ const LICITACION_STEPS = LICITACION_STAGES.map((s, i) => ({
   key: s.key,
   label: s.label,
   icon: LICITACION_ICONS[i],
+}));
+
+const CONTRATO_ICONS = [FileText, Truck, ClipboardList, Wrench, Award, Layers, FileSearch, FlaskConical, Award, Check];
+const CONTRATO_STEPS = ADMINISTRACION_CONTRATO_STAGES.map((s, i) => ({
+  key: s.key,
+  label: s.label,
+  icon: CONTRATO_ICONS[i],
 }));
 
 
@@ -88,6 +95,7 @@ export default function CreatePdcPage() {
   const isPurchase = isPurchaseType(form.process_type);
   const isObra = isObraType(form.process_type);
   const isLicitacion = isLicitacionType(form.process_type);
+  const isContrato = isAdministracionContratoType(form.process_type);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -128,9 +136,9 @@ export default function CreatePdcPage() {
       });
 
       // Los procesos de obra reciben las 10 etapas preestablecidas
-      if (isObra || isLicitacion) {
+      if (isObra || isLicitacion || isContrato) {
         const { error: stagesError } = await supabase.rpc(
-          isObra ? "seed_obra_stages" : "seed_licitacion_stages",
+          isObra ? "seed_obra_stages" : isLicitacion ? "seed_licitacion_stages" : "seed_administracion_contrato_stages",
           { p_process_id: data.id },
         );
         if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
@@ -190,11 +198,13 @@ export default function CreatePdcPage() {
               ? "Flujo de ejecución de obra (10 etapas preestablecidas)"
               : isLicitacion
                 ? "Flujo de licitación (10 etapas preestablecidas)"
+                : isContrato
+                ? "Flujo de administración de contrato (10 etapas preestablecidas)"
                 : isPurchase
                 ? "Flujo de compra (8 etapas)"
                 : "Flujo genérico (4 etapas)"}
           </p>
-          <ProcessStepper steps={isObra ? OBRA_STEPS : isLicitacion ? LICITACION_STEPS : isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
+          <ProcessStepper steps={isObra ? OBRA_STEPS : isLicitacion ? LICITACION_STEPS : isContrato ? CONTRATO_STEPS : isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
 
         </CardContent>
       </Card>

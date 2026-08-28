@@ -12,7 +12,7 @@ export const PROCESS_TYPES: ProcessType[] = [
 export const PROCESS_TYPE_LABELS: Record<ProcessType, string> = {
   compra: "Compra",
   licitacion: "Licitación",
-  contrato: "Contrato",
+  contrato: "Administración de Contrato",
   permiso: "Permiso",
   obra: "Ejecución de Obra",
   personalizado: "Personalizado",
@@ -25,6 +25,23 @@ export const isObraType = (t?: string | null): boolean => t === "obra";
 
 /** True si el proceso usa el flujo preestablecido de Licitación (10 etapas). */
 export const isLicitacionType = (t?: string | null): boolean => t === "licitacion";
+
+/** True si el proceso usa el flujo preestablecido de Administración de Contrato (10 etapas). */
+export const isAdministracionContratoType = (t?: string | null): boolean => t === "contrato";
+
+/** Etapas preestablecidas del proceso "Administración de Contrato". */
+export const ADMINISTRACION_CONTRATO_STAGES = [
+  { key: "formalizacion", label: "Formalización y Habilitación del Contrato" },
+  { key: "inicio", label: "Inicio y Puesta en Marcha" },
+  { key: "linea_base", label: "Planificación y Línea Base Contractual" },
+  { key: "seguimiento_ejecucion", label: "Seguimiento de Ejecución y Avance" },
+  { key: "estados_pago", label: "Medición, Estados de Pago y Facturación" },
+  { key: "cambios", label: "Gestión de Cambios y Modificaciones" },
+  { key: "incumplimientos", label: "Gestión de Incumplimientos, Riesgos y Controversias" },
+  { key: "recepcion_servicio", label: "Recepción de la Obra o Servicio" },
+  { key: "cierre_administrativo", label: "Cierre Administrativo y Financiero" },
+  { key: "cierre_contractual", label: "Cierre Contractual y Garantías" },
+] as const;
 
 /** Etapas preestablecidas del proceso "Licitación" (con hito principal). */
 export const LICITACION_STAGES = [

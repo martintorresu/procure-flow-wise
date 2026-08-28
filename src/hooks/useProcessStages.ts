@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export type StageStatus = "not_started" | "in_progress" | "blocked" | "completed";
@@ -85,5 +86,25 @@ export function sortStagesForPicker(stages: ProcessStage[]): ProcessStage[] {
     const ai = a.status === "in_progress" ? 0 : 1;
     const bi = b.status === "in_progress" ? 0 : 1;
     return ai !== bi ? ai - bi : a.sort_order - b.sort_order;
+  });
+}
+
+/** Cambia el estado de una etapa. Permite múltiples etapas en curso simultáneamente. */
+export function useUpdateStageStatus(processId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ stageId, status }: { stageId: string; status: StageStatus }) => {
+      const { error } = await supabase
+        .from("process_stages")
+        .update({ status })
+        .eq("id", stageId);
+      if (error) throw new Error(error.message);
+      return { stageId, status };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["process-stages", processId ?? ""] });
+      toast.success("Estado de la etapa actualizado");
+    },
+    onError: (e: Error) => toast.error(`No se pudo actualizar la etapa: ${e.message}`),
   });
 }

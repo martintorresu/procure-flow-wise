@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CalendarDays, Flag, ListChecks, ExternalLink, Layers } from "lucide-react";
-import { useProcessStages, STAGE_STATUS_META, type ProcessStage } from "@/hooks/useProcessStages";
+import { useProcessStages, useUpdateStageStatus, STAGE_STATUS_META, type ProcessStage, type StageStatus } from "@/hooks/useProcessStages";
 import { useStageCommitments, type StageCommitment } from "@/hooks/useStageCommitments";
 import { dueMeta, statusMeta } from "@/lib/commitments";
 import { formatDate } from "@/lib/stageLabels";
@@ -94,7 +94,36 @@ function StageCommitmentsBlock({ commitments }: { commitments: StageCommitment[]
   );
 }
 
-function StageItem({ stage, commitments }: { stage: ProcessStage; commitments: StageCommitment[] }) {
+const STAGE_STATUSES: StageStatus[] = ["not_started", "in_progress", "blocked", "completed"];
+
+function StageStatusSelect({ stage, processId }: { stage: ProcessStage; processId: string }) {
+  const update = useUpdateStageStatus(processId);
+  return (
+    <Select
+      value={stage.status}
+      disabled={update.isPending}
+      onValueChange={(v) => {
+        if (v !== stage.status) update.mutate({ stageId: stage.id, status: v as StageStatus });
+      }}
+    >
+      <SelectTrigger className="h-8 w-[170px]" aria-label={`Estado de la etapa ${stage.name}`}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {STAGE_STATUSES.map((s) => (
+          <SelectItem key={s} value={s}>
+            <span className="flex items-center gap-2">
+              <span className={`h-2 w-2 rounded-full ${STAGE_STATUS_META[s].dot}`} aria-hidden />
+              {STAGE_STATUS_META[s].label}
+            </span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function StageItem({ stage, processId, commitments }: { stage: ProcessStage; processId: string; commitments: StageCommitment[] }) {
   const meta = STAGE_STATUS_META[stage.status];
   return (
     <AccordionItem value={stage.id} className="rounded-lg border border-border px-3">
@@ -110,6 +139,10 @@ function StageItem({ stage, commitments }: { stage: ProcessStage; commitments: S
         </div>
       </AccordionTrigger>
       <AccordionContent className="space-y-4 pb-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase text-muted-foreground">Estado</span>
+          <StageStatusSelect stage={stage} processId={processId} />
+        </div>
         {stage.description && <p className="text-sm text-muted-foreground">{stage.description}</p>}
         <div className="grid gap-4 md:grid-cols-2">
           <div>
@@ -206,7 +239,7 @@ export function ProcessStages({ processId }: { processId: string }) {
         {!isLoading && stages.length > 0 && (
           <Accordion type="multiple" className="space-y-2">
             {stages.map((s) => (
-              <StageItem key={s.id} stage={s} commitments={byStage.get(s.id) ?? []} />
+              <StageItem key={s.id} stage={s} processId={processId} commitments={byStage.get(s.id) ?? []} />
             ))}
           </Accordion>
         )}
