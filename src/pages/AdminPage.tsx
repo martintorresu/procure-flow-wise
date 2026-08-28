@@ -22,7 +22,7 @@ import { ContingenciesSection } from "@/components/admin/ContingenciesSection";
 import { MinutaConfigSection } from "@/components/admin/MinutaConfigSection";
 
 import { isValidE164 } from "@/hooks/useTenantUsers";
-import type { UserRole } from "@/types/pdc";
+import type { UserRole } from "@/types/process";
 import { formatStageLabel } from "@/lib/stageLabels";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { USER_LIMIT_MESSAGE } from "@/lib/plans";

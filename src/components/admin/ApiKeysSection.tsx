@@ -22,14 +22,14 @@ const SAMPLE_PAYLOAD = `{
       "responsible": "Juan Pérez (jefe de obra)",
       "due_date": "2026-08-25",
       "priority": "alta",
-      "pdc_reference": "PC-2024-0045"
+      "process_reference": "PC-2024-0045"
     },
     {
       "text": "Enviar certificado de calidad del hormigón del lote 12",
       "responsible": "María Soto",
       "due_date": "2026-08-27",
       "priority": "media",
-      "pdc_reference": "CT-2024-0012"
+      "process_reference": "CT-2024-0012"
     }
   ]
 }`;

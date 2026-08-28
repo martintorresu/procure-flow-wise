@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
     const [{ data: alert }, { data: profile }, { data: contact }, { data: config }] = await Promise.all([
       alertId
         ? admin.from("alerts")
-            .select("id, tenant_id, pdc_id, type, message, due_date")
+            .select("id, tenant_id, process_id, type, message, due_date")
             .eq("id", alertId).eq("tenant_id", tenantId).maybeSingle()
         : Promise.resolve({ data: null }),
       admin.from("profiles")
@@ -110,13 +110,13 @@ Deno.serve(async (req) => {
     // tiene relación (o dirigidas a sí mismo). Evita usar el envío como canal abierto.
     if (caller && !callerIsAdmin && alert) {
       let related = caller.id === userId;
-      if (!related && alert.pdc_id) {
+      if (!related && alert.process_id) {
         const [{ data: proc }, { data: participant }] = await Promise.all([
-          admin.from("purchase_processes")
+          admin.from("processes")
             .select("id, created_by")
-            .eq("id", alert.pdc_id).eq("tenant_id", tenantId).maybeSingle(),
+            .eq("id", alert.process_id).eq("tenant_id", tenantId).maybeSingle(),
           admin.from("process_participants")
-            .select("id").eq("process_id", alert.pdc_id).eq("user_id", caller.id).maybeSingle(),
+            .select("id").eq("process_id", alert.process_id).eq("user_id", caller.id).maybeSingle(),
         ]);
         related = !!participant || proc?.created_by === caller.id;
       }
@@ -140,17 +140,17 @@ Deno.serve(async (req) => {
     if (!accessToken || !phoneNumberId) return json({ error: "Configuración de WhatsApp incompleta" }, 400);
 
 
-    let pdcName = "Proceso";
+    let processName = "Proceso";
     let currentStage = "Sin etapa";
     let actionType = "Prueba de configuración";
     let requiredAction = "Mensaje de verificación desde Pro.Curem. No requiere acción.";
 
     if (alert) {
-      if (alert.pdc_id) {
-        const { data: pdc } = await admin
-          .from("purchase_processes").select("pdc_number, name").eq("id", alert.pdc_id).maybeSingle();
-        if (pdc) {
-          pdcName = `${pdc.pdc_number} · ${pdc.name}`;
+      if (alert.process_id) {
+        const { data: process } = await admin
+          .from("processes").select("process_number, name").eq("id", alert.process_id).maybeSingle();
+        if (process) {
+          processName = `${process.process_number} · ${process.name}`;
         }
       }
       actionType = ACTION_LABELS[alert.type] ?? alert.type;
@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
         ? alert.message.trim()
         : `${actionType} (vence: ${dueDate})`;
     } else {
-      pdcName = "Proceso de prueba";
+      processName = "Proceso de prueba";
       currentStage = "—";
     }
 
@@ -180,7 +180,7 @@ Deno.serve(async (req) => {
             type: "body",
             parameters: [
               { type: "text", text: actionType },      // {{1}} tipo de alerta
-              { type: "text", text: pdcName },         // {{2}} nombre del proceso
+              { type: "text", text: processName },         // {{2}} nombre del proceso
               { type: "text", text: currentStage },    // {{3}} etapa actual
               { type: "text", text: requiredAction },  // {{4}} acción requerida
             ],
@@ -248,7 +248,7 @@ Deno.serve(async (req) => {
       test: isTest,
       message_id: metaMessageId,
       phone: maskedPhone,
-      link: alert?.pdc_id ? `${APP_BASE_URL}/pdc/${alert.pdc_id}` : null,
+      link: alert?.process_id ? `${APP_BASE_URL}/process/${alert.process_id}` : null,
     });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Error desconocido" }, 500);

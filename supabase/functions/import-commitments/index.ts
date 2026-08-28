@@ -40,7 +40,7 @@ function parseDate(v: unknown): string | null {
 }
 
 interface ProfileRow { id: string; full_name: string | null; email: string }
-interface ProcRow { id: string; pdc_number: string; name: string }
+interface ProcRow { id: string; process_number: string; name: string }
 
 /** Matching fuzzy simple por nombre / email. */
 function matchUser(responsible: string, profiles: ProfileRow[]): ProfileRow | null {
@@ -72,10 +72,10 @@ function matchUser(responsible: string, profiles: ProfileRow[]): ProfileRow | nu
 function matchProcess(reference: string, procs: ProcRow[]): ProcRow | null {
   const target = norm(reference).replace(/\s/g, "");
   if (!target) return null;
-  const byNumber = procs.find((p) => norm(p.pdc_number).replace(/\s/g, "") === target);
+  const byNumber = procs.find((p) => norm(p.process_number).replace(/\s/g, "") === target);
   if (byNumber) return byNumber;
   const partial = procs.filter(
-    (p) => norm(p.pdc_number).replace(/\s/g, "").includes(target) || target.includes(norm(p.pdc_number).replace(/\s/g, "")),
+    (p) => norm(p.process_number).replace(/\s/g, "").includes(target) || target.includes(norm(p.process_number).replace(/\s/g, "")),
   );
   if (partial.length === 1) return partial[0];
   const byName = procs.filter((p) => norm(p.name).includes(norm(reference)));
@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
 
     const [{ data: profiles }, { data: procs }] = await Promise.all([
       admin.from("profiles").select("id, full_name, email").eq("tenant_id", tenantId),
-      admin.from("purchase_processes").select("id, pdc_number, name").eq("tenant_id", tenantId),
+      admin.from("processes").select("id, process_number, name").eq("tenant_id", tenantId),
     ]);
 
     const profileList = (profiles ?? []) as ProfileRow[];
@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     const rows: Record<string, unknown>[] = [];
     const unmatched: { text: string; reasons: string[] }[] = [];
     let matchedUsers = 0;
-    let matchedPdcs = 0;
+    let matchedProcesses = 0;
 
     for (const raw of commitments) {
       const text = typeof raw?.text === "string" ? raw.text.trim() : "";
@@ -147,17 +147,17 @@ Deno.serve(async (req) => {
       if (responsible && !user) reasons.push(`Responsable "${responsible}" sin usuario coincidente`);
       if (user) matchedUsers++;
 
-      const ref = typeof raw?.pdc_reference === "string" ? raw.pdc_reference.trim() : "";
+      const ref = typeof raw?.process_reference === "string" ? raw.process_reference.trim() : "";
       const proc = ref ? matchProcess(ref, procList) : null;
       if (ref && !proc) reasons.push(`Proceso "${ref}" no encontrado`);
-      if (proc) matchedPdcs++;
+      if (proc) matchedProcesses++;
 
       const priorityRaw = typeof raw?.priority === "string" ? norm(raw.priority) : "";
       const priority = PRIORITIES.has(priorityRaw) ? priorityRaw : null;
 
       rows.push({
         tenant_id: tenantId,
-        pdc_id: proc?.id ?? null,
+        process_id: proc?.id ?? null,
         source: "api",
         meeting_date: meetingDate,
         meeting_title: meetingTitle,
@@ -173,12 +173,12 @@ Deno.serve(async (req) => {
       if (reasons.length) unmatched.push({ text, reasons });
     }
 
-    if (!rows.length) return json({ imported: 0, matched_users: 0, matched_pdcs: 0, unmatched }, 200);
+    if (!rows.length) return json({ imported: 0, matched_users: 0, matched_processes: 0, unmatched }, 200);
 
     const { data: inserted, error: insErr } = await admin
       .from("process_commitments")
       .insert(rows)
-      .select("id, pdc_id, responsible_user_id, commitment_text, due_date");
+      .select("id, process_id, responsible_user_id, commitment_text, due_date");
     if (insErr) return json({ error: insErr.message }, 400);
 
     await admin.from("api_keys").update({ last_used_at: new Date().toISOString() }).eq("id", keyRow.id);
@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
         .from("alerts")
         .insert({
           tenant_id: tenantId,
-          pdc_id: r.pdc_id,
+          process_id: r.process_id,
           type: "commitment",
           severity: "medium",
           message: `Nuevo compromiso: ${String(r.commitment_text).slice(0, 180)}`,
@@ -243,7 +243,7 @@ Deno.serve(async (req) => {
     return json({
       imported: inserted?.length ?? 0,
       matched_users: matchedUsers,
-      matched_pdcs: matchedPdcs,
+      matched_processes: matchedProcesses,
       unmatched,
     });
   } catch (e) {

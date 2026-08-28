@@ -5,7 +5,7 @@ import type { CommitmentPriority, CommitmentStatus } from "@/lib/commitments";
 export interface Commitment {
   id: string;
   tenant_id: string;
-  pdc_id: string | null;
+  process_id: string | null;
   source: string;
   meeting_date: string | null;
   meeting_title: string | null;
@@ -22,13 +22,13 @@ export interface Commitment {
 }
 
 const SELECT =
-  "id, tenant_id, pdc_id, source, meeting_date, meeting_title, commitment_text, responsible_user_id, responsible_name, due_date, priority, status, notes, created_at";
+  "id, tenant_id, process_id, source, meeting_date, meeting_title, commitment_text, responsible_user_id, responsible_name, due_date, priority, status, notes, created_at";
 
 const PLACEHOLDER_TENANT = "00000000-0000-0000-0000-000000000000";
 
 export const commitmentKeys = {
   all: ["commitments"] as const,
-  byPdc: (pdcId: string) => ["commitments", "pdc", pdcId] as const,
+  byProcess: (processId: string) => ["commitments", "process", processId] as const,
 };
 
 /** Todos los compromisos del tenant (RLS filtra). */
@@ -47,15 +47,15 @@ export function useCommitments() {
 }
 
 /** Compromisos vinculados a un proceso. */
-export function usePdcCommitments(pdcId: string | undefined) {
+export function useProcessCommitments(processId: string | undefined) {
   return useQuery({
-    queryKey: commitmentKeys.byPdc(pdcId ?? ""),
-    enabled: !!pdcId,
+    queryKey: commitmentKeys.byProcess(processId ?? ""),
+    enabled: !!processId,
     queryFn: async (): Promise<Commitment[]> => {
       const { data, error } = await supabase
         .from("process_commitments")
         .select(SELECT)
-        .eq("pdc_id", pdcId!)
+        .eq("process_id", processId!)
         .order("created_at", { ascending: false });
       if (error) throw new Error(error.message);
       return (data ?? []) as unknown as Commitment[];
@@ -67,7 +67,7 @@ export interface NewCommitment {
   commitment_text: string;
   responsible_user_id: string | null;
   responsible_name: string | null;
-  pdc_id: string | null;
+  process_id: string | null;
   due_date: string | null;
   priority: CommitmentPriority | null;
   meeting_title: string | null;
@@ -99,7 +99,7 @@ export function useImportCommitments() {
       const { data, error } = await supabase
         .from("process_commitments")
         .insert(rows as never)
-        .select("id, tenant_id, pdc_id, responsible_user_id, commitment_text, due_date");
+        .select("id, tenant_id, process_id, responsible_user_id, commitment_text, due_date");
       if (error) throw new Error(error.message);
 
       // Alertas in-app + WhatsApp (best effort, no bloquea)
@@ -111,7 +111,7 @@ export function useImportCommitments() {
             .insert(
               withUser.map((r) => ({
                 tenant_id: r.tenant_id,
-                pdc_id: r.pdc_id,
+                process_id: r.process_id,
                 type: "commitment",
                 severity: "medium",
                 message: `Nuevo compromiso: ${r.commitment_text.slice(0, 180)}`,
@@ -168,7 +168,7 @@ export function useDeleteCommitment() {
   });
 }
 
-export interface ProcessOption { id: string; pdc_number: string; name: string }
+export interface ProcessOption { id: string; process_number: string; name: string }
 
 /** Lista liviana de procesos del tenant para vincular compromisos. */
 export function useProcessOptions() {
@@ -176,9 +176,9 @@ export function useProcessOptions() {
     queryKey: ["process-options"],
     queryFn: async (): Promise<ProcessOption[]> => {
       const { data, error } = await supabase
-        .from("purchase_processes")
-        .select("id, pdc_number, name")
-        .order("pdc_number", { ascending: false });
+        .from("processes")
+        .select("id, process_number, name")
+        .order("process_number", { ascending: false });
       if (error) throw new Error(error.message);
       return (data ?? []) as ProcessOption[];
     },

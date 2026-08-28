@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { rowToPdc, type PdcRow } from "@/hooks/usePdcs";
-import type { Pdc } from "@/types/pdc";
+import { rowToProcess, type ProcessRow } from "@/hooks/useProcesses";
+import type { Process } from "@/types/process";
 
 export interface Project {
   id: string;
@@ -64,14 +64,14 @@ export function useProjectProcesses(projectId: string | undefined) {
   return useQuery({
     queryKey: ["projects", projectId, "processes"],
     enabled: !!projectId,
-    queryFn: async (): Promise<Pdc[]> => {
+    queryFn: async (): Promise<Process[]> => {
       const { data, error } = await supabase
-        .from("purchase_processes")
+        .from("processes")
         .select("*")
         .eq("project_id", projectId!)
         .order("created_at", { ascending: true });
       if (error) throw new Error(error.message);
-      return (data as unknown as PdcRow[]).map(rowToPdc);
+      return (data as unknown as ProcessRow[]).map(rowToProcess);
     },
   });
 }

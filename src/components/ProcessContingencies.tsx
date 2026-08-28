@@ -47,8 +47,8 @@ export function ProcessContingencies({ processId, canManage }: Props) {
               <CardTitle className="flex flex-wrap items-center gap-2 text-sm">
                 <GitBranch className="w-4 h-4" />
                 {isParent ? "Contingencia derivada" : "Contingencia de"}
-                <Link className="hover:underline" to={`/pdcs/${isParent ? c.child_process_id : c.parent_process_id}`}>
-                  {other?.pdc_number} · {other?.name}
+                <Link className="hover:underline" to={`/procesos/${isParent ? c.child_process_id : c.parent_process_id}`}>
+                  {other?.process_number} · {other?.name}
                 </Link>
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${CONTINGENCY_MODE_BADGE[c.execution_mode]}`}>
                   {CONTINGENCY_MODE_EMOJI[c.execution_mode]} {CONTINGENCY_MODE_LABELS[c.execution_mode]}

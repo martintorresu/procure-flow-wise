@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { usePdcs } from "@/hooks/usePdcs";
+import { useProcesses } from "@/hooks/useProcesses";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -26,13 +26,13 @@ const TYPE_INITIALS: Record<ProcessType, string> = {
   personalizado: "Ps",
 };
 
-export default function PdcListPage() {
+export default function ProcessListPage() {
   const navigate = useNavigate();
   const subscription = useTenantSubscription();
 
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
-  const { data: pdcs = [], isLoading: loading } = usePdcs();
+  const { data: processes = [], isLoading: loading } = useProcesses();
   const { data: summaries = {} } = useProcessStageSummaries();
   const { data: contingencies = [] } = useAllContingencies();
   const parallelParents = new Set(
@@ -41,12 +41,12 @@ export default function PdcListPage() {
       .map((c) => c.parent_process_id),
   );
 
-  const filtered = pdcs.filter((pdc) => {
-    if (typeFilter !== "all" && (pdc.process_type ?? "compra") !== typeFilter) return false;
+  const filtered = processes.filter((process) => {
+    if (typeFilter !== "all" && (process.process_type ?? "compra") !== typeFilter) return false;
     if (
       search &&
-      !pdc.title.toLowerCase().includes(search.toLowerCase()) &&
-      !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())
+      !process.title.toLowerCase().includes(search.toLowerCase()) &&
+      !process.process_number.toLowerCase().includes(search.toLowerCase())
     )
       return false;
     return true;
@@ -54,7 +54,7 @@ export default function PdcListPage() {
 
   return (
     <div className="space-y-6">
-      <SEO title="Procesos" description="Listado de procesos con su avance por etapas." path="/pdcs" />
+      <SEO title="Procesos" description="Listado de procesos con su avance por etapas." path="/procesos" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Procesos</h1>
@@ -80,7 +80,7 @@ export default function PdcListPage() {
               </Tooltip>
             </TooltipProvider>
           ) : (
-            <Link to="/pdcs/new">
+            <Link to="/procesos/new">
               <Button><Plus className="w-4 h-4 mr-2" />Crear Proceso</Button>
             </Link>
           )}
@@ -129,17 +129,17 @@ export default function PdcListPage() {
                 <p className="text-xs">Crea tu primer proceso con el botón "Crear Proceso".</p>
               </div>
             )}
-            {!loading && filtered.map((pdc) => {
-              const isChained = Boolean(pdc.predecessor_process_id || pdcs.some((o) => o.predecessor_process_id === pdc.id));
-              const type = (pdc.process_type as ProcessType) ?? "compra";
+            {!loading && filtered.map((process) => {
+              const isChained = Boolean(process.predecessor_process_id || processes.some((o) => o.predecessor_process_id === process.id));
+              const type = (process.process_type as ProcessType) ?? "compra";
               const typeLabel = PROCESS_TYPE_LABELS[type];
-              const summary = summaries[pdc.id];
+              const summary = summaries[process.id];
               return (
                 <div
-                  key={pdc.id}
+                  key={process.id}
                   role="listitem"
                   tabIndex={0}
-                  onClick={() => navigate(`/pdcs/${pdc.id}`)}
+                  onClick={() => navigate(`/procesos/${process.id}`)}
                   className="flex items-center gap-4 border-b last:border-0 border-border/60 hover:bg-muted/50 hover:cursor-pointer transition-colors p-4"
                 >
                   <TooltipProvider>
@@ -158,8 +158,8 @@ export default function PdcListPage() {
 
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-mono text-xs text-muted-foreground shrink-0">{pdc.pdc_number}</span>
-                      <span className="text-foreground font-semibold text-sm truncate">{pdc.title}</span>
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">{process.process_number}</span>
+                      <span className="text-foreground font-semibold text-sm truncate">{process.title}</span>
                       {isChained && (
                         <TooltipProvider>
                           <Tooltip>
@@ -172,17 +172,17 @@ export default function PdcListPage() {
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {pdc.project_name} · {pdc.current_owner}
+                      {process.project_name} · {process.current_owner}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <StageProgressBadge summary={summary} />
                       <InProgressStagesText summary={summary} />
-                      {pdc.paused_by_contingency && (
+                      {process.paused_by_contingency && (
                         <Badge variant="outline" className="border-amber-500/50 text-amber-700 dark:text-amber-300">
                           ⏸️ Pausado por contingencia
                         </Badge>
                       )}
-                      {parallelParents.has(pdc.id) && (
+                      {parallelParents.has(process.id) && (
                         <Badge variant="outline" className="border-blue-500/50 text-blue-700 dark:text-blue-300">
                           🔀 Contingencia en paralelo
                         </Badge>

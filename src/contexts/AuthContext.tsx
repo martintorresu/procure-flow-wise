@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import type { User, UserRole } from "@/types/pdc";
+import type { User, UserRole } from "@/types/process";
 
 interface LoginResult {
   ok: boolean;
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const tenant = resolveTenant(window.location.pathname, window.location.hostname);
     const nextParam = new URLSearchParams(window.location.search).get("next");
     // Allowlist de destinos internos: evita open redirect vía ?next=
-    const ALLOWED_PATHS = ["/dashboard", "/t/", "/pdcs", "/commitments", "/admin"];
+    const ALLOWED_PATHS = ["/dashboard", "/t/", "/procesos", "/commitments", "/admin"];
     const isValidNext =
       !!nextParam && /^\/(?!\/)/.test(nextParam) && ALLOWED_PATHS.some((p) => nextParam.startsWith(p));
     const safeNext = isValidNext ? nextParam! : "/";

@@ -37,7 +37,7 @@ type Phase = "dashboard" | "setup" | "capture" | "review";
 
 interface DraftRow extends ParsedCommitment {
   userId: string | null;
-  pdcId: string | null;
+  processId: string | null;
   stageId: string | null;
   activityRef: string | null;
   included: boolean;
@@ -74,7 +74,7 @@ export default function MinutaActivaPage() {
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [meetingTitle, setMeetingTitle] = useState("");
   const [meetingDate, setMeetingDate] = useState(todayISO);
-  const [presetPdcId, setPresetPdcId] = useState<string | null>(null);
+  const [presetProcessId, setPresetProcessId] = useState<string | null>(null);
   const [presetStageId, setPresetStageId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<MinutaParticipant[]>([]);
 
@@ -101,7 +101,7 @@ export default function MinutaActivaPage() {
   }, [myProfile]);
 
   // Etapas del proceso vinculado (dependiente del proceso seleccionado)
-  const { data: stages = [] } = useProcessStages(presetPdcId ?? undefined);
+  const { data: stages = [] } = useProcessStages(presetProcessId ?? undefined);
   const sortedStages = useMemo(() => sortStagesForPicker(stages), [stages]);
   const stageById = useMemo(
     () => new Map(stages.map((s) => [s.id, s] as const)),
@@ -111,7 +111,7 @@ export default function MinutaActivaPage() {
   // Al cambiar el proceso se limpia la etapa seleccionada
   useEffect(() => {
     setPresetStageId(null);
-  }, [presetPdcId]);
+  }, [presetProcessId]);
 
   // Preselección automática si hay exactamente una etapa en curso
   useEffect(() => {
@@ -154,7 +154,7 @@ export default function MinutaActivaPage() {
   const setupValid =
     meetingTitle.trim().length >= 3 &&
     !!meetingDate &&
-    !!presetPdcId &&
+    !!presetProcessId &&
     !!presetStageId &&
     participants.length > 0;
 
@@ -179,11 +179,11 @@ export default function MinutaActivaPage() {
     }
     return parsed.map((p): DraftRow => {
       const u = p.responsible ? matchUser(p.responsible, users) : null;
-      const proc = p.pdcReference ? matchProcess(p.pdcReference, processes) : null;
+      const proc = p.processReference ? matchProcess(p.processReference, processes) : null;
       return {
         ...p,
         userId: u?.id ?? null,
-        pdcId: proc?.id ?? presetPdcId,
+        processId: proc?.id ?? presetProcessId,
         stageId: presetStageId,
         activityRef: null,
         included: true,
@@ -226,9 +226,9 @@ export default function MinutaActivaPage() {
         responsible: "",
         dueDate: null,
         priority: null,
-        pdcReference: "",
+        processReference: "",
         userId: null,
-        pdcId: presetPdcId,
+        processId: presetProcessId,
         stageId: presetStageId,
         activityRef: null,
         included: true,
@@ -245,7 +245,7 @@ export default function MinutaActivaPage() {
     () =>
       calculateQualityScore(
         {
-          hasProject: !!presetPdcId || includedDrafts.some((d) => !!d.pdcId),
+          hasProject: !!presetProcessId || includedDrafts.some((d) => !!d.processId),
           hasStage: !!presetStageId,
           hasMeetingDate: !!meetingDate,
           participantCount: participants.length,
@@ -257,7 +257,7 @@ export default function MinutaActivaPage() {
         },
         maxDeliveryDays,
       ),
-    [includedDrafts, presetPdcId, presetStageId, meetingDate, participants.length, maxDeliveryDays],
+    [includedDrafts, presetProcessId, presetStageId, meetingDate, participants.length, maxDeliveryDays],
   );
 
   const qualityOk = quality.score >= qualityThreshold;
@@ -291,7 +291,7 @@ export default function MinutaActivaPage() {
       commitment_text: d.text.trim(),
       responsible_user_id: d.userId,
       responsible_name: d.userId ? ((users.find((u) => u.id === d.userId)?.full_name ?? d.responsible) || null) : (d.responsible || null),
-      pdc_id: d.pdcId,
+      process_id: d.processId,
       stage_id: d.stageId,
       activity_ref: d.activityRef,
       due_date: d.dueDate,
@@ -317,7 +317,7 @@ export default function MinutaActivaPage() {
         sessionId = await createSession.mutateAsync({
           title: meetingTitle.trim(),
           meetingDate: meetingDate || todayISO,
-          pdcId: presetPdcId,
+          processId: presetProcessId,
           processStageId: presetStageId,
           qualityScore: quality.score,
           participants: participants.map((p) => ({
@@ -364,7 +364,7 @@ export default function MinutaActivaPage() {
     setManualText("");
     setElapsed(0);
     setStartedAt(null);
-    setPresetPdcId(null);
+    setPresetProcessId(null);
     setPresetStageId(null);
     setParticipants((prev) => prev.filter((p) => p.locked));
   };
@@ -469,14 +469,14 @@ export default function MinutaActivaPage() {
               <Label>
                 Proceso vinculado <span className="text-danger">*</span>
               </Label>
-              <Select value={presetPdcId ?? "none"} onValueChange={(v) => setPresetPdcId(v === "none" ? null : v)}>
-                <SelectTrigger className={!presetPdcId ? "border-danger/50" : undefined}>
+              <Select value={presetProcessId ?? "none"} onValueChange={(v) => setPresetProcessId(v === "none" ? null : v)}>
+                <SelectTrigger className={!presetProcessId ? "border-danger/50" : undefined}>
                   <SelectValue placeholder="Vincular todos los compromisos a un proceso" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Selecciona un proceso</SelectItem>
                   {processes.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                    <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -489,10 +489,10 @@ export default function MinutaActivaPage() {
               <Select
                 value={presetStageId ?? "none"}
                 onValueChange={(v) => setPresetStageId(v === "none" ? null : v)}
-                disabled={!presetPdcId}
+                disabled={!presetProcessId}
               >
                 <SelectTrigger className={!presetStageId ? "border-danger/50" : undefined}>
-                  <SelectValue placeholder={presetPdcId ? "Selecciona una etapa" : "Selecciona primero un proceso"} />
+                  <SelectValue placeholder={presetProcessId ? "Selecciona una etapa" : "Selecciona primero un proceso"} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">Selecciona una etapa</SelectItem>
@@ -503,7 +503,7 @@ export default function MinutaActivaPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {presetPdcId && sortedStages.length === 0 && (
+              {presetProcessId && sortedStages.length === 0 && (
                 <p className="text-xs text-muted-foreground">Este proceso aún no tiene etapas definidas.</p>
               )}
             </div>
@@ -740,15 +740,15 @@ export default function MinutaActivaPage() {
                 )}
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Proceso{d.pdcReference && !d.pdcId ? ` (detectado: ${d.pdcReference})` : ""}</Label>
-                <Select value={d.pdcId ?? "none"} onValueChange={(v) => updateDraft(i, { pdcId: v === "none" ? null : v })}>
+                <Label className="text-xs">Proceso{d.processReference && !d.processId ? ` (detectado: ${d.processReference})` : ""}</Label>
+                <Select value={d.processId ?? "none"} onValueChange={(v) => updateDraft(i, { processId: v === "none" ? null : v })}>
                   <SelectTrigger>
                     <SelectValue placeholder="Sin proceso" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Sin proceso</SelectItem>
                     {processes.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                      <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

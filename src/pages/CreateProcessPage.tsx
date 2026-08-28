@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCreatePdc, usePdc } from "@/hooks/usePdcs";
+import { useCreateProcess, useProcess } from "@/hooks/useProcesses";
 import { ProjectSelect } from "@/components/ProjectSelect";
 import { SEO } from "@/components/SEO";
 import {
@@ -27,16 +27,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
 
-export default function CreatePdcPage() {
+export default function CreateProcessPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const subscription = useTenantSubscription();
 
   const [params] = useSearchParams();
   const fromId = params.get("from") ?? undefined;
-  const { data: parent } = usePdc(fromId);
-  const createPdc = useCreatePdc();
-  const submitting = createPdc.isPending;
+  const { data: parent } = useProcess(fromId);
+  const createProcess = useCreateProcess();
+  const submitting = createProcess.isPending;
 
   const [form, setForm] = useState({
     process_type: "compra" as ProcessType,
@@ -52,7 +52,7 @@ export default function CreatePdcPage() {
     setForm((p) => ({
       ...p,
       project_id: parent.project_id ?? null,
-      description: `Continuación de ${parent.pdc_number} — ${parent.title}.`,
+      description: `Continuación de ${parent.process_number} — ${parent.title}.`,
       responsible_name: parent.current_owner && parent.current_owner !== "—" ? parent.current_owner : "",
     }));
   }, [parent]);
@@ -87,7 +87,7 @@ export default function CreatePdcPage() {
     }
 
     try {
-      const data = await createPdc.mutateAsync({
+      const data = await createProcess.mutateAsync({
         name: form.title,
         project_id: form.project_id,
         process_type: form.process_type,
@@ -105,8 +105,8 @@ export default function CreatePdcPage() {
         );
         if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
       }
-      toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
-      navigate(`/pdcs/${data.id}`);
+      toast.success(`Proceso ${data.process_number} creado exitosamente`);
+      navigate(`/procesos/${data.id}`);
     } catch (err) {
       toast.error(`Error al crear el proceso: ${(err as Error).message}`);
     }
@@ -114,7 +114,7 @@ export default function CreatePdcPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <SEO title="Nuevo Proceso" description="Crea un nuevo proceso indicando tipo, proyecto y responsable." path="/pdcs/new" />
+      <SEO title="Nuevo Proceso" description="Crea un nuevo proceso indicando tipo, proyecto y responsable." path="/procesos/new" />
       <div>
         <h1 className="text-2xl font-bold">Crear Proceso</h1>
         <p className="text-sm text-muted-foreground">Complete los datos del nuevo proceso</p>
@@ -139,7 +139,7 @@ export default function CreatePdcPage() {
           <CardContent className="p-4 flex items-center gap-2 text-sm">
             <Link2 className="w-4 h-4 text-accent" />
             <span>
-              Continuación de <span className="font-mono">{parent.pdc_number}</span> — {parent.title}
+              Continuación de <span className="font-mono">{parent.process_number}</span> — {parent.title}
             </span>
           </CardContent>
         </Card>
@@ -204,7 +204,7 @@ export default function CreatePdcPage() {
               <Button type="submit" disabled={submitting || subscription.isAtProcessLimit}>
                 {submitting ? "Creando…" : "Crear Proceso"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => navigate("/pdcs")}>Cancelar</Button>
+              <Button type="button" variant="outline" onClick={() => navigate("/procesos")}>Cancelar</Button>
             </div>
           </form>
         </CardContent>

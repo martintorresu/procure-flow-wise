@@ -10,14 +10,14 @@ import { StageProgressBadge } from "@/components/StageProgress";
 import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
 import { useProject, useProjectProcesses } from "@/hooks/useProjects";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
-import type { Pdc } from "@/types/pdc";
+import type { Process } from "@/types/process";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 /** Ordena los procesos siguiendo predecessor → continuación; los huérfanos al final. */
-function buildChains(processes: Pdc[]): Pdc[][] {
+function buildChains(processes: Process[]): Process[][] {
   const byId = new Map(processes.map((p) => [p.id, p]));
-  const children = new Map<string, Pdc[]>();
-  const roots: Pdc[] = [];
+  const children = new Map<string, Process[]>();
+  const roots: Process[] = [];
   for (const p of processes) {
     const parentId = p.predecessor_process_id;
     if (parentId && byId.has(parentId)) {
@@ -28,8 +28,8 @@ function buildChains(processes: Pdc[]): Pdc[][] {
       roots.push(p);
     }
   }
-  const chains: Pdc[][] = [];
-  const walk = (node: Pdc, acc: Pdc[]) => {
+  const chains: Process[][] = [];
+  const walk = (node: Process, acc: Process[]) => {
     acc.push(node);
     const kids = children.get(node.id) ?? [];
     if (kids.length === 0) {
@@ -95,13 +95,13 @@ export default function ProjectChainPage() {
                         <Badge variant="outline" className="text-xs">
                           {PROCESS_TYPE_LABELS[(p.process_type ?? "compra") as ProcessType]}
                         </Badge>
-                        <span className="font-mono text-xs">{p.pdc_number}</span>
+                        <span className="font-mono text-xs">{p.process_number}</span>
                         <span className="font-medium flex-1 min-w-[160px] truncate">{p.title}</span>
                         <StageProgressBadge summary={summaries[p.id]} />
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <User className="w-3 h-3" /> {p.current_owner}
                         </span>
-                        <Link to={`/pdcs/${p.id}`}>
+                        <Link to={`/procesos/${p.id}`}>
                           <Button variant="outline" size="sm">Ver ficha</Button>
                         </Link>
                       </CardContent>

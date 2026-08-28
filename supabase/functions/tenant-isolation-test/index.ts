@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
   const cleanup: Array<() => Promise<void>> = [];
   const results: TestResult[] = [];
-  let acmePdcId: string | null = null;
+  let acmeProcessId: string | null = null;
 
   try {
     // 1. Crear usuarios con tenant_slug en metadata
@@ -109,22 +109,22 @@ Deno.serve(async (req) => {
     // 3. Insertar como acme en cada tabla y testear lectura como codelco
     const insertedIds: Record<string, string> = {};
 
-    // purchase_processes
+    // processes
     {
-      const { data, error } = await acmeClient.from("purchase_processes").insert({
-        name: "[ISO-TEST] Acme PdC",
+      const { data, error } = await acmeClient.from("processes").insert({
+        name: "[ISO-TEST] Acme Proceso",
         created_by: acmeUser.user.id,
         tenant_id: tenantAcme!.id,
       } as never).select("id, tenant_id").single();
       if (error || !data) {
-        results.push({ table: "purchase_processes", acme_inserted: 0, codelco_can_read: 0, isolated: false, note: "INSERT acme falló: " + error?.message });
+        results.push({ table: "processes", acme_inserted: 0, codelco_can_read: 0, isolated: false, note: "INSERT acme falló: " + error?.message });
       } else {
-        acmePdcId = data.id;
-        insertedIds.purchase_processes = data.id;
-        cleanup.push(async () => { await admin.from("purchase_processes").delete().eq("id", data.id); });
-        const { data: read } = await codelcoClient.from("purchase_processes").select("id").eq("id", data.id);
+        acmeProcessId = data.id;
+        insertedIds.processes = data.id;
+        cleanup.push(async () => { await admin.from("processes").delete().eq("id", data.id); });
+        const { data: read } = await codelcoClient.from("processes").select("id").eq("id", data.id);
         results.push({
-          table: "purchase_processes", acme_inserted: 1,
+          table: "processes", acme_inserted: 1,
           codelco_can_read: read?.length ?? 0,
           isolated: (read?.length ?? 0) === 0,
           note: `tenant_id asignado=${data.tenant_id === tenantAcme?.id ? "acme ✅" : "INCORRECTO ❌ " + data.tenant_id}`,
@@ -132,12 +132,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (!acmePdcId) {
-      // Sin PdC no podemos testear las tablas hijas
+    if (!acmeProcessId) {
+      // Sin Proceso no podemos testear las tablas hijas
       return json(200, {
         sanity: sanityChecks,
         results,
-        summary: "Test abortado: no se pudo crear PdC base como acme",
+        summary: "Test abortado: no se pudo crear Proceso base como acme",
       });
     }
 
@@ -166,19 +166,19 @@ Deno.serve(async (req) => {
     };
 
     await testChildTable("process_stages", {
-      process_id: acmePdcId, name: "Etapa iso test", sort_order: 1, activities: {},
+      process_id: acmeProcessId, name: "Etapa iso test", sort_order: 1, activities: {},
     });
     await testChildTable("process_documents", {
-      process_id: acmePdcId, file_name: "iso.pdf", file_type: "pdf", file_size: 1,
+      process_id: acmeProcessId, file_name: "iso.pdf", file_type: "pdf", file_size: 1,
       file_path: "iso/iso.pdf", category: "otros",
     });
     await testChildTable("alerts", {
-      pdc_id: acmePdcId, type: "test", severity: "low", message: "iso test alert",
+      process_id: acmeProcessId, type: "test", severity: "low", message: "iso test alert",
     });
 
-    // Test extra: codelco lista TODOS los purchase_processes — no debe ver el de acme
-    const { data: codelcoList } = await codelcoClient.from("purchase_processes").select("id");
-    const codelcoSeesAcme = codelcoList?.some(r => r.id === acmePdcId) ?? false;
+    // Test extra: codelco lista TODOS los processes — no debe ver el de acme
+    const { data: codelcoList } = await codelcoClient.from("processes").select("id");
+    const codelcoSeesAcme = codelcoList?.some(r => r.id === acmeProcessId) ?? false;
 
     const allIsolated = results.every(r => r.isolated);
 
@@ -186,8 +186,8 @@ Deno.serve(async (req) => {
       sanity: sanityChecks,
       results,
       list_test: {
-        codelco_total_visible_pdcs: codelcoList?.length ?? 0,
-        codelco_can_see_acme_pdc_in_list: codelcoSeesAcme,
+        codelco_total_visible_processes: codelcoList?.length ?? 0,
+        codelco_can_see_acme_process_in_list: codelcoSeesAcme,
       },
       summary: allIsolated && !codelcoSeesAcme
         ? "✅ AISLAMIENTO CROSS-TENANT VERIFICADO en todas las tablas"

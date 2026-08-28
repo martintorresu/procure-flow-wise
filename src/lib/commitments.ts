@@ -57,21 +57,21 @@ export function parsePriority(value?: string | null): CommitmentPriority | null 
   return PRIORITY_WORDS[norm(value)] ?? null;
 }
 
-const PDC_REF = /\b((?:pdc|pc|ct|lt|pm)[-\s]?\d{4}[-\s]?\d{2,6})\b/i;
+const PROCESS_REF = /\b((?:process|pc|ct|lt|pm)[-\s]?\d{4}[-\s]?\d{2,6})\b/i;
 
 export interface ParsedCommitment {
   text: string;
   responsible: string;
   dueDate: string | null;
   priority: CommitmentPriority | null;
-  pdcReference: string;
+  processReference: string;
 }
 
 /**
  * Parsea el textarea manual. Formato flexible, uno por línea:
- *   - [Responsable] Compromiso | Fecha límite | Prioridad | PDC relacionado
+ *   - [Responsable] Compromiso | Fecha límite | Prioridad | PROCESS relacionado
  * Tolera viñetas/numeración, "Responsable:" en vez de corchetes, separadores
- * `|`, `;` o ` - `, y orden libre de fecha/prioridad/PDC.
+ * `|`, `;` o ` - `, y orden libre de fecha/prioridad/PROCESS.
  */
 export function parseCommitmentsText(input: string): ParsedCommitment[] {
   const out: ParsedCommitment[] = [];
@@ -102,35 +102,35 @@ export function parseCommitmentsText(input: string): ParsedCommitment[] {
     let text = parts[0];
     let dueDate: string | null = null;
     let priority: CommitmentPriority | null = null;
-    let pdcReference = "";
+    let processReference = "";
 
     for (const part of parts.slice(1)) {
       const d = parseFlexibleDate(part);
       if (d && !dueDate) { dueDate = d; continue; }
       const p = parsePriority(part);
       if (p && !priority) { priority = p; continue; }
-      const ref = part.match(PDC_REF);
-      if (ref && !pdcReference) { pdcReference = ref[1].trim(); continue; }
-      if (!pdcReference && /^[A-Za-z]{2,4}[-\s]?\d/.test(part)) { pdcReference = part; continue; }
+      const ref = part.match(PROCESS_REF);
+      if (ref && !processReference) { processReference = ref[1].trim(); continue; }
+      if (!processReference && /^[A-Za-z]{2,4}[-\s]?\d/.test(part)) { processReference = part; continue; }
       text += ` — ${part}`;
     }
 
-    if (!pdcReference) {
-      const inline = text.match(PDC_REF);
-      if (inline) pdcReference = inline[1].trim();
+    if (!processReference) {
+      const inline = text.match(PROCESS_REF);
+      if (inline) processReference = inline[1].trim();
     }
     if (!responsible) {
       const inlineResp = text.match(/\(([^)]{3,40})\)\s*$/);
       if (inlineResp) responsible = inlineResp[1].trim();
     }
 
-    out.push({ text: text.trim(), responsible, dueDate, priority, pdcReference });
+    out.push({ text: text.trim(), responsible, dueDate, priority, processReference });
   }
   return out;
 }
 
 export interface MatchableUser { id: string; full_name: string | null; email: string }
-export interface MatchableProcess { id: string; pdc_number: string; title?: string; name?: string }
+export interface MatchableProcess { id: string; process_number: string; title?: string; name?: string }
 
 /** Matching fuzzy de responsable contra usuarios del tenant. */
 export function matchUser<T extends MatchableUser>(responsible: string, users: T[]): T | null {
@@ -159,10 +159,10 @@ export function matchProcess<T extends MatchableProcess>(reference: string, proc
   const flat = (s: string) => norm(s).replace(/\s/g, "");
   const target = flat(reference);
   if (!target) return null;
-  const exact = procs.find((p) => flat(p.pdc_number) === target);
+  const exact = procs.find((p) => flat(p.process_number) === target);
   if (exact) return exact;
   const partial = procs.filter(
-    (p) => flat(p.pdc_number).includes(target) || target.includes(flat(p.pdc_number)),
+    (p) => flat(p.process_number).includes(target) || target.includes(flat(p.process_number)),
   );
   if (partial.length === 1) return partial[0];
   const byName = procs.filter((p) => norm(p.title ?? p.name ?? "").includes(norm(reference)));
@@ -306,11 +306,11 @@ export function parseTranscriptText(input: string, today = new Date()): ParsedCo
         ? "baja"
         : null;
 
-    const refMatch = chunk.match(PDC_REF);
-    const pdcReference = refMatch ? refMatch[1].trim() : "";
+    const refMatch = chunk.match(PROCESS_REF);
+    const processReference = refMatch ? refMatch[1].trim() : "";
 
     const text = chunk.replace(/\s+/g, " ").replace(/^[,;:\s]+/, "").trim();
-    out.push({ text, responsible, dueDate, priority, pdcReference });
+    out.push({ text, responsible, dueDate, priority, processReference });
   }
   return out;
 }

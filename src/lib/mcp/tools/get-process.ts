@@ -9,19 +9,19 @@ export default defineTool({
     "Devuelve el detalle de un proceso de compra (por id o por número de proceso) junto con sus etapas y comentarios recientes.",
   inputSchema: {
     id: z.string().uuid().optional().describe("Identificador único del proceso."),
-    pdc_number: z.string().trim().min(1).optional().describe("Número del proceso, por ejemplo PC-0001."),
+    process_number: z.string().trim().min(1).optional().describe("Número del proceso, por ejemplo PC-0001."),
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ id, pdc_number }, ctx) => {
+  handler: async ({ id, process_number }, ctx) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "No autenticado" }], isError: true };
     }
-    if (!id && !pdc_number) {
-      return { content: [{ type: "text", text: "Indica id o pdc_number" }], isError: true };
+    if (!id && !process_number) {
+      return { content: [{ type: "text", text: "Indica id o process_number" }], isError: true };
     }
     const supabase = supabaseForUser(ctx);
-    let query = supabase.from("purchase_processes").select("*").limit(1);
-    query = id ? query.eq("id", id) : query.eq("pdc_number", pdc_number!);
+    let query = supabase.from("processes").select("*").limit(1);
+    query = id ? query.eq("id", id) : query.eq("process_number", process_number!);
     const { data: process, error } = await query.maybeSingle();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     if (!process) return { content: [{ type: "text", text: "Proceso no encontrado" }], isError: true };

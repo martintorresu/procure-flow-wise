@@ -9,20 +9,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePdc, useUpdatePdc } from "@/hooks/usePdcs";
+import { useProcess, useUpdateProcess } from "@/hooks/useProcesses";
 import { SEO } from "@/components/SEO";
 import { ProjectSelect } from "@/components/ProjectSelect";
 import { PROCESS_TYPES, PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 
-export default function EditPdcPage() {
+export default function EditProcessPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const updatePdc = useUpdatePdc();
-  const submitting = updatePdc.isPending;
+  const updateProcess = useUpdateProcess();
+  const submitting = updateProcess.isPending;
   const isAdmin = user?.role === "admin";
-  const { data: pdc, isLoading, isError } = usePdc(isAdmin ? id : undefined);
-  const [pdcNumber, setPdcNumber] = useState<string>("");
+  const { data: process, isLoading, isError } = useProcess(isAdmin ? id : undefined);
+  const [processNumber, setProcessNumber] = useState<string>("");
   const [form, setForm] = useState({
     project_id: null as string | null,
     process_type: "compra" as ProcessType,
@@ -36,16 +36,16 @@ export default function EditPdcPage() {
   }, [isError]);
 
   useEffect(() => {
-    if (!pdc) return;
-    setPdcNumber(pdc.pdc_number);
+    if (!process) return;
+    setProcessNumber(process.process_number);
     setForm({
-      project_id: pdc.project_id ?? null,
-      process_type: (pdc.process_type ?? "compra") as ProcessType,
-      name: pdc.title ?? "",
-      description: pdc.description ?? "",
-      responsible_name: pdc.current_owner === "—" ? "" : (pdc.current_owner ?? ""),
+      project_id: process.project_id ?? null,
+      process_type: (process.process_type ?? "compra") as ProcessType,
+      name: process.title ?? "",
+      description: process.description ?? "",
+      responsible_name: process.current_owner === "—" ? "" : (process.current_owner ?? ""),
     });
-  }, [pdc]);
+  }, [process]);
 
   if (!isAdmin) {
     return (
@@ -71,7 +71,7 @@ export default function EditPdcPage() {
       return;
     }
     try {
-      await updatePdc.mutateAsync({
+      await updateProcess.mutateAsync({
         id: id!,
         patch: {
           name: form.name,
@@ -82,7 +82,7 @@ export default function EditPdcPage() {
         },
       });
       toast.success("Proceso actualizado correctamente");
-      navigate(`/pdcs/${id}`);
+      navigate(`/procesos/${id}`);
     } catch (err) {
       toast.error(`Error al guardar: ${(err as Error).message}`);
     }
@@ -90,13 +90,13 @@ export default function EditPdcPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <SEO title={pdcNumber ? `Editar Proceso ${pdcNumber}` : "Editar Proceso"} description="Actualiza los datos generales del proceso." />
+      <SEO title={processNumber ? `Editar Proceso ${processNumber}` : "Editar Proceso"} description="Actualiza los datos generales del proceso." />
       <div className="flex items-center gap-3">
-        <Link to={`/pdcs/${id}`}>
+        <Link to={`/procesos/${id}`}>
           <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">Editar Proceso {pdcNumber}</h1>
+          <h1 className="text-2xl font-bold">Editar Proceso {processNumber}</h1>
           <p className="text-sm text-muted-foreground">Edición administrativa de un proceso ya iniciado</p>
         </div>
       </div>
@@ -144,7 +144,7 @@ export default function EditPdcPage() {
               <Button type="submit" disabled={submitting}>
                 {submitting ? "Guardando…" : "Guardar cambios"}
               </Button>
-              <Button type="button" variant="outline" onClick={() => navigate(`/pdcs/${id}`)}>Cancelar</Button>
+              <Button type="button" variant="outline" onClick={() => navigate(`/procesos/${id}`)}>Cancelar</Button>
             </div>
           </form>
         </CardContent>

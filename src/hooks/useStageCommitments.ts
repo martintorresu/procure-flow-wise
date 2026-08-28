@@ -29,7 +29,7 @@ export function useStageCommitments(processId: string | undefined) {
       const { data, error } = await supabase
         .from("process_commitments")
         .select(SELECT)
-        .eq("pdc_id", processId!)
+        .eq("process_id", processId!)
         .not("stage_id", "is", null)
         .order("meeting_date", { ascending: false });
       if (error) throw new Error(error.message);

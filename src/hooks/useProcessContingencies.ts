@@ -5,7 +5,7 @@ import type { ContingencyMode, ContingencyStatus } from "@/lib/contingencies";
 
 export interface ProcessRef {
   id: string;
-  pdc_number: string;
+  process_number: string;
   name: string;
   project_id: string | null;
 }
@@ -28,8 +28,8 @@ export interface Contingency {
 const SELECT = `
   id, tenant_id, parent_process_id, child_process_id, execution_mode, reason,
   status, created_by, created_at, completed_at,
-  parent:purchase_processes!process_contingencies_parent_process_id_fkey(id, pdc_number, name, project_id),
-  child:purchase_processes!process_contingencies_child_process_id_fkey(id, pdc_number, name, project_id)
+  parent:processes!process_contingencies_parent_process_id_fkey(id, process_number, name, project_id),
+  child:processes!process_contingencies_child_process_id_fkey(id, process_number, name, project_id)
 `;
 
 /** Contingencias donde el proceso participa como padre o como hijo. */
@@ -75,7 +75,7 @@ export function useActiveContingencies(): UseQueryResult<Contingency[], Error> {
 
 function invalidate(qc: ReturnType<typeof useQueryClient>) {
   qc.invalidateQueries({ queryKey: ["contingencies"] });
-  qc.invalidateQueries({ queryKey: ["pdcs"] });
+  qc.invalidateQueries({ queryKey: ["processes"] });
   qc.invalidateQueries({ queryKey: queryKeys.alerts() });
 }
 

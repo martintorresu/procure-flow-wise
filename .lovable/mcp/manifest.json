@@ -68,7 +68,7 @@
               "format": "uuid",
               "description": "Identificador único del proceso."
             },
-            "pdc_number": {
+            "process_number": {
               "type": "string",
               "minLength": 1,
               "description": "Número del proceso, por ejemplo PC-0001."

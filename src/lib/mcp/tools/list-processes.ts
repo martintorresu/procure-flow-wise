@@ -19,9 +19,9 @@ export default defineTool({
     }
     const supabase = supabaseForUser(ctx);
     let query = supabase
-      .from("purchase_processes")
+      .from("processes")
       .select(
-        "id, pdc_number, name, process_type, project_id, responsible_name, created_at, updated_at",
+        "id, process_number, name, process_type, project_id, responsible_name, created_at, updated_at",
       )
       .order("updated_at", { ascending: false })
       .limit(limit ?? 20);
@@ -29,7 +29,7 @@ export default defineTool({
     if (process_type) query = query.eq("process_type", process_type);
     // Sanitiza metacaracteres de PostgREST para evitar inyección de filtros.
     const safeSearch = search?.replace(/[.,()]/g, "");
-    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,pdc_number.ilike.%${safeSearch}%`);
+    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,process_number.ilike.%${safeSearch}%`);
 
     const { data, error } = await query;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };

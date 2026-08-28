@@ -5,11 +5,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { FolderKanban, ArrowRight } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { useProjects } from "@/hooks/useProjects";
-import { usePdcs } from "@/hooks/usePdcs";
+import { useProcesses } from "@/hooks/useProcesses";
 
 export default function ProjectsPage() {
   const { data: projects = [], isLoading } = useProjects();
-  const { data: pdcs = [] } = usePdcs();
+  const { data: processes = [] } = useProcesses();
 
   return (
     <div className="space-y-6">
@@ -38,7 +38,7 @@ export default function ProjectsPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {projects.map((p) => {
-          const count = pdcs.filter((x) => x.project_id === p.id).length;
+          const count = processes.filter((x) => x.project_id === p.id).length;
           return (
             <Link key={p.id} to={`/projects/${p.id}`}>
               <Card className="h-full transition-colors hover:bg-muted/40 hover:border-primary/40">

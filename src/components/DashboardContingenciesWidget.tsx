@@ -60,7 +60,7 @@ export function DashboardContingenciesWidget() {
                   <span className="text-xs text-muted-foreground">{timeAgo(c.created_at)}</span>
                 </div>
               </div>
-              <Link to={`/pdcs/${c.child_process_id}`}>
+              <Link to={`/procesos/${c.child_process_id}`}>
                 <Button variant="outline" size="sm">Ver</Button>
               </Link>
             </li>

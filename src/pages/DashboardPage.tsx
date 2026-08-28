@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAlerts } from "@/hooks/useAlerts";
-import { usePdcs } from "@/hooks/usePdcs";
+import { useProcesses } from "@/hooks/useProcesses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
@@ -37,32 +37,32 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const qc = useQueryClient();
-  const { data: pdcs = [], isLoading: pdcsLoading } = usePdcs();
+  const { data: processes = [], isLoading: processesLoading } = useProcesses();
   const { data: summaries = {} } = useProcessStageSummaries();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
   const subscription = useTenantSubscription();
 
   useEffect(() => {
-    qc.prefetchQuery({ queryKey: queryKeys.pdcs() });
+    qc.prefetchQuery({ queryKey: queryKeys.processes() });
   }, [qc]);
 
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
   const stagesInProgress = Object.values(summaries).reduce((acc, s) => acc + s.inProgress.length, 0);
-  const finishedProcesses = pdcs.filter((p) => {
+  const finishedProcesses = processes.filter((p) => {
     const s = summaries[p.id];
     return s && s.total > 0 && s.completed === s.total;
   }).length;
 
   const [typeFilter, setTypeFilter] = useState<ProcessType | "all">("all");
 
-  const filteredPdcs = pdcs.filter(
+  const filteredProcesses = processes.filter(
     (p) => typeFilter === "all" || (p.process_type ?? "compra") === typeFilter,
   );
 
   const stats = [
-    { label: "Procesos", value: pdcs.length, icon: FileText, color: "text-accent", to: "/pdcs" },
-    { label: "Etapas en curso", value: stagesInProgress, icon: Layers, color: "text-primary", to: "/pdcs" },
-    { label: "Procesos completados", value: finishedProcesses, icon: CheckCircle2, color: "text-success", to: "/pdcs" },
+    { label: "Procesos", value: processes.length, icon: FileText, color: "text-accent", to: "/procesos" },
+    { label: "Etapas en curso", value: stagesInProgress, icon: Layers, color: "text-primary", to: "/procesos" },
+    { label: "Procesos completados", value: finishedProcesses, icon: CheckCircle2, color: "text-success", to: "/procesos" },
     { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-warning", to: "/alerts" },
   ];
 
@@ -83,8 +83,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Hero: procesos por tipo */}
-      {!pdcsLoading && <DashboardFlowHero pdcs={pdcs} summaries={summaries} />}
-      {pdcsLoading && <Skeleton className="h-64 w-full rounded-xl" />}
+      {!processesLoading && <DashboardFlowHero processes={processes} summaries={summaries} />}
+      {processesLoading && <Skeleton className="h-64 w-full rounded-xl" />}
 
       {/* KPIs compactos */}
       <Card>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="w-4 h-4" /> Procesos
           </CardTitle>
-          <Link to="/pdcs">
+          <Link to="/procesos">
             <Button variant="ghost" size="sm" className="text-accent">
               Ver todos <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
@@ -145,7 +145,7 @@ export default function DashboardPage() {
 
           {/* List */}
           <div role="list" aria-label="Procesos" className="flex flex-col gap-2 mt-3">
-            {pdcsLoading && [0,1,2].map((i) => (
+            {processesLoading && [0,1,2].map((i) => (
               <div key={i} className="flex items-center gap-4 rounded-lg shadow-sm border bg-card p-4">
                 <Skeleton className="w-12 h-12 rounded-full shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -154,16 +154,16 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
-            {!pdcsLoading && filteredPdcs.map((pdc) => {
-              const isChained = Boolean(pdc.predecessor_process_id || pdcs.some((o) => o.predecessor_process_id === pdc.id));
-              const type = (pdc.process_type as ProcessType) ?? "compra";
-              const summary = summaries[pdc.id];
+            {!processesLoading && filteredProcesses.map((process) => {
+              const isChained = Boolean(process.predecessor_process_id || processes.some((o) => o.predecessor_process_id === process.id));
+              const type = (process.process_type as ProcessType) ?? "compra";
+              const summary = summaries[process.id];
               return (
                 <div
-                  key={pdc.id}
+                  key={process.id}
                   role="listitem"
                   tabIndex={0}
-                  onClick={() => navigate(`/pdcs/${pdc.id}`)}
+                  onClick={() => navigate(`/procesos/${process.id}`)}
                   className="flex items-start gap-4 rounded-xl border bg-card hover:bg-muted/50 hover:cursor-pointer transition-colors p-4"
                 >
                   <TooltipProvider>
@@ -181,8 +181,8 @@ export default function DashboardPage() {
                   </TooltipProvider>
                   <div className="flex-1 min-w-0 space-y-1.5">
                     <div className="flex items-center gap-1.5 min-w-0">
-                      <span className="font-mono text-xs text-muted-foreground shrink-0">{pdc.pdc_number}</span>
-                      <span className="text-foreground font-semibold text-sm truncate">{pdc.title}</span>
+                      <span className="font-mono text-xs text-muted-foreground shrink-0">{process.process_number}</span>
+                      <span className="text-foreground font-semibold text-sm truncate">{process.title}</span>
                       {isChained && (
                         <TooltipProvider>
                           <Tooltip>
@@ -194,7 +194,7 @@ export default function DashboardPage() {
                         </TooltipProvider>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">{pdc.project_name}</div>
+                    <div className="text-xs text-muted-foreground truncate">{process.project_name}</div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <StageProgressBadge summary={summary} />
                       <InProgressStagesText summary={summary} />
@@ -203,7 +203,7 @@ export default function DashboardPage() {
                 </div>
               );
             })}
-            {!pdcsLoading && filteredPdcs.length === 0 && (
+            {!processesLoading && filteredProcesses.length === 0 && (
               <div className="py-8 text-center rounded-lg border bg-card">
                 <div className="flex flex-col items-center gap-1 text-muted-foreground">
                   <FileText className="w-6 h-6 opacity-40" />
@@ -238,7 +238,7 @@ export default function DashboardPage() {
               </div>
             )}
             {!alertsLoading && unresolvedAlerts.slice(0, 3).map((alert) => {
-              const pdc = pdcs.find((p) => p.id === alert.pdc_id);
+              const process = processes.find((p) => p.id === alert.process_id);
               const severityColors = {
                 low: "border-l-success", medium: "border-l-warning",
                 high: "border-l-danger", critical: "border-l-danger",
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                   <div className="flex justify-between items-start">
                     <div>
                       <p className="text-sm font-medium">{humanizeTechnicalText(alert.message)}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{pdc?.pdc_number ?? "—"} {pdc?.title ? `— ${pdc.title}` : ""}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{process?.process_number ?? "—"} {process?.title ? `— ${process.title}` : ""}</p>
                     </div>
                     <span className="text-xs text-muted-foreground">{alert.created_at?.slice(0, 10)}</span>
                   </div>

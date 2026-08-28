@@ -2,37 +2,37 @@ import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Link2 } from "lucide-react";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
-import type { Pdc } from "@/types/pdc";
+import type { Process } from "@/types/process";
 import type { StageSummaryMap } from "@/hooks/useProcessStageSummaries";
 
 interface Props {
-  pdcs: Pdc[];
+  processes: Process[];
   summaries: StageSummaryMap;
 }
 
 /** Distribución de procesos activos por tipo, con su avance de etapas. */
-export function DashboardFlowHero({ pdcs, summaries }: Props) {
+export function DashboardFlowHero({ processes, summaries }: Props) {
   const chainedIds = useMemo(() => {
     const set = new Set<string>();
-    for (const p of pdcs) {
+    for (const p of processes) {
       if (p.predecessor_process_id) {
         set.add(p.id);
         set.add(p.predecessor_process_id);
       }
     }
     return set;
-  }, [pdcs]);
+  }, [processes]);
 
   const byType = useMemo(() => {
-    const map = new Map<ProcessType, Pdc[]>();
-    for (const p of pdcs) {
+    const map = new Map<ProcessType, Process[]>();
+    for (const p of processes) {
       const t = (p.process_type ?? "compra") as ProcessType;
       map.set(t, [...(map.get(t) ?? []), p]);
     }
     return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
-  }, [pdcs]);
+  }, [processes]);
 
-  const avgPercent = (list: Pdc[]) => {
+  const avgPercent = (list: Process[]) => {
     const withStages = list.filter((p) => (summaries[p.id]?.total ?? 0) > 0);
     if (withStages.length === 0) return 0;
     return Math.round(
@@ -52,7 +52,7 @@ export function DashboardFlowHero({ pdcs, summaries }: Props) {
 
       <header className="relative mb-6">
         <h2 className="text-base font-semibold">Procesos activos por tipo</h2>
-        <p className="text-xs text-white/70">{pdcs.length} procesos en curso</p>
+        <p className="text-xs text-white/70">{processes.length} procesos en curso</p>
       </header>
 
       {byType.length === 0 ? (
@@ -75,11 +75,11 @@ export function DashboardFlowHero({ pdcs, summaries }: Props) {
                   {list.slice(0, 8).map((p) => (
                     <Link
                       key={p.id}
-                      to={`/pdcs/${p.id}`}
-                      title={`${p.pdc_number} — ${p.title}`}
+                      to={`/procesos/${p.id}`}
+                      title={`${p.process_number} — ${p.title}`}
                       className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 font-mono text-[10px] transition-colors hover:bg-white/30"
                     >
-                      {p.pdc_number}
+                      {p.process_number}
                       {chainedIds.has(p.id) && <Link2 className="h-2.5 w-2.5" aria-hidden />}
                     </Link>
                   ))}

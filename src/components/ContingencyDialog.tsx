@@ -13,16 +13,16 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCreateContingency } from "@/hooks/useProcessContingencies";
 import { CONTINGENCY_MODE_DESCRIPTIONS, CONTINGENCY_MODE_LABELS, type ContingencyMode } from "@/lib/contingencies";
-import type { Pdc } from "@/types/pdc";
+import type { Process } from "@/types/process";
 
 /** Diálogo para bifurcar un proceso por contingencia (crea el sub-proceso hijo). */
-export function ContingencyDialog({ pdc, createdBy }: { pdc: Pdc; createdBy: string }) {
+export function ContingencyDialog({ process, createdBy }: { process: Process; createdBy: string }) {
   const navigate = useNavigate();
   const create = useCreateContingency();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [mode, setMode] = useState<ContingencyMode>("pause_and_attend");
-  const [title, setTitle] = useState(`Contingencia: ${pdc.title}`);
+  const [title, setTitle] = useState(`Contingencia: ${process.title}`);
 
   const submit = () => {
     if (!reason.trim()) {
@@ -31,10 +31,10 @@ export function ContingencyDialog({ pdc, createdBy }: { pdc: Pdc; createdBy: str
     }
     create.mutate(
       {
-        parentProcessId: pdc.id,
+        parentProcessId: process.id,
         executionMode: mode,
         reason: reason.trim(),
-        title: title.trim() || `Contingencia: ${pdc.title}`,
+        title: title.trim() || `Contingencia: ${process.title}`,
         createdBy,
       },
       {
@@ -42,7 +42,7 @@ export function ContingencyDialog({ pdc, createdBy }: { pdc: Pdc; createdBy: str
           toast.success(`Bifurcación creada (${res.childNumber})`);
           setOpen(false);
           setReason("");
-          navigate(`/pdcs/${res.childProcessId}`);
+          navigate(`/procesos/${res.childProcessId}`);
         },
         onError: (e: Error) => toast.error(e.message),
       },
@@ -65,7 +65,7 @@ export function ContingencyDialog({ pdc, createdBy }: { pdc: Pdc; createdBy: str
         <DialogHeader>
           <DialogTitle>Bifurcar por contingencia</DialogTitle>
           <DialogDescription>
-            Se creará un sub-proceso vinculado a {pdc.pdc_number} para atender el imprevisto.
+            Se creará un sub-proceso vinculado a {process.process_number} para atender el imprevisto.
           </DialogDescription>
         </DialogHeader>
 
@@ -121,7 +121,7 @@ export function ContingencyDialog({ pdc, createdBy }: { pdc: Pdc; createdBy: str
             <Label htmlFor="cont-title">Título del proceso de contingencia</Label>
             <Input id="cont-title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <p className="text-xs text-muted-foreground">
-              Hereda el proyecto ({pdc.project_name}) del proceso padre.
+              Hereda el proyecto ({process.project_name}) del proceso padre.
             </p>
           </div>
         </div>
