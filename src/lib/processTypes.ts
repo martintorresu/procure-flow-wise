@@ -1,24 +1,18 @@
-export type ProcessType = "compra" | "licitacion" | "contrato" | "permiso" | "obra" | "personalizado";
+export type ProcessType = "licitacion" | "contrato" | "obra" | "personalizado";
 
 export const PROCESS_TYPES: ProcessType[] = [
-  "compra",
+  "obra",
   "licitacion",
   "contrato",
-  "permiso",
-  "obra",
   "personalizado",
 ];
 
 export const PROCESS_TYPE_LABELS: Record<ProcessType, string> = {
-  compra: "Compra",
   licitacion: "Licitación",
   contrato: "Administración de Contrato",
-  permiso: "Permiso",
   obra: "Ejecución de Obra",
   personalizado: "Personalizado",
 };
-
-export const isPurchaseType = (t?: string | null): boolean => (t ?? "compra") === "compra";
 
 /** True si el proceso usa el flujo preestablecido de Ejecución de Obra (10 etapas). */
 export const isObraType = (t?: string | null): boolean => t === "obra";

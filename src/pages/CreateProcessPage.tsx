@@ -39,7 +39,7 @@ export default function CreateProcessPage() {
   const submitting = createProcess.isPending;
 
   const [form, setForm] = useState({
-    process_type: "compra" as ProcessType,
+    process_type: "" as ProcessType | "",
     project_id: null as string | null,
     title: "",
     description: "",
@@ -73,7 +73,7 @@ export default function CreateProcessPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.project_id || !form.title) {
+    if (!form.process_type || !form.project_id || !form.title) {
       toast.error("Complete los campos obligatorios");
       return;
     }
@@ -168,7 +168,7 @@ export default function CreateProcessPage() {
             <div className="space-y-2">
               <Label>Tipo de proceso *</Label>
               <Select value={form.process_type} onValueChange={(v) => update("process_type", v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger><SelectValue placeholder="Selecciona un tipo de proceso" /></SelectTrigger>
                 <SelectContent>
                   {PROCESS_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</SelectItem>

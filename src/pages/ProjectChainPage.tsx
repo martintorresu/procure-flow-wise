@@ -93,7 +93,7 @@ export default function ProjectChainPage() {
                     <Card className="transition-colors hover:border-primary/40">
                       <CardContent className="p-4 flex flex-wrap items-center gap-3">
                         <Badge variant="outline" className="text-xs">
-                          {PROCESS_TYPE_LABELS[(p.process_type ?? "compra") as ProcessType]}
+                          {PROCESS_TYPE_LABELS[(p.process_type ?? "personalizado") as ProcessType]}
                         </Badge>
                         <span className="font-mono text-xs">{p.process_number}</span>
                         <span className="font-medium flex-1 min-w-[160px] truncate">{p.title}</span>

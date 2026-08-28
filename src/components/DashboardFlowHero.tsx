@@ -26,7 +26,7 @@ export function DashboardFlowHero({ processes, summaries }: Props) {
   const byType = useMemo(() => {
     const map = new Map<ProcessType, Process[]>();
     for (const p of processes) {
-      const t = (p.process_type ?? "compra") as ProcessType;
+      const t = (p.process_type ?? "personalizado") as ProcessType;
       map.set(t, [...(map.get(t) ?? []), p]);
     }
     return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);

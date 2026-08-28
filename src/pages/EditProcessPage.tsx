@@ -25,7 +25,7 @@ export default function EditProcessPage() {
   const [processNumber, setProcessNumber] = useState<string>("");
   const [form, setForm] = useState({
     project_id: null as string | null,
-    process_type: "compra" as ProcessType,
+    process_type: "personalizado" as ProcessType,
     name: "",
     description: "",
     responsible_name: "",
@@ -40,7 +40,7 @@ export default function EditProcessPage() {
     setProcessNumber(process.process_number);
     setForm({
       project_id: process.project_id ?? null,
-      process_type: (process.process_type ?? "compra") as ProcessType,
+      process_type: (process.process_type ?? "personalizado") as ProcessType,
       name: process.title ?? "",
       description: process.description ?? "",
       responsible_name: process.current_owner === "—" ? "" : (process.current_owner ?? ""),

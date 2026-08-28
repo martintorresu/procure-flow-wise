@@ -39,7 +39,7 @@ export function rowToProcess(r: ProcessRow): Process {
     created_at: r.created_at,
     updated_at: r.updated_at,
     tenant_id: r.tenant_id ?? null,
-    process_type: (r.process_type as Process["process_type"]) ?? "compra",
+    process_type: (r.process_type as Process["process_type"]) ?? "personalizado",
     project_id: r.project_id ?? null,
     predecessor_process_id: r.predecessor_process_id ?? null,
     paused_by_contingency: r.paused_by_contingency ?? null,
@@ -94,7 +94,7 @@ export function useCreateProcess() {
         .insert({
           name: input.name,
           project_id: input.project_id,
-          process_type: input.process_type ?? "compra",
+          process_type: input.process_type ?? "personalizado",
           predecessor_process_id: input.predecessor_process_id ?? null,
           description: input.description ?? null,
           responsible_name: input.responsible_name ?? null,
