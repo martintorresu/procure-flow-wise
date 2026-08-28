@@ -1,8 +1,8 @@
 export type UserRole = "admin" | "compras" | "ingenieria" | "programacion" | "gerente" | "planificacion" | "logistica";
 
-export interface Pdc {
+export interface Process {
   id: string;
-  pdc_number: string;
+  process_number: string;
   title: string;
   description: string;
   /** Nombre del proyecto vinculado (join con projects). */
@@ -25,7 +25,7 @@ export interface Pdc {
 
 export interface Alert {
   id: string;
-  pdc_id: string;
+  process_id: string;
   type: string;
   severity: "low" | "medium" | "high" | "critical";
   message: string;

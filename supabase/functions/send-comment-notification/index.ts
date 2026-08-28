@@ -37,8 +37,8 @@ Deno.serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     const { data: proc } = await admin
-      .from("purchase_processes")
-      .select("id, pdc_number, name, tenant_id, created_by, responsible_name")
+      .from("processes")
+      .select("id, process_number, name, tenant_id, created_by, responsible_name")
       .eq("id", comment.process_id)
       .maybeSingle();
     if (!proc) return json({ error: "Proceso no encontrado" }, 404);
@@ -71,15 +71,15 @@ Deno.serve(async (req) => {
     recipients = [...new Set(recipients.filter(Boolean).filter((e) => e !== authorProfile?.email))];
     if (recipients.length === 0) return json({ sent: false, reason: "sin destinatarios" });
 
-    const link = `${origin}/pdcs/${proc.id}`;
+    const link = `${origin}/procesos/${proc.id}`;
     const html = layout(
-      `Nuevo comentario en ${escapeHtml(proc.pdc_number)}`,
+      `Nuevo comentario en ${escapeHtml(proc.process_number)}`,
       `<p style="font-size:15px;line-height:1.6"><strong>${escapeHtml(authorName)}</strong> comentó en el proceso <strong>${escapeHtml(proc.name)}</strong>:</p>
        <blockquote style="margin:16px 0;padding:12px 16px;border-left:3px solid #cbd5e1;background:#f8fafc;font-size:15px;line-height:1.6;white-space:pre-wrap">${escapeHtml(comment.body)}</blockquote>
        ${button(link, "Ver el proceso")}`,
     );
 
-    const result = await sendEmail(recipients, `Nuevo comentario en ${proc.pdc_number} · Pro.Curem Flow`, html);
+    const result = await sendEmail(recipients, `Nuevo comentario en ${proc.process_number} · Pro.Curem Flow`, html);
     if (!result.ok) return json({ error: "Resend rechazó el envío", status: result.status, details: result.details }, 502);
 
     return json({ sent: true, recipients: recipients.length, from: result.usedFrom });

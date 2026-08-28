@@ -1,11 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClipboardList } from "lucide-react";
 import { CommitmentsTable } from "@/components/CommitmentsTable";
-import { usePdcCommitments, useProcessOptions } from "@/hooks/useCommitments";
+import { useProcessCommitments, useProcessOptions } from "@/hooks/useCommitments";
 
 /** Compromisos de reuniones vinculados a un proceso. */
-export function ProcessCommitments({ pdcId }: { pdcId: string }) {
-  const { data: commitments = [], isLoading } = usePdcCommitments(pdcId);
+export function ProcessCommitments({ processId }: { processId: string }) {
+  const { data: commitments = [], isLoading } = useProcessCommitments(processId);
   const { data: processes = [] } = useProcessOptions();
 
   return (

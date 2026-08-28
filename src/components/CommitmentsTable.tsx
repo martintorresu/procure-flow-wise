@@ -35,7 +35,7 @@ export function CommitmentsTable({
 
   const procLabel = (id: string | null) => {
     const p = processes.find((x) => x.id === id);
-    return p ? `${p.pdc_number} · ${p.name}` : null;
+    return p ? `${p.process_number} · ${p.name}` : null;
   };
 
   const colCount = 7 + (hideProcessColumn ? 0 : 1) + (hideMeetingColumn ? 0 : 1);
@@ -80,9 +80,9 @@ export function CommitmentsTable({
               </TableCell>
               {!hideProcessColumn && (
                 <TableCell className="text-sm">
-                  {c.pdc_id ? (
-                    <Link to={`/pdcs/${c.pdc_id}`} className="text-primary hover:underline">
-                      {procLabel(c.pdc_id) ?? "Ver proceso"}
+                  {c.process_id ? (
+                    <Link to={`/procesos/${c.process_id}`} className="text-primary hover:underline">
+                      {procLabel(c.process_id) ?? "Ver proceso"}
                     </Link>
                   ) : (
                     <span className="text-muted-foreground">Sin vincular</span>
@@ -122,25 +122,25 @@ export function CommitmentsTable({
                 </Select>
               </TableCell>
               <TableCell className="text-right whitespace-nowrap">
-                {c.pdc_id && (
+                {c.process_id && (
                   <Button
                     size="sm"
                     variant="ghost"
                     title="Desvincular proceso"
                     aria-label="Desvincular proceso"
-                    onClick={() => update.mutate({ id: c.id, pdc_id: null })}
+                    onClick={() => update.mutate({ id: c.id, process_id: null })}
                   >
                     <Unlink className="w-4 h-4" />
                   </Button>
                 )}
-                {!c.pdc_id && processes.length > 0 && (
-                  <Select onValueChange={(v) => update.mutate({ id: c.id, pdc_id: v })}>
+                {!c.process_id && processes.length > 0 && (
+                  <Select onValueChange={(v) => update.mutate({ id: c.id, process_id: v })}>
                     <SelectTrigger className="h-8 w-[150px] inline-flex">
                       <SelectValue placeholder="Vincular…" />
                     </SelectTrigger>
                     <SelectContent>
                       {processes.slice(0, 100).map((p) => (
-                        <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                        <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

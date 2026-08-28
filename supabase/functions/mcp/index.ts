@@ -71,12 +71,12 @@ var list_processes_default = defineTool({
       return { content: [{ type: "text", text: "No autenticado" }], isError: true };
     }
     const supabase = supabaseForUser(ctx);
-    let query = supabase.from("purchase_processes").select(
-      "id, pdc_number, name, process_type, project_id, responsible_name, created_at, updated_at"
+    let query = supabase.from("processes").select(
+      "id, process_number, name, process_type, project_id, responsible_name, created_at, updated_at"
     ).order("updated_at", { ascending: false }).limit(limit ?? 20);
     if (process_type) query = query.eq("process_type", process_type);
     const safeSearch = search?.replace(/[.,()]/g, "");
-    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,pdc_number.ilike.%${safeSearch}%`);
+    if (safeSearch) query = query.or(`name.ilike.%${safeSearch}%,process_number.ilike.%${safeSearch}%`);
     const { data, error } = await query;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {
@@ -95,19 +95,19 @@ var get_process_default = defineTool2({
   description: "Devuelve el detalle de un proceso de compra (por id o por n\xFAmero de proceso) junto con sus etapas y comentarios recientes.",
   inputSchema: {
     id: z2.string().uuid().optional().describe("Identificador \xFAnico del proceso."),
-    pdc_number: z2.string().trim().min(1).optional().describe("N\xFAmero del proceso, por ejemplo PC-0001.")
+    process_number: z2.string().trim().min(1).optional().describe("N\xFAmero del proceso, por ejemplo PC-0001.")
   },
   annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
-  handler: async ({ id, pdc_number }, ctx) => {
+  handler: async ({ id, process_number }, ctx) => {
     if (!ctx.isAuthenticated()) {
       return { content: [{ type: "text", text: "No autenticado" }], isError: true };
     }
-    if (!id && !pdc_number) {
-      return { content: [{ type: "text", text: "Indica id o pdc_number" }], isError: true };
+    if (!id && !process_number) {
+      return { content: [{ type: "text", text: "Indica id o process_number" }], isError: true };
     }
     const supabase = supabaseForUser(ctx);
-    let query = supabase.from("purchase_processes").select("*").limit(1);
-    query = id ? query.eq("id", id) : query.eq("pdc_number", pdc_number);
+    let query = supabase.from("processes").select("*").limit(1);
+    query = id ? query.eq("id", id) : query.eq("process_number", process_number);
     const { data: process, error } = await query.maybeSingle();
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     if (!process) return { content: [{ type: "text", text: "Proceso no encontrado" }], isError: true };
@@ -199,7 +199,7 @@ var add_process_comment_default = defineTool5({
       return { content: [{ type: "text", text: "No autenticado" }], isError: true };
     }
     const supabase = supabaseForUser(ctx);
-    const { data: process, error: processError } = await supabase.from("purchase_processes").select("id, tenant_id").eq("id", process_id).maybeSingle();
+    const { data: process, error: processError } = await supabase.from("processes").select("id, tenant_id").eq("id", process_id).maybeSingle();
     if (processError) return { content: [{ type: "text", text: processError.message }], isError: true };
     if (!process) return { content: [{ type: "text", text: "Proceso no encontrado o sin acceso" }], isError: true };
     const { data, error } = await supabase.from("process_comments").insert({

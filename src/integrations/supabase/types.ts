@@ -66,7 +66,7 @@ export type Database = {
           id: string
           message: string
           owner_role: Database["public"]["Enums"]["app_role"] | null
-          pdc_id: string | null
+          process_id: string | null
           resolved: boolean
           severity: string
           tenant_id: string
@@ -80,7 +80,7 @@ export type Database = {
           id?: string
           message: string
           owner_role?: Database["public"]["Enums"]["app_role"] | null
-          pdc_id?: string | null
+          process_id?: string | null
           resolved?: boolean
           severity?: string
           tenant_id: string
@@ -94,7 +94,7 @@ export type Database = {
           id?: string
           message?: string
           owner_role?: Database["public"]["Enums"]["app_role"] | null
-          pdc_id?: string | null
+          process_id?: string | null
           resolved?: boolean
           severity?: string
           tenant_id?: string
@@ -103,10 +103,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "alerts_pdc_id_fkey"
-            columns: ["pdc_id"]
+            foreignKeyName: "alerts_process_id_fkey"
+            columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -226,7 +226,7 @@ export type Database = {
           created_by: string | null
           id: string
           meeting_date: string
-          pdc_id: string | null
+          process_id: string | null
           process_stage_id: string | null
           quality_score: number
           status: string
@@ -239,7 +239,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           meeting_date: string
-          pdc_id?: string | null
+          process_id?: string | null
           process_stage_id?: string | null
           quality_score?: number
           status?: string
@@ -252,7 +252,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           meeting_date?: string
-          pdc_id?: string | null
+          process_id?: string | null
           process_stage_id?: string | null
           quality_score?: number
           status?: string
@@ -269,10 +269,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "minuta_sessions_pdc_id_fkey"
-            columns: ["pdc_id"]
+            foreignKeyName: "minuta_sessions_process_id_fkey"
+            columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -321,7 +321,7 @@ export type Database = {
             foreignKeyName: "process_comments_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -345,8 +345,8 @@ export type Database = {
           meeting_session_id: string | null
           meeting_title: string | null
           notes: string | null
-          pdc_id: string | null
           priority: string | null
+          process_id: string | null
           raw_json: Json | null
           responsible_name: string | null
           responsible_user_id: string | null
@@ -367,8 +367,8 @@ export type Database = {
           meeting_session_id?: string | null
           meeting_title?: string | null
           notes?: string | null
-          pdc_id?: string | null
           priority?: string | null
+          process_id?: string | null
           raw_json?: Json | null
           responsible_name?: string | null
           responsible_user_id?: string | null
@@ -389,8 +389,8 @@ export type Database = {
           meeting_session_id?: string | null
           meeting_title?: string | null
           notes?: string | null
-          pdc_id?: string | null
           priority?: string | null
+          process_id?: string | null
           raw_json?: Json | null
           responsible_name?: string | null
           responsible_user_id?: string | null
@@ -416,10 +416,10 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "process_commitments_pdc_id_fkey"
-            columns: ["pdc_id"]
+            foreignKeyName: "process_commitments_process_id_fkey"
+            columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -487,7 +487,7 @@ export type Database = {
             foreignKeyName: "process_contingencies_child_process_id_fkey"
             columns: ["child_process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -501,7 +501,7 @@ export type Database = {
             foreignKeyName: "process_contingencies_parent_process_id_fkey"
             columns: ["parent_process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -558,7 +558,7 @@ export type Database = {
             foreignKeyName: "process_documents_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -625,7 +625,7 @@ export type Database = {
             foreignKeyName: "process_participants_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
@@ -679,11 +679,88 @@ export type Database = {
             foreignKeyName: "process_stages_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
-            referencedRelation: "purchase_processes"
+            referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
             foreignKeyName: "process_stages_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      processes: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          id: string
+          name: string
+          paused_by_contingency: string | null
+          predecessor_process_id: string | null
+          process_number: string
+          process_type: string
+          project_id: string | null
+          responsible_name: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          id?: string
+          name: string
+          paused_by_contingency?: string | null
+          predecessor_process_id?: string | null
+          process_number?: string
+          process_type?: string
+          project_id?: string | null
+          responsible_name?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          id?: string
+          name?: string
+          paused_by_contingency?: string | null
+          predecessor_process_id?: string | null
+          process_number?: string
+          process_type?: string
+          project_id?: string | null
+          responsible_name?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processes_paused_by_contingency_fkey"
+            columns: ["paused_by_contingency"]
+            isOneToOne: false
+            referencedRelation: "process_contingencies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_predecessor_process_id_fkey"
+            columns: ["predecessor_process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "processes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -789,83 +866,6 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_tenant_id_fkey"
-            columns: ["tenant_id"]
-            isOneToOne: false
-            referencedRelation: "tenants"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      purchase_processes: {
-        Row: {
-          created_at: string
-          created_by: string
-          description: string | null
-          id: string
-          name: string
-          paused_by_contingency: string | null
-          pdc_number: string
-          predecessor_process_id: string | null
-          process_type: string
-          project_id: string | null
-          responsible_name: string | null
-          tenant_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          created_by: string
-          description?: string | null
-          id?: string
-          name: string
-          paused_by_contingency?: string | null
-          pdc_number?: string
-          predecessor_process_id?: string | null
-          process_type?: string
-          project_id?: string | null
-          responsible_name?: string | null
-          tenant_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          created_by?: string
-          description?: string | null
-          id?: string
-          name?: string
-          paused_by_contingency?: string | null
-          pdc_number?: string
-          predecessor_process_id?: string | null
-          process_type?: string
-          project_id?: string | null
-          responsible_name?: string | null
-          tenant_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "purchase_processes_paused_by_contingency_fkey"
-            columns: ["paused_by_contingency"]
-            isOneToOne: false
-            referencedRelation: "process_contingencies"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_processes_predecessor_process_id_fkey"
-            columns: ["predecessor_process_id"]
-            isOneToOne: false
-            referencedRelation: "purchase_processes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_processes_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "purchase_processes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1063,7 +1063,7 @@ export type Database = {
         }
         Returns: Json
       }
-      generate_pdc_number: { Args: never; Returns: string }
+      generate_process_number: { Args: never; Returns: string }
       process_number_prefix: { Args: { _type: string }; Returns: string }
       seed_administracion_contrato_stages: {
         Args: { p_process_id: string }

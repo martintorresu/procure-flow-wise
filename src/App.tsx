@@ -7,10 +7,10 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
 import LoginPage from "@/pages/LoginPage";
 import DashboardPage from "@/pages/DashboardPage";
-import PdcListPage from "@/pages/PdcListPage";
-import CreatePdcPage from "@/pages/CreatePdcPage";
-import EditPdcPage from "@/pages/EditPdcPage";
-import PdcDetailPage from "@/pages/PdcDetailPage";
+import ProcessListPage from "@/pages/ProcessListPage";
+import CreateProcessPage from "@/pages/CreateProcessPage";
+import EditProcessPage from "@/pages/EditProcessPage";
+import ProcessDetailPage from "@/pages/ProcessDetailPage";
 import PrivacyPolicyPage from "@/pages/PrivacyPolicyPage";
 import AlertsPage from "@/pages/AlertsPage";
 import SignUpPage from "@/pages/SignUpPage";
@@ -80,7 +80,15 @@ function LoginRoute() {
   return <LoginPage />;
 }
 
+/** Redirige enlaces antiguos /pdcs/... a /procesos/... conservando el resto de la ruta. */
+function LegacyProcessRedirect() {
+  const location = useLocation();
+  const target = location.pathname.replace(/\/pdcs(\/|$)/, "/procesos$1") + location.search;
+  return <Navigate to={target} replace />;
+}
+
 const App = () => (
+
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -104,10 +112,10 @@ const App = () => (
             {/* Rutas protegidas — tenant default */}
             <Route element={<ProtectedRoutes />}>
               <Route path="/" element={<DashboardPage />} />
-              <Route path="/pdcs" element={<PdcListPage />} />
-              <Route path="/pdcs/new" element={<CreatePdcPage />} />
-              <Route path="/pdcs/:id/edit" element={<EditPdcPage />} />
-              <Route path="/pdcs/:id" element={<PdcDetailPage />} />
+              <Route path="/procesos" element={<ProcessListPage />} />
+              <Route path="/procesos/new" element={<CreateProcessPage />} />
+              <Route path="/procesos/:id/edit" element={<EditProcessPage />} />
+              <Route path="/procesos/:id" element={<ProcessDetailPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectChainPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
@@ -120,10 +128,10 @@ const App = () => (
             {/* Rutas protegidas — por tenant */}
             <Route path="/t/:tenantSlug" element={<ProtectedRoutes />}>
               <Route index element={<DashboardPage />} />
-              <Route path="pdcs" element={<PdcListPage />} />
-              <Route path="pdcs/new" element={<CreatePdcPage />} />
-              <Route path="pdcs/:id/edit" element={<EditPdcPage />} />
-              <Route path="pdcs/:id" element={<PdcDetailPage />} />
+              <Route path="procesos" element={<ProcessListPage />} />
+              <Route path="procesos/new" element={<CreateProcessPage />} />
+              <Route path="procesos/:id/edit" element={<EditProcessPage />} />
+              <Route path="procesos/:id" element={<ProcessDetailPage />} />
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="projects/:id" element={<ProjectChainPage />} />
               <Route path="alerts" element={<AlertsPage />} />
@@ -133,7 +141,12 @@ const App = () => (
               <Route path="admin" element={<AdminPage />} />
             </Route>
 
+            {/* Redirecciones desde las rutas antiguas /pdcs → /procesos */}
+            <Route path="/pdcs/*" element={<LegacyProcessRedirect />} />
+            <Route path="/t/:tenantSlug/pdcs/*" element={<LegacyProcessRedirect />} />
+
             <Route path="*" element={<NotFound />} />
+
           </Routes>
         </BrowserRouter>
       </AuthProvider>

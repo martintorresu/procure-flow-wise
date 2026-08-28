@@ -65,7 +65,7 @@ export function ProcessProgressCard({ processId }: { processId: string }) {
               Define las etapas para hacer seguimiento del avance y vincular compromisos.
             </p>
             <Button variant="outline" size="sm" asChild>
-              <Link to={`/pdcs/${processId}`}>Ir a la pestaña Etapas</Link>
+              <Link to={`/procesos/${processId}`}>Ir a la pestaña Etapas</Link>
             </Button>
           </div>
         )}

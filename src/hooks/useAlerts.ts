@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Alert } from "@/types/pdc";
+import type { Alert } from "@/types/process";
 import { queryKeys } from "@/lib/queryKeys";
 
 const SEVERITY_ORDER: Record<Alert["severity"], number> = {
@@ -14,7 +14,7 @@ export function useAlerts(): UseQueryResult<Alert[], Error> {
     queryFn: async (): Promise<Alert[]> => {
       const { data, error } = await supabase
         .from("alerts")
-        .select("id, pdc_id, type, severity, message, due_date, resolved, created_at");
+        .select("id, process_id, type, severity, message, due_date, resolved, created_at");
       if (error) throw new Error(error.message);
       const rows = (data ?? []) as unknown as Alert[];
       return [...rows].sort((a, b) => {

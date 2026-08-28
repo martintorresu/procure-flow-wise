@@ -33,13 +33,13 @@ Deno.serve(async (req) => {
     if (!participant) return json({ error: "Invitación no encontrada" }, 404);
 
     const { data: proc } = await supabase
-      .from("purchase_processes")
-      .select("pdc_number, name")
+      .from("processes")
+      .select("process_number, name")
       .eq("id", participant.process_id)
       .maybeSingle();
 
     const link = `${origin}/signup?invited_email=${encodeURIComponent(participant.email)}`;
-    const procTitle = proc ? `${proc.pdc_number} — ${proc.name}` : "un proceso";
+    const procTitle = proc ? `${proc.process_number} — ${proc.name}` : "un proceso";
 
     const html = layout(
       "Te invitaron a un proceso en Pro.Curem Flow",
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
        <p style="font-size:13px;color:#64748b">Si el botón no funciona, copia este enlace:<br>${escapeHtml(link)}</p>`,
     );
 
-    const result = await sendEmail([participant.email], `Invitación al proceso ${proc?.pdc_number ?? ""} · Pro.Curem Flow`.trim(), html);
+    const result = await sendEmail([participant.email], `Invitación al proceso ${proc?.process_number ?? ""} · Pro.Curem Flow`.trim(), html);
     if (!result.ok) return json({ error: "Resend rechazó el envío", status: result.status, details: result.details }, 502);
 
     return json({ sent: true, from: result.usedFrom });

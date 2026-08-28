@@ -1,12 +1,12 @@
-export interface PdcFilters {
+export interface ProcessFilters {
   projectId?: string;
   processType?: string;
 }
 
 /** Claves de caché centralizadas para TanStack Query. */
 export const queryKeys = {
-  pdcs: (filters?: PdcFilters) => ["pdcs", filters ?? {}] as const,
-  pdc: (id: string) => ["pdcs", id] as const,
+  processes: (filters?: ProcessFilters) => ["processes", filters ?? {}] as const,
+  process: (id: string) => ["processes", id] as const,
   processStageSummaries: () => ["process-stage-summaries"] as const,
   alerts: () => ["alerts"] as const,
   alertRules: () => ["alert_rules"] as const,

@@ -1,5 +1,5 @@
 import { useAlerts, useResolveAlert } from "@/hooks/useAlerts";
-import { usePdcs } from "@/hooks/usePdcs";
+import { useProcesses } from "@/hooks/useProcesses";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -12,7 +12,7 @@ import { formatStageLabel, humanizeTechnicalText } from "@/lib/stageLabels";
 
 export default function AlertsPage() {
   const { data: alerts = [], isLoading, isError, error } = useAlerts();
-  const { data: pdcs = [] } = usePdcs();
+  const { data: processes = [] } = useProcesses();
   const resolveMutation = useResolveAlert();
 
   const resolve = (id: string) => {
@@ -91,13 +91,13 @@ export default function AlertsPage() {
                   </tr>
                 )}
                 {!isLoading && alerts.map((alert) => {
-                  const pdc = pdcs.find((p) => p.id === alert.pdc_id);
+                  const process = processes.find((p) => p.id === alert.process_id);
                   return (
                     <tr key={alert.id} className={`border-b last:border-0 ${alert.resolved ? "opacity-50" : ""}`}>
                       <td className="py-3 px-4">
-                        {pdc ? (
-                          <Link to={`/pdcs/${alert.pdc_id}`} className="text-accent hover:underline font-mono text-xs">
-                            {pdc.pdc_number}
+                        {process ? (
+                          <Link to={`/procesos/${alert.process_id}`} className="text-accent hover:underline font-mono text-xs">
+                            {process.process_number}
                           </Link>
                         ) : (
                           <span className="text-muted-foreground text-xs font-mono">—</span>

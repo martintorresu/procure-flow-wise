@@ -5,15 +5,15 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Pdc } from "@/types/pdc";
-import { queryKeys, type PdcFilters } from "@/lib/queryKeys";
+import type { Process } from "@/types/process";
+import { queryKeys, type ProcessFilters } from "@/lib/queryKeys";
 import type { ProcessType } from "@/lib/processTypes";
 
 const SELECT = "*, project:projects(name)";
 
-export interface PdcRow {
+export interface ProcessRow {
   id: string;
-  pdc_number: string;
+  process_number: string;
   name: string;
   description: string | null;
   responsible_name: string | null;
@@ -28,10 +28,10 @@ export interface PdcRow {
   tenant_id?: string | null;
 }
 
-export function rowToPdc(r: PdcRow): Pdc {
+export function rowToProcess(r: ProcessRow): Process {
   return {
     id: r.id,
-    pdc_number: r.pdc_number,
+    process_number: r.process_number,
     title: r.name,
     description: r.description ?? "",
     project_name: r.project?.name ?? "—",
@@ -39,7 +39,7 @@ export function rowToPdc(r: PdcRow): Pdc {
     created_at: r.created_at,
     updated_at: r.updated_at,
     tenant_id: r.tenant_id ?? null,
-    process_type: (r.process_type as Pdc["process_type"]) ?? "compra",
+    process_type: (r.process_type as Process["process_type"]) ?? "compra",
     project_id: r.project_id ?? null,
     predecessor_process_id: r.predecessor_process_id ?? null,
     paused_by_contingency: r.paused_by_contingency ?? null,
@@ -47,35 +47,35 @@ export function rowToPdc(r: PdcRow): Pdc {
 }
 
 /** Lista procesos del tenant del usuario (RLS filtra). Soporta filtros opcionales. */
-export function usePdcs(filters?: PdcFilters): UseQueryResult<Pdc[], Error> {
+export function useProcesses(filters?: ProcessFilters): UseQueryResult<Process[], Error> {
   return useQuery({
-    queryKey: queryKeys.pdcs(filters),
+    queryKey: queryKeys.processes(filters),
     queryFn: async () => {
-      let q = supabase.from("purchase_processes").select(SELECT).order("created_at", { ascending: false });
+      let q = supabase.from("processes").select(SELECT).order("created_at", { ascending: false });
       if (filters?.projectId) q = q.eq("project_id", filters.projectId);
       if (filters?.processType) q = q.eq("process_type", filters.processType);
       const { data, error } = await q;
       if (error) throw new Error(error.message);
-      return (data as unknown as PdcRow[]).map(rowToPdc);
+      return (data as unknown as ProcessRow[]).map(rowToProcess);
     },
   });
 }
 
 /** Detalle de un proceso. */
-export function usePdc(id: string | undefined): UseQueryResult<Pdc | null, Error> {
+export function useProcess(id: string | undefined): UseQueryResult<Process | null, Error> {
   return useQuery({
-    queryKey: id ? queryKeys.pdc(id) : ["pdcs", "none"],
+    queryKey: id ? queryKeys.process(id) : ["processes", "none"],
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("purchase_processes").select(SELECT).eq("id", id!).maybeSingle();
+        .from("processes").select(SELECT).eq("id", id!).maybeSingle();
       if (error) throw new Error(error.message);
-      return data ? rowToPdc(data as unknown as PdcRow) : null;
+      return data ? rowToProcess(data as unknown as ProcessRow) : null;
     },
   });
 }
 
-export interface CreatePdcInput {
+export interface CreateProcessInput {
   project_id: string;
   process_type?: ProcessType;
   predecessor_process_id?: string | null;
@@ -85,12 +85,12 @@ export interface CreatePdcInput {
   created_by: string;
 }
 
-export function useCreatePdc() {
+export function useCreateProcess() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (input: CreatePdcInput) => {
+    mutationFn: async (input: CreateProcessInput) => {
       const { data, error } = await supabase
-        .from("purchase_processes")
+        .from("processes")
         .insert({
           name: input.name,
           project_id: input.project_id,
@@ -101,16 +101,16 @@ export function useCreatePdc() {
           created_by: input.created_by,
           tenant_id: "00000000-0000-0000-0000-000000000000", // overridden by trigger
         })
-        .select("id, pdc_number")
+        .select("id, process_number")
         .single();
       if (error) throw new Error(error.message);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["pdcs"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["processes"] }),
   });
 }
 
-export interface UpdatePdcInput {
+export interface UpdateProcessInput {
   id: string;
   patch: Partial<{
     name: string;
@@ -121,19 +121,19 @@ export interface UpdatePdcInput {
   }>;
 }
 
-export function useUpdatePdc() {
+export function useUpdateProcess() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, patch }: UpdatePdcInput) => {
+    mutationFn: async ({ id, patch }: UpdateProcessInput) => {
       const { error } = await supabase
-        .from("purchase_processes")
+        .from("processes")
         .update(patch)
         .eq("id", id);
       if (error) throw new Error(error.message);
     },
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: ["pdcs"] });
-      qc.invalidateQueries({ queryKey: queryKeys.pdc(vars.id) });
+      qc.invalidateQueries({ queryKey: ["processes"] });
+      qc.invalidateQueries({ queryKey: queryKeys.process(vars.id) });
     },
   });
 }

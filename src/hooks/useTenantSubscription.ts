@@ -23,7 +23,7 @@ export const subscriptionKeys = {
 /** Cuenta procesos activos (no recepcionados) del tenant. */
 async function countActiveProcesses(tenantId: string) {
   const { count } = await supabase
-    .from("purchase_processes")
+    .from("processes")
     .select("id", { count: "exact", head: true })
     .eq("tenant_id", tenantId);
   return count ?? 0;

@@ -109,13 +109,13 @@ export function ContingenciesSection() {
               {rows.map((c) => (
                 <TableRow key={c.id}>
                   <TableCell className="text-sm">
-                    <Link className="hover:underline" to={`/pdcs/${c.parent_process_id}`}>
-                      {c.parent?.pdc_number} · {c.parent?.name}
+                    <Link className="hover:underline" to={`/procesos/${c.parent_process_id}`}>
+                      {c.parent?.process_number} · {c.parent?.name}
                     </Link>
                   </TableCell>
                   <TableCell className="text-sm">
-                    <Link className="hover:underline" to={`/pdcs/${c.child_process_id}`}>
-                      {c.child?.pdc_number} · {c.child?.name}
+                    <Link className="hover:underline" to={`/procesos/${c.child_process_id}`}>
+                      {c.child?.process_number} · {c.child?.name}
                     </Link>
                   </TableCell>
                   <TableCell>

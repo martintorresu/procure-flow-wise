@@ -34,8 +34,8 @@ const navSections: NavSection[] = [
   {
     label: "PROCESOS",
     items: [
-      { to: "/pdcs", icon: FileText, label: "Procesos" },
-      { to: "/pdcs/new", icon: Plus, label: "Crear Proceso" },
+      { to: "/procesos", icon: FileText, label: "Procesos" },
+      { to: "/procesos/new", icon: Plus, label: "Crear Proceso" },
       { to: "/projects", icon: FolderKanban, label: "Proyectos" },
     ],
   },

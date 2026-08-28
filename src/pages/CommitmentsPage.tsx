@@ -38,7 +38,7 @@ import {
 } from "@/lib/commitments";
 
 const STRUCTURED_PLACEHOLDER = `Formato (uno por línea):
-- [Responsable] Compromiso | Fecha límite | Prioridad | PDC relacionado
+- [Responsable] Compromiso | Fecha límite | Prioridad | PROCESS relacionado
 
 Ejemplo:
 - [Juan Pérez] Subir certificado de materiales | 25/08/2026 | Alta | PC-2024-0045`;
@@ -50,9 +50,9 @@ type Mode = "transcript" | "structured";
 
 interface DraftRow extends ParsedCommitment {
   userId: string | null;
-  pdcId: string | null;
+  processId: string | null;
   autoUser: boolean;
-  autoPdc: boolean;
+  autoProcess: boolean;
 }
 
 export default function CommitmentsPage() {
@@ -70,7 +70,7 @@ export default function CommitmentsPage() {
   // Filtros de la lista
   const [fStatus, setFStatus] = useState("all");
   const [fResponsible, setFResponsible] = useState("all");
-  const [fPdc, setFPdc] = useState("all");
+  const [fProcess, setFProcess] = useState("all");
   const [fMeetingDate, setFMeetingDate] = useState("");
   const [grouped, setGrouped] = useState(false);
   const [visibleCount, setVisibleCount] = useState(50);
@@ -85,13 +85,13 @@ export default function CommitmentsPage() {
     }
     const rows: DraftRow[] = parsed.map((p) => {
       const u = p.responsible ? matchUser(p.responsible, users) : null;
-      const proc = p.pdcReference ? matchProcess(p.pdcReference, processes) : null;
+      const proc = p.processReference ? matchProcess(p.processReference, processes) : null;
       return {
         ...p,
         userId: u?.id ?? null,
-        pdcId: proc?.id ?? null,
+        processId: proc?.id ?? null,
         autoUser: !!u,
-        autoPdc: !!proc,
+        autoProcess: !!proc,
       };
     });
     setDraft(rows);
@@ -104,7 +104,7 @@ export default function CommitmentsPage() {
       commitment_text: d.text,
       responsible_user_id: d.userId,
       responsible_name: d.responsible || null,
-      pdc_id: d.pdcId,
+      process_id: d.processId,
       due_date: d.dueDate,
       priority: d.priority,
       meeting_title: meetingTitle.trim() || null,
@@ -137,12 +137,12 @@ export default function CommitmentsPage() {
       commitments.filter((c) => {
         if (fStatus !== "all" && c.status !== fStatus) return false;
         if (fResponsible !== "all" && c.responsible_name !== fResponsible) return false;
-        if (fPdc === "none" && c.pdc_id) return false;
-        if (fPdc !== "all" && fPdc !== "none" && c.pdc_id !== fPdc) return false;
+        if (fProcess === "none" && c.process_id) return false;
+        if (fProcess !== "all" && fProcess !== "none" && c.process_id !== fProcess) return false;
         if (fMeetingDate && c.meeting_date !== fMeetingDate) return false;
         return true;
       }),
-    [commitments, fStatus, fResponsible, fPdc, fMeetingDate],
+    [commitments, fStatus, fResponsible, fProcess, fMeetingDate],
   );
 
   const groups = useMemo(() => {
@@ -219,13 +219,13 @@ export default function CommitmentsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={fPdc} onValueChange={setFPdc}>
+            <Select value={fProcess} onValueChange={setFProcess}>
               <SelectTrigger><SelectValue placeholder="Proceso" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los procesos</SelectItem>
                 <SelectItem value="none">Sin vincular</SelectItem>
                 {processes.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -281,7 +281,7 @@ export default function CommitmentsPage() {
             <TabsContent value="structured" className="mt-4 space-y-2">
               <Label htmlFor="commitments-text">Compromisos (una línea por compromiso)</Label>
               <p className="text-xs text-muted-foreground">
-                Formato: <code>[Responsable] Compromiso | Fecha | Prioridad | PDC</code>
+                Formato: <code>[Responsable] Compromiso | Fecha | Prioridad | PROCESS</code>
               </p>
             </TabsContent>
           </Tabs>
@@ -341,18 +341,18 @@ export default function CommitmentsPage() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell className={!d.pdcId ? "bg-warning/10" : undefined}>
+                      <TableCell className={!d.processId ? "bg-warning/10" : undefined}>
                         <Select
-                          value={d.pdcId ?? "none"}
-                          onValueChange={(v) => updateDraft(i, { pdcId: v === "none" ? null : v })}
+                          value={d.processId ?? "none"}
+                          onValueChange={(v) => updateDraft(i, { processId: v === "none" ? null : v })}
                         >
                           <SelectTrigger className="w-[200px]">
                             <SelectValue placeholder="Sin proceso" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="none">Sin proceso{d.pdcReference ? ` (${d.pdcReference})` : ""}</SelectItem>
+                            <SelectItem value="none">Sin proceso{d.processReference ? ` (${d.processReference})` : ""}</SelectItem>
                             {processes.map((p) => (
-                              <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                              <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
@@ -428,13 +428,13 @@ export default function CommitmentsPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={fPdc} onValueChange={setFPdc}>
+            <Select value={fProcess} onValueChange={setFProcess}>
               <SelectTrigger><SelectValue placeholder="Proceso" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los procesos</SelectItem>
                 <SelectItem value="none">Sin vincular</SelectItem>
                 {processes.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>{p.pdc_number} · {p.name}</SelectItem>
+                  <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -456,13 +456,13 @@ export default function CommitmentsPage() {
                 {!isLoading && filtered.slice(0, visibleCount).map((c) => {
                   const meta = dueMeta(c.due_date, c.status);
                   const statusLabel = COMMITMENT_STATUSES.find((s) => s.value === c.status)?.label ?? c.status;
-                  const proc = processes.find((p) => p.id === c.pdc_id);
+                  const proc = processes.find((p) => p.id === c.process_id);
                   return (
                     <div key={c.id} className="border rounded-lg p-3 space-y-1.5 bg-card">
                       <p className="text-sm font-medium">{c.commitment_text}</p>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span>{c.responsible_name ?? "Sin responsable"}</span>
-                        {proc && <span className="font-mono">{proc.pdc_number}</span>}
+                        {proc && <span className="font-mono">{proc.process_number}</span>}
                         {c.due_date && (
                           <span className={meta.overdue ? "text-danger font-semibold" : undefined}>
                             Límite: {c.due_date}{meta.overdue ? " · vencido" : ""}
