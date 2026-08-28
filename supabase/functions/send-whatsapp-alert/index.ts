@@ -7,7 +7,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const GRAPH_VERSION = "v21.0";
 const APP_BASE_URL = "https://app.pro-curem.com";
 const TEMPLATE_NAME = "procurem_alerta";
-const TEMPLATE_LANG = "es";
+const TEMPLATE_LANG = "es_CL";
 
 const ACTION_LABELS: Record<string, string> = {
   approval_required: "Aprobación requerida",
