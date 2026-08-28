@@ -103,7 +103,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "alerts_pdc_id_fkey"
+            foreignKeyName: "alerts_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "processes"
@@ -269,7 +269,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "minuta_sessions_pdc_id_fkey"
+            foreignKeyName: "minuta_sessions_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "processes"
@@ -416,7 +416,7 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "process_commitments_pdc_id_fkey"
+            foreignKeyName: "process_commitments_process_id_fkey"
             columns: ["process_id"]
             isOneToOne: false
             referencedRelation: "processes"
