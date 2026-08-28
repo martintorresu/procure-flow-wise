@@ -199,7 +199,7 @@ var add_process_comment_default = defineTool5({
       return { content: [{ type: "text", text: "No autenticado" }], isError: true };
     }
     const supabase = supabaseForUser(ctx);
-    const { data: process, error: processError } = await supabase.from("purchase_processes").select("id, tenant_id").eq("id", process_id).maybeSingle();
+    const { data: process, error: processError } = await supabase.from("processes").select("id, tenant_id").eq("id", process_id).maybeSingle();
     if (processError) return { content: [{ type: "text", text: processError.message }], isError: true };
     if (!process) return { content: [{ type: "text", text: "Proceso no encontrado o sin acceso" }], isError: true };
     const { data, error } = await supabase.from("process_comments").insert({

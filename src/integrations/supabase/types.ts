@@ -739,28 +739,28 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "purchase_processes_paused_by_contingency_fkey"
+            foreignKeyName: "processes_paused_by_contingency_fkey"
             columns: ["paused_by_contingency"]
             isOneToOne: false
             referencedRelation: "process_contingencies"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "purchase_processes_predecessor_process_id_fkey"
+            foreignKeyName: "processes_predecessor_process_id_fkey"
             columns: ["predecessor_process_id"]
             isOneToOne: false
             referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "purchase_processes_project_id_fkey"
+            foreignKeyName: "processes_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "purchase_processes_tenant_id_fkey"
+            foreignKeyName: "processes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"

@@ -17,7 +17,7 @@ export default defineTool({
     }
     const supabase = supabaseForUser(ctx);
     const { data: process, error: processError } = await supabase
-      .from("purchase_processes")
+      .from("processes")
       .select("id, tenant_id")
       .eq("id", process_id)
       .maybeSingle();
