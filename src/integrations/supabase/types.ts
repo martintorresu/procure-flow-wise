@@ -780,7 +780,12 @@ export type Database = {
       }
       permit_documents: {
         Row: {
+          description: string | null
           document_type: string | null
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
           file_url: string | null
           id: string
           name: string
@@ -790,7 +795,12 @@ export type Database = {
           uploaded_by: string | null
         }
         Insert: {
+          description?: string | null
           document_type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           file_url?: string | null
           id?: string
           name: string
@@ -800,7 +810,12 @@ export type Database = {
           uploaded_by?: string | null
         }
         Update: {
+          description?: string | null
           document_type?: string | null
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
           file_url?: string | null
           id?: string
           name?: string
