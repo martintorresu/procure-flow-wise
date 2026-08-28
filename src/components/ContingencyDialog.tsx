@@ -35,9 +35,6 @@ export function ContingencyDialog({ pdc, createdBy }: { pdc: Pdc; createdBy: str
         executionMode: mode,
         reason: reason.trim(),
         title: title.trim() || `Contingencia: ${pdc.title}`,
-        criticality: pdc.criticality,
-        project: pdc.project,
-        projectId: pdc.project_id ?? null,
         createdBy,
       },
       {
@@ -124,7 +121,7 @@ export function ContingencyDialog({ pdc, createdBy }: { pdc: Pdc; createdBy: str
             <Label htmlFor="cont-title">Título del proceso de contingencia</Label>
             <Input id="cont-title" value={title} onChange={(e) => setTitle(e.target.value)} />
             <p className="text-xs text-muted-foreground">
-              Hereda criticidad ({pdc.criticality}) y proyecto ({pdc.project}) del proceso padre.
+              Hereda el proyecto ({pdc.project_name}) del proceso padre.
             </p>
           </div>
         </div>

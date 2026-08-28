@@ -1,29 +1,13 @@
-/** Etiquetas legibles para claves técnicas de etapas y estados. */
+/** Etiquetas legibles para claves técnicas usadas en mensajes automáticos. */
 export const STAGE_LABELS: Record<string, string> = {
-  ingenieria: "Ingeniería",
-  definicion_tecnica: "Definición Técnica",
-  programacion: "Programación",
-  planificacion: "Planificación",
-  compras: "Compras",
-  cotizacion: "Cotización",
-  licitacion: "Licitación",
-  evaluacion: "Evaluación",
-  adjudicacion: "Adjudicación",
-  orden_compra: "Orden de Compra",
-  seguimiento: "Seguimiento",
-  fat: "FAT",
-  logistica: "Logística",
-  recepcion: "Recepción",
-  cerrado: "Cerrado",
   pending_approval: "Pendiente de aprobación",
-  po_issued: "Orden de Compra emitida",
-  shipping: "En tránsito",
-  arrived: "Recibido",
-  awarded: "Adjudicado",
-  closed: "Cerrado",
+  not_started: "No iniciada",
+  in_progress: "En curso",
+  blocked: "Bloqueada",
+  completed: "Completada",
 };
 
-/** Convierte una clave técnica en texto legible ("orden_compra" → "Orden de Compra"). */
+/** Convierte una clave técnica en texto legible ("in_progress" → "En curso"). */
 export function formatStageLabel(key?: string | null): string {
   if (!key) return "—";
   const k = key.trim().toLowerCase();

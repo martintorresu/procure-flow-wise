@@ -1,78 +1,29 @@
-import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { StatusBadge, TrafficLightIndicator, CriticalityBadge } from "@/components/StatusIndicators";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, DollarSign, User, MapPin, FileText, ClipboardList, Wrench, Check, Pencil } from "lucide-react";
+import { ArrowLeft, User, Pencil, Link2, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 import { usePdc } from "@/hooks/usePdcs";
 import { useAlerts } from "@/hooks/useAlerts";
-import { getTrafficLight } from "@/lib/trafficLight";
 import { useAuth } from "@/contexts/AuthContext";
 import { SEO } from "@/components/SEO";
-import { ProcessStepper } from "@/components/ProcessStepper";
-import { PURCHASE_STEPS, PURCHASE_STATUS_ORDER } from "@/lib/processStages";
-import { ProcessStepperZoom } from "@/components/ProcessStepperZoom";
 import { formatDate, humanizeTechnicalText } from "@/lib/stageLabels";
-import type { Pdc } from "@/types/pdc";
-import { GENERIC_STAGES, PROCESS_TYPE_LABELS, canChain, genericStageIndex, isPurchaseType, type ProcessType } from "@/lib/processTypes";
+import { PROCESS_TYPE_LABELS, canChain, type ProcessType } from "@/lib/processTypes";
 import { Badge } from "@/components/ui/badge";
-import { Link2 } from "lucide-react";
 import { useProcessParticipants } from "@/hooks/useProcessParticipants";
 import { InviteExternalDialog } from "@/components/InviteExternalDialog";
 import { ProcessComments } from "@/components/ProcessComments";
 import { ProcessCommitments } from "@/components/ProcessCommitments";
 import { ProcessStages } from "@/components/ProcessStages";
 import { ProcessDocuments } from "@/components/ProcessDocuments";
+import { ProcessProgressCard } from "@/components/StageProgress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ContingencyDialog } from "@/components/ContingencyDialog";
 import { ProcessContingencies } from "@/components/ProcessContingencies";
 import { useCompleteContingency, useContingenciesByProcess } from "@/hooks/useProcessContingencies";
 import { canManageContingencies, timeAgo } from "@/lib/contingencies";
-
-
-
-const STATUS_ORDER = PURCHASE_STATUS_ORDER;
-
-function PurchaseStepperCard({ pdc }: { pdc: Pdc }) {
-  const [showFull, setShowFull] = useState(false);
-  const steps = PURCHASE_STEPS;
-  const idx = STATUS_ORDER.indexOf(pdc.current_status);
-  const activeStepIdx = idx >= 0 ? idx : 0;
-  const useZoom = steps.length > 6 && !showFull;
-
-  return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-medium">Avance del proceso</h3>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground">
-              Etapa actual: <span className="font-medium text-foreground">{steps[activeStepIdx]?.label ?? "—"}</span>
-            </span>
-            <button
-              type="button"
-              onClick={() => setShowFull((v) => !v)}
-              className="text-xs text-accent hover:underline"
-            >
-              {useZoom ? `Ver flujo completo (${steps.length} etapas)` : "Ver etapa crítica"}
-            </button>
-          </div>
-        </div>
-        {useZoom ? (
-          <ProcessStepperZoom steps={steps} activeIndex={activeStepIdx} progress={null} />
-        ) : (
-          <ProcessStepper steps={steps} activeIndex={activeStepIdx} />
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-
-
 
 export default function PdcDetailPage() {
   const { id } = useParams();
@@ -94,8 +45,6 @@ export default function PdcDetailPage() {
   const isPaused = !!pdc?.paused_by_contingency;
   const pausingContingency = contingencies.find((c) => c.id === pdc?.paused_by_contingency);
 
-
-
   if (loading) {
     return <div className="text-center py-20 text-muted-foreground">Cargando proceso…</div>;
   }
@@ -110,21 +59,16 @@ export default function PdcDetailPage() {
   }
 
   const processType = (pdc.process_type ?? "compra") as ProcessType;
-  const isPurchase = isPurchaseType(processType);
-  const showChainButton = canChain(processType, pdc.current_stage, pdc.current_status);
+  const showChainButton = canChain();
   const alerts = allAlerts.filter((a) => a.pdc_id === pdc.id);
-
-  // Etapas del stepper genérico (constantes del tipo de proceso)
-  const genericSteps = GENERIC_STAGES.map((g, i) => ({
-    key: g.key,
-    label: g.label,
-    icon: [FileText, ClipboardList, Wrench, Check][i],
-  }));
-  const genericActiveIndex = Math.min(genericStageIndex(pdc.current_stage), genericSteps.length - 1);
 
   return (
     <div className="space-y-6">
-      <SEO title={`${pdc.pdc_number} — ${pdc.title}`} description={`Detalle del proceso ${pdc.pdc_number}: estado ${pdc.current_status}, proyecto ${pdc.project}.`} path={`/pdcs/${pdc.id}`} />
+      <SEO
+        title={`${pdc.pdc_number} — ${pdc.title}`}
+        description={`Detalle del proceso ${pdc.pdc_number} del proyecto ${pdc.project_name}.`}
+        path={`/pdcs/${pdc.id}`}
+      />
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-start gap-4">
@@ -133,16 +77,11 @@ export default function PdcDetailPage() {
           </Link>
           <div>
             <div className="flex items-center gap-3 mb-1">
-              <TrafficLightIndicator color={getTrafficLight(pdc)} />
               <h1 className="text-xl font-bold">{pdc.pdc_number}</h1>
-              <StatusBadge status={pdc.current_status} />
-              <CriticalityBadge level={pdc.criticality} />
-              <Badge variant="outline" className="text-xs">
-                {isPurchase ? "Proceso de Compra" : PROCESS_TYPE_LABELS[processType]}
-              </Badge>
+              <Badge variant="outline" className="text-xs">{PROCESS_TYPE_LABELS[processType]}</Badge>
             </div>
             <p className="text-lg font-medium">{pdc.title}</p>
-            <p className="text-sm text-muted-foreground">{pdc.project}</p>
+            <p className="text-sm text-muted-foreground">{pdc.project_name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -157,8 +96,8 @@ export default function PdcDetailPage() {
                   </Button>
                 </Link>
               )}
-              {canBifurcate && user && !isPaused && (
-                <ContingencyDialog pdc={pdc} createdBy={user.id} />
+              {canBifurcate && user && (
+                !isPaused && <ContingencyDialog pdc={pdc} createdBy={user.id} />
               )}
               {isAdmin && pdc.tenant_id && user && (
                 <InviteExternalDialog processId={pdc.id} tenantId={pdc.tenant_id} invitedBy={user.id} />
@@ -190,16 +129,13 @@ export default function PdcDetailPage() {
             </>
           )}
         </div>
-
       </div>
 
       {isPaused && pausingContingency && (
         <Card className="border-l-4 border-l-amber-500 bg-amber-500/5">
           <CardContent className="p-4 flex flex-wrap items-center justify-between gap-4">
             <div className="space-y-1">
-              <p className="text-sm font-medium">
-                ⏸️ Proceso pausado por contingencia
-              </p>
+              <p className="text-sm font-medium">⏸️ Proceso pausado por contingencia</p>
               <p className="text-xs text-muted-foreground">
                 {pausingContingency.reason} · Iniciada {timeAgo(pausingContingency.created_at)}
               </p>
@@ -227,17 +163,12 @@ export default function PdcDetailPage() {
         </Card>
       )}
 
-
-
       {/* Key info cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[
           { icon: User, label: "Responsable", value: pdc.current_owner },
-          ...(isExternal ? [] : [{ icon: DollarSign, label: "Monto Estimado", value: `${pdc.currency} ${pdc.estimated_amount.toLocaleString()}` }]),
-          { icon: Calendar, label: "Fecha Requerida", value: pdc.required_on_site_date },
-          ...(isExternal ? [] : [{ icon: MapPin, label: "Proveedor", value: pdc.selected_supplier || "Sin asignar" }]),
+          { icon: FolderKanban, label: "Proyecto", value: pdc.project_name },
         ].map((item) => (
-
           <Card key={item.label}>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 text-muted-foreground mb-1">
@@ -250,27 +181,8 @@ export default function PdcDetailPage() {
         ))}
       </div>
 
-      {/* Progress stepper */}
-      {!isPurchase && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-medium">Avance del proceso</h3>
-              <span className="text-xs text-muted-foreground">
-                Etapa actual:{" "}
-                <span className="font-medium text-foreground">
-                  {genericSteps[genericActiveIndex].label}
-                </span>
-              </span>
-            </div>
-            <ProcessStepper steps={genericSteps} activeIndex={genericActiveIndex} />
-          </CardContent>
-        </Card>
-      )}
-      {isPurchase && (
-        <PurchaseStepperCard pdc={pdc} />
-      )}
-
+      {/* Avance real desde process_stages */}
+      <ProcessProgressCard processId={pdc.id} />
 
       {/* Vista reducida para participantes externos */}
       {isExternal && (
@@ -282,7 +194,6 @@ export default function PdcDetailPage() {
                 <p className="text-sm text-muted-foreground">{pdc.description}</p>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-muted-foreground">Categoría:</span> {pdc.category}</div>
                 <div><span className="text-muted-foreground">Creado:</span> {formatDate(pdc.created_at)}</div>
                 <div><span className="text-muted-foreground">Actualizado:</span> {formatDate(pdc.updated_at)}</div>
               </div>
@@ -302,14 +213,12 @@ export default function PdcDetailPage() {
       {/* Tabs */}
       {!isExternal && (
       <Tabs defaultValue="summary">
-
-        <TabsList className="grid grid-cols-3 lg:grid-cols-6 w-full h-auto">
+        <TabsList className="grid grid-cols-3 lg:grid-cols-5 w-full h-auto">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="stages">Etapas</TabsTrigger>
           <TabsTrigger value="documents">Documentos</TabsTrigger>
           <TabsTrigger value="commitments">Compromisos</TabsTrigger>
           <TabsTrigger value="contingencies">Contingencias</TabsTrigger>
-          <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
 
         <TabsContent value="stages">
@@ -322,14 +231,11 @@ export default function PdcDetailPage() {
 
         <TabsContent value="documents">
           <ProcessDocuments processId={pdc.id} />
-
         </TabsContent>
 
         <TabsContent value="commitments">
           <ProcessCommitments pdcId={pdc.id} />
         </TabsContent>
-
-
 
         {/* Summary */}
         <TabsContent value="summary">
@@ -337,13 +243,13 @@ export default function PdcDetailPage() {
             <CardContent className="p-6 space-y-4">
               <div>
                 <h3 className="font-medium mb-1">Descripción</h3>
-                <p className="text-sm text-muted-foreground">{pdc.description}</p>
+                <p className="text-sm text-muted-foreground">{pdc.description || "Sin descripción."}</p>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-muted-foreground">Categoría:</span> {pdc.category}</div>
+                <div><span className="text-muted-foreground">Tipo:</span> {PROCESS_TYPE_LABELS[processType]}</div>
+                <div><span className="text-muted-foreground">Proyecto:</span> {pdc.project_name}</div>
                 <div><span className="text-muted-foreground">Creado:</span> {formatDate(pdc.created_at)}</div>
                 <div><span className="text-muted-foreground">Actualizado:</span> {formatDate(pdc.updated_at)}</div>
-                <div><span className="text-muted-foreground">Moneda:</span> {pdc.currency}</div>
               </div>
               {alerts.length > 0 && (
                 <div>
@@ -354,28 +260,6 @@ export default function PdcDetailPage() {
                     </div>
                   ))}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Closed */}
-        <TabsContent value="closed">
-          <Card>
-            <CardHeader><CardTitle className="text-base">Cierre del Proceso</CardTitle></CardHeader>
-            <CardContent>
-              {pdc.current_status === "closed" || pdc.current_status === "closed_with_incident" ? (
-                <div className="space-y-3 text-sm">
-                  <div className={`p-4 rounded-lg border ${pdc.current_status === "closed" ? "bg-success/10 border-success/20" : "bg-warning/10 border-warning/20"}`}>
-                    <p className="text-muted-foreground">Estado de cierre</p>
-                    <p className={`text-lg font-bold ${pdc.current_status === "closed" ? "text-success" : "text-warning"}`}>
-                      {pdc.current_status === "closed" ? "Cerrado satisfactoriamente" : "Cerrado con incidente"}
-                    </p>
-                  </div>
-                  <div><span className="text-muted-foreground">Última actualización:</span> {formatDate(pdc.updated_at)}</div>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">El proceso aún no se encuentra cerrado.</p>
               )}
             </CardContent>
           </Card>
@@ -393,6 +277,5 @@ export default function PdcDetailPage() {
         />
       )}
     </div>
-
   );
 }

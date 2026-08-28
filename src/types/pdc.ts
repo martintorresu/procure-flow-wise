@@ -1,46 +1,20 @@
-export type PdcStatus =
-  | "draft"
-  | "technical_definition"
-  | "planning"
-  | "quotation"
-  | "evaluation"
-  | "awarded"
-  | "po_issued"
-  | "drawings"
-  | "fat"
-  | "shipping"
-  | "arrived"
-  | "closed"
-  | "closed_with_incident";
-
-export type Criticality = "low" | "medium" | "high";
-export type TrafficLight = "green" | "yellow" | "red";
 export type UserRole = "admin" | "compras" | "ingenieria" | "programacion" | "gerente" | "planificacion" | "logistica";
 
 export interface Pdc {
   id: string;
   pdc_number: string;
-  project: string;
   title: string;
   description: string;
-  category: string;
-  criticality: Criticality;
-  estimated_amount: number;
-  currency: string;
-  required_on_site_date: string;
-  current_status: PdcStatus;
+  /** Nombre del proyecto vinculado (join con projects). */
+  project_name: string;
   current_owner: string;
-  requesting_area?: string | null;
-  selected_supplier?: string;
   created_at: string;
   updated_at: string;
-  /** Etapa cruda del enum process_stage (BD). */
-  current_stage?: string;
   /** Tenant dueño del proceso. */
   tenant_id?: string | null;
 
-  /** Tipo de proceso: compra | licitacion | contrato | permiso | personalizado. */
-  process_type?: "compra" | "licitacion" | "contrato" | "permiso" | "personalizado";
+  /** Tipo de proceso: compra | licitacion | contrato | permiso | obra | personalizado. */
+  process_type?: "compra" | "licitacion" | "contrato" | "permiso" | "obra" | "personalizado";
   /** Proyecto normalizado (tabla projects). */
   project_id?: string | null;
   /** Proceso del que este es continuación. */
@@ -75,28 +49,4 @@ export interface User {
   rut?: string;
   /** Preferencia de recibir alertas por WhatsApp. */
   whatsappNotificationsEnabled?: boolean;
-
 }
-
-
-export const STATUS_LABELS: Record<PdcStatus, string> = {
-  draft: "Borrador",
-  technical_definition: "Definición Técnica",
-  planning: "Planificación",
-  quotation: "Cotización",
-  evaluation: "Evaluación",
-  awarded: "Adjudicado",
-  po_issued: "OC Emitida",
-  drawings: "Planos",
-  fat: "Prueba de Fábrica",
-  shipping: "En Tránsito",
-  arrived: "Arribado",
-  closed: "Cerrado",
-  closed_with_incident: "Cerrado c/Incidente",
-};
-
-export const CRITICALITY_LABELS: Record<Criticality, string> = {
-  low: "Baja",
-  medium: "Media",
-  high: "Alta",
-};

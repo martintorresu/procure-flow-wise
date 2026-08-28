@@ -113,14 +113,12 @@ Deno.serve(async (req) => {
       if (!related && alert.pdc_id) {
         const [{ data: proc }, { data: participant }] = await Promise.all([
           admin.from("purchase_processes")
-            .select("id, created_by, engineering_responsible")
+            .select("id, created_by")
             .eq("id", alert.pdc_id).eq("tenant_id", tenantId).maybeSingle(),
           admin.from("process_participants")
             .select("id").eq("process_id", alert.pdc_id).eq("user_id", caller.id).maybeSingle(),
         ]);
-        related = !!participant ||
-          proc?.created_by === caller.id ||
-          proc?.engineering_responsible === caller.id;
+        related = !!participant || proc?.created_by === caller.id;
       }
       if (!related) return json({ error: "No autorizado para notificar este proceso" }, 403);
     }
@@ -150,10 +148,9 @@ Deno.serve(async (req) => {
     if (alert) {
       if (alert.pdc_id) {
         const { data: pdc } = await admin
-          .from("purchase_processes").select("pdc_number, name, current_stage").eq("id", alert.pdc_id).maybeSingle();
+          .from("purchase_processes").select("pdc_number, name").eq("id", alert.pdc_id).maybeSingle();
         if (pdc) {
           pdcName = `${pdc.pdc_number} · ${pdc.name}`;
-          if (pdc.current_stage) currentStage = String(pdc.current_stage);
         }
       }
       actionType = ACTION_LABELS[alert.type] ?? alert.type;

@@ -19,7 +19,7 @@
       {
         "name": "list_processes",
         "title": "Listar procesos de compra",
-        "description": "Lista los procesos de compra visibles para el usuario, con filtros opcionales por criticidad, etapa, tipo o texto de búsqueda.",
+        "description": "Lista los procesos de compra visibles para el usuario, con filtros opcionales por tipo o texto de búsqueda.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,
@@ -32,20 +32,6 @@
               "type": "string",
               "minLength": 1,
               "description": "Texto a buscar en el nombre o número del proceso."
-            },
-            "criticality": {
-              "type": "string",
-              "enum": [
-                "alta",
-                "media",
-                "baja"
-              ],
-              "description": "Filtrar por criticidad."
-            },
-            "stage": {
-              "type": "string",
-              "minLength": 1,
-              "description": "Filtrar por etapa actual (current_stage)."
             },
             "process_type": {
               "type": "string",

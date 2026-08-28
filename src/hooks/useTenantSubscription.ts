@@ -25,8 +25,7 @@ async function countActiveProcesses(tenantId: string) {
   const { count } = await supabase
     .from("purchase_processes")
     .select("id", { count: "exact", head: true })
-    .eq("tenant_id", tenantId)
-    .neq("current_stage", "recepcion");
+    .eq("tenant_id", tenantId);
   return count ?? 0;
 }
 

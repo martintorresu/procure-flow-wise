@@ -5,85 +5,40 @@ import {
   type UseQueryResult,
 } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Pdc, Criticality, PdcStatus } from "@/types/pdc";
+import type { Pdc } from "@/types/pdc";
 import { queryKeys, type PdcFilters } from "@/lib/queryKeys";
 import type { ProcessType } from "@/lib/processTypes";
 
-
-// Mapas DB ↔ FE
-const CRIT_DB_TO_FE: Record<string, Criticality> = { baja: "low", media: "medium", alta: "high" };
-export const CRIT_FE_TO_DB: Record<Criticality, "baja" | "media" | "alta"> = {
-  low: "baja", medium: "media", high: "alta",
-};
-
-const STAGE_TO_STATUS: Record<string, PdcStatus> = {
-  ingenieria: "technical_definition",
-  programacion: "planning",
-  compras: "quotation",
-  licitacion: "quotation",
-  cotizacion: "quotation",
-  evaluacion: "evaluation",
-  adjudicacion: "awarded",
-  orden_compra: "po_issued",
-  oc: "po_issued",
-  seguimiento: "fat",
-  fat: "fat",
-  logistica: "shipping",
-  recepcion: "shipping",
-  cerrado: "closed",
-};
-
-// Orden de avance de etapas en BD (process_stage enum)
-const STAGE_ORDER = [
-  "ingenieria", "programacion", "compras", "licitacion",
-  "evaluacion", "orden_compra", "seguimiento", "recepcion",
-] as const;
-export type DbStage = typeof STAGE_ORDER[number];
+const SELECT = "*, project:projects(name)";
 
 export interface PdcRow {
   id: string;
   pdc_number: string;
   name: string;
-  project: string;
   description: string | null;
-  category: string | null;
-  criticality: string;
-  estimated_amount: number | null;
-  currency: string | null;
-  required_on_site_date: string | null;
-  current_stage: string;
-  requesting_area: string | null;
-  et_document_code: string | null;
-  engineering_responsible: string | null;
   responsible_name: string | null;
   process_type: string | null;
   project_id: string | null;
+  project?: { name: string } | null;
   predecessor_process_id: string | null;
   paused_by_contingency: string | null;
   created_by: string;
   created_at: string;
   updated_at: string;
+  tenant_id?: string | null;
 }
 
 export function rowToPdc(r: PdcRow): Pdc {
   return {
     id: r.id,
     pdc_number: r.pdc_number,
-    project: r.project,
     title: r.name,
     description: r.description ?? "",
-    category: r.category ?? "",
-    criticality: CRIT_DB_TO_FE[r.criticality] ?? "medium",
-    estimated_amount: Number(r.estimated_amount ?? 0),
-    currency: r.currency ?? "USD",
-    required_on_site_date: r.required_on_site_date ?? "",
-    current_status: STAGE_TO_STATUS[r.current_stage] ?? "draft",
+    project_name: r.project?.name ?? "—",
     current_owner: r.responsible_name ?? "—",
-    requesting_area: r.requesting_area ?? null,
     created_at: r.created_at,
     updated_at: r.updated_at,
-    current_stage: r.current_stage as DbStage,
-    tenant_id: (r as PdcRow & { tenant_id?: string }).tenant_id ?? null,
+    tenant_id: r.tenant_id ?? null,
     process_type: (r.process_type as Pdc["process_type"]) ?? "compra",
     project_id: r.project_id ?? null,
     predecessor_process_id: r.predecessor_process_id ?? null,
@@ -91,15 +46,14 @@ export function rowToPdc(r: PdcRow): Pdc {
   };
 }
 
-/** Lista PdCs del tenant del usuario (RLS filtra). Soporta filtros opcionales. */
+/** Lista procesos del tenant del usuario (RLS filtra). Soporta filtros opcionales. */
 export function usePdcs(filters?: PdcFilters): UseQueryResult<Pdc[], Error> {
   return useQuery({
     queryKey: queryKeys.pdcs(filters),
     queryFn: async () => {
-      let q = supabase.from("purchase_processes").select("*").order("created_at", { ascending: false });
-      if (filters?.project) q = q.ilike("project", `%${filters.project}%`);
-      if (filters?.criticality) q = q.eq("criticality", CRIT_FE_TO_DB[filters.criticality]);
-      if (filters?.stage) q = q.eq("current_stage", filters.stage as DbStage);
+      let q = supabase.from("purchase_processes").select(SELECT).order("created_at", { ascending: false });
+      if (filters?.projectId) q = q.eq("project_id", filters.projectId);
+      if (filters?.processType) q = q.eq("process_type", filters.processType);
       const { data, error } = await q;
       if (error) throw new Error(error.message);
       return (data as unknown as PdcRow[]).map(rowToPdc);
@@ -107,14 +61,14 @@ export function usePdcs(filters?: PdcFilters): UseQueryResult<Pdc[], Error> {
   });
 }
 
-/** Detalle de un PdC. */
+/** Detalle de un proceso. */
 export function usePdc(id: string | undefined): UseQueryResult<Pdc | null, Error> {
   return useQuery({
     queryKey: id ? queryKeys.pdc(id) : ["pdcs", "none"],
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("purchase_processes").select("*").eq("id", id!).maybeSingle();
+        .from("purchase_processes").select(SELECT).eq("id", id!).maybeSingle();
       if (error) throw new Error(error.message);
       return data ? rowToPdc(data as unknown as PdcRow) : null;
     },
@@ -122,18 +76,11 @@ export function usePdc(id: string | undefined): UseQueryResult<Pdc | null, Error
 }
 
 export interface CreatePdcInput {
-  project: string;
-  project_id?: string | null;
+  project_id: string;
   process_type?: ProcessType;
   predecessor_process_id?: string | null;
   name: string;
   description?: string | null;
-  category?: string | null;
-  criticality: Criticality;
-  estimated_amount?: number | null;
-  currency: string;
-  required_on_site_date: string;
-  requesting_area?: string;
   responsible_name?: string | null;
   created_by: string;
 }
@@ -146,19 +93,11 @@ export function useCreatePdc() {
         .from("purchase_processes")
         .insert({
           name: input.name,
-          project: input.project,
-          project_id: input.project_id ?? null,
+          project_id: input.project_id,
           process_type: input.process_type ?? "compra",
           predecessor_process_id: input.predecessor_process_id ?? null,
           description: input.description ?? null,
-          category: input.category ?? null,
-          criticality: CRIT_FE_TO_DB[input.criticality],
-          estimated_amount: input.estimated_amount ?? null,
-          currency: input.currency,
-          required_on_site_date: input.required_on_site_date,
-          requesting_area: input.requesting_area || "Sin especificar",
           responsible_name: input.responsible_name ?? null,
-          et_document_code: null,
           created_by: input.created_by,
           tenant_id: "00000000-0000-0000-0000-000000000000", // overridden by trigger
         })
@@ -175,18 +114,10 @@ export interface UpdatePdcInput {
   id: string;
   patch: Partial<{
     name: string;
-    project: string;
     project_id: string | null;
     process_type: ProcessType;
     description: string | null;
-    category: string | null;
-    criticality: Criticality;
-    estimated_amount: number | null;
-    currency: string;
-    required_on_site_date: string;
-    requesting_area: string;
     responsible_name: string | null;
-    current_stage: DbStage;
   }>;
 }
 
@@ -194,54 +125,15 @@ export function useUpdatePdc() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: UpdatePdcInput) => {
-      const { criticality, ...rest } = patch;
       const { error } = await supabase
         .from("purchase_processes")
-        .update({
-          ...rest,
-          ...(criticality !== undefined ? { criticality: CRIT_FE_TO_DB[criticality] } : {}),
-        })
+        .update(patch)
         .eq("id", id);
       if (error) throw new Error(error.message);
     },
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: ["pdcs"] });
       qc.invalidateQueries({ queryKey: queryKeys.pdc(vars.id) });
-    },
-  });
-}
-
-/**
- * Avanza la etapa del proceso a la siguiente del flujo.
- */
-export function useAdvanceStage() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (pdcId: string): Promise<{ advanced: boolean; pendingRole?: string }> => {
-      const { data: pdc, error: pdcErr } = await supabase
-        .from("purchase_processes")
-        .select("id, tenant_id, current_stage, criticality, estimated_amount, name, pdc_number")
-        .eq("id", pdcId).single();
-      if (pdcErr) throw new Error(pdcErr.message);
-
-      const idx = STAGE_ORDER.indexOf(pdc.current_stage as DbStage);
-      if (idx < 0 || idx >= STAGE_ORDER.length - 1) {
-        throw new Error("El proceso ya está en la última etapa.");
-      }
-      const nextStage = STAGE_ORDER[idx + 1];
-
-      // Sin bloqueo → avanza
-      const { error: advErr } = await supabase
-        .from("purchase_processes")
-        .update({ current_stage: nextStage })
-        .eq("id", pdcId);
-      if (advErr) throw new Error(advErr.message);
-      return { advanced: true };
-    },
-    onSuccess: (_d, pdcId) => {
-      qc.invalidateQueries({ queryKey: ["pdcs"] });
-      qc.invalidateQueries({ queryKey: queryKeys.pdc(pdcId) });
-      qc.invalidateQueries({ queryKey: queryKeys.alerts() });
     },
   });
 }
