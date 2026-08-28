@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTenant } from "@/config/tenants";
+
 import { useAlerts } from "@/hooks/useAlerts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProcuremMark, ProcuremLockup } from "@/components/ProcuremMark";
@@ -54,7 +54,6 @@ const baseBottomItems: NavItem[] = [
 export default function AppSidebar() {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const tenant = useTenant();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
 
