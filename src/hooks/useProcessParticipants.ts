@@ -8,15 +8,18 @@ export interface ProcessParticipant {
   id: string;
   process_id: string;
   tenant_id: string;
-  email: string;
+  email: string | null;
   external_company: string | null;
   external_role: ExternalRole;
   permission_level: PermissionLevel;
   status: "pending" | "accepted";
   user_id: string | null;
+  /** Cargo descriptivo (opcional). No influye en permisos. */
+  position_id: string | null;
   invited_at: string;
   accepted_at: string | null;
 }
+
 
 export const EXTERNAL_ROLE_LABELS: Record<ExternalRole, string> = {
   mandante: "Mandante",
