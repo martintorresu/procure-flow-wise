@@ -10,44 +10,22 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreatePdc, usePdc } from "@/hooks/usePdcs";
 import { ProjectSelect } from "@/components/ProjectSelect";
-import { ProcessStepper } from "@/components/ProcessStepper";
-import { PURCHASE_STEPS } from "@/lib/processStages";
 import { SEO } from "@/components/SEO";
-import { ADMINISTRACION_CONTRATO_STAGES, GENERIC_STAGES, LICITACION_STAGES, OBRA_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isAdministracionContratoType, isLicitacionType, isObraType, isPurchaseType, type ProcessType } from "@/lib/processTypes";
-import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock, Building2, Layers, PaintRoller, MapPin } from "lucide-react";
+import {
+  ADMINISTRACION_CONTRATO_STAGES,
+  LICITACION_STAGES,
+  OBRA_STAGES,
+  PROCESS_TYPES,
+  PROCESS_TYPE_LABELS,
+  isAdministracionContratoType,
+  isLicitacionType,
+  isObraType,
+  type ProcessType,
+} from "@/lib/processTypes";
+import { Link2, Lock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
-
-
-
-const GENERIC_STEPS = GENERIC_STAGES.map((s, i) => ({
-  key: s.key,
-  label: s.label,
-  icon: [FileText, ClipboardList, Wrench, Check][i],
-}));
-
-const OBRA_ICONS = [FileText, Truck, MapPin, Layers, Building2, Ship, Wrench, PaintRoller, FlaskConical, Check];
-const OBRA_STEPS = OBRA_STAGES.map((s, i) => ({
-  key: s.key,
-  label: s.label,
-  icon: OBRA_ICONS[i],
-}));
-
-const LICITACION_ICONS = [FileText, ClipboardList, FileSearch, Truck, Wrench, FileSearch, Award, Layers, Award, Check];
-const LICITACION_STEPS = LICITACION_STAGES.map((s, i) => ({
-  key: s.key,
-  label: s.label,
-  icon: LICITACION_ICONS[i],
-}));
-
-const CONTRATO_ICONS = [FileText, Truck, ClipboardList, Wrench, Award, Layers, FileSearch, FlaskConical, Award, Check];
-const CONTRATO_STEPS = ADMINISTRACION_CONTRATO_STAGES.map((s, i) => ({
-  key: s.key,
-  label: s.label,
-  icon: CONTRATO_ICONS[i],
-}));
-
 
 export default function CreatePdcPage() {
   const navigate = useNavigate();
@@ -63,11 +41,8 @@ export default function CreatePdcPage() {
   const [form, setForm] = useState({
     process_type: "compra" as ProcessType,
     project_id: null as string | null,
-    project: "", title: "", description: "", category: "",
-    criticality: "medium" as "low" | "medium" | "high",
-    estimated_amount: "", currency: "USD",
-    required_on_site_date: "",
-    requesting_area: "",
+    title: "",
+    description: "",
     responsible_name: "",
   });
 
@@ -77,30 +52,28 @@ export default function CreatePdcPage() {
     setForm((p) => ({
       ...p,
       project_id: parent.project_id ?? null,
-      project: parent.project ?? "",
-      description: parent.selected_supplier
-        ? `Continuación de ${parent.pdc_number}. Proveedor adjudicado: ${parent.selected_supplier}.`
-        : `Continuación de ${parent.pdc_number} — ${parent.title}.`,
-      category: parent.category || "",
-      criticality: parent.criticality,
-      estimated_amount: parent.estimated_amount ? String(parent.estimated_amount) : "",
-      currency: parent.currency || "USD",
-      required_on_site_date: parent.required_on_site_date || "",
+      description: `Continuación de ${parent.pdc_number} — ${parent.title}.`,
       responsible_name: parent.current_owner && parent.current_owner !== "—" ? parent.current_owner : "",
     }));
   }, [parent]);
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
-  const isPurchase = isPurchaseType(form.process_type);
   const isObra = isObraType(form.process_type);
   const isLicitacion = isLicitacionType(form.process_type);
   const isContrato = isAdministracionContratoType(form.process_type);
 
+  const presetStages = isObra
+    ? OBRA_STAGES
+    : isLicitacion
+      ? LICITACION_STAGES
+      : isContrato
+        ? ADMINISTRACION_CONTRATO_STAGES
+        : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.project_id || !form.title || !form.required_on_site_date) {
+    if (!form.project_id || !form.title) {
       toast.error("Complete los campos obligatorios");
       return;
     }
@@ -108,34 +81,23 @@ export default function CreatePdcPage() {
       toast.error("Sesión expirada. Vuelva a iniciar sesión.");
       return;
     }
-    // Refuerzo del límite de plan también ante acceso directo por URL.
     if (subscription.isAtProcessLimit) {
       toast.error(PROCESS_LIMIT_MESSAGE);
       return;
     }
 
     try {
-      // SECURITY: tenant_id is resolved server-side via RLS policy using auth.uid()
-      // The PLACEHOLDER_TENANT pattern is used; the actual tenant is set by trigger
-      // TODO: La columna created_by debería tener DEFAULT auth.uid() en la migración SQL
       const data = await createPdc.mutateAsync({
         name: form.title,
-        project: form.project,
         project_id: form.project_id,
         process_type: form.process_type,
         predecessor_process_id: fromId ?? null,
         description: form.description || null,
-        category: form.category || null,
-        criticality: form.criticality,
-        estimated_amount: form.estimated_amount ? Number(form.estimated_amount) : null,
-        currency: form.currency,
-        required_on_site_date: form.required_on_site_date,
-        requesting_area: form.requesting_area || "Sin especificar",
         responsible_name: form.responsible_name || null,
         created_by: user.id,
       });
 
-      // Los procesos de obra reciben las 10 etapas preestablecidas
+      // Los procesos preestablecidos reciben sus 10 etapas
       if (isObra || isLicitacion || isContrato) {
         const { error: stagesError } = await supabase.rpc(
           isObra ? "seed_obra_stages" : isLicitacion ? "seed_licitacion_stages" : "seed_administracion_contrato_stages",
@@ -144,12 +106,6 @@ export default function CreatePdcPage() {
         if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
       }
       toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
-
-      // Los procesos tipo "permiso" continúan en Permisología para completar el trámite
-      if (form.process_type === "permiso") {
-        navigate(`/pdcs/${data.id}`);
-        return;
-      }
       navigate(`/pdcs/${data.id}`);
     } catch (err) {
       toast.error(`Error al crear el proceso: ${(err as Error).message}`);
@@ -158,7 +114,7 @@ export default function CreatePdcPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <SEO title="Nuevo Proceso" description="Crea un nuevo proceso indicando tipo, proyecto, criticidad, monto y fecha requerida." path="/pdcs/new" />
+      <SEO title="Nuevo Proceso" description="Crea un nuevo proceso indicando tipo, proyecto y responsable." path="/pdcs/new" />
       <div>
         <h1 className="text-2xl font-bold">Crear Proceso</h1>
         <p className="text-sm text-muted-foreground">Complete los datos del nuevo proceso</p>
@@ -178,8 +134,6 @@ export default function CreatePdcPage() {
         </Card>
       )}
 
-
-
       {parent && (
         <Card className="border-l-4 border-l-accent bg-accent/5">
           <CardContent className="p-4 flex items-center gap-2 text-sm">
@@ -191,116 +145,59 @@ export default function CreatePdcPage() {
         </Card>
       )}
 
-      <Card>
-        <CardContent className="p-6 space-y-4">
-          <p className="text-xs text-muted-foreground uppercase tracking-wide">
-            {isObra
-              ? "Flujo de ejecución de obra (10 etapas preestablecidas)"
-              : isLicitacion
-                ? "Flujo de licitación (10 etapas preestablecidas)"
-                : isContrato
-                ? "Flujo de administración de contrato (10 etapas preestablecidas)"
-                : isPurchase
-                ? "Flujo de compra (8 etapas)"
-                : "Flujo genérico (4 etapas)"}
-          </p>
-          <ProcessStepper steps={isObra ? OBRA_STEPS : isLicitacion ? LICITACION_STEPS : isContrato ? CONTRATO_STEPS : isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
-
-        </CardContent>
-      </Card>
+      {presetStages && (
+        <Card>
+          <CardContent className="p-6 space-y-3">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide">
+              Etapas preestablecidas ({presetStages.length})
+            </p>
+            <ol className="grid gap-1 text-sm sm:grid-cols-2">
+              {presetStages.map((s, i) => (
+                <li key={s.key} className="text-muted-foreground">
+                  <span className="font-mono text-xs mr-1">{i + 1}.</span>{s.label}
+                </li>
+              ))}
+            </ol>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardContent className="p-6">
           <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Tipo de proceso *</Label>
-                <Select value={form.process_type} onValueChange={(v) => update("process_type", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {PROCESS_TYPES.map((t) => (
-                      <SelectItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Categoría</Label>
-                <Select value={form.category} onValueChange={(v) => update("category", v)}>
-                  <SelectTrigger><SelectValue placeholder="Seleccione" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Equipos Mecánicos">Equipos Mecánicos</SelectItem>
-                    <SelectItem value="Equipos Eléctricos">Equipos Eléctricos</SelectItem>
-                    <SelectItem value="Instrumentación">Instrumentación</SelectItem>
-                    <SelectItem value="Válvulas">Válvulas</SelectItem>
-                    <SelectItem value="Materiales Eléctricos">Materiales Eléctricos</SelectItem>
-                    <SelectItem value="Estructuras">Estructuras</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Tipo de proceso *</Label>
+              <Select value={form.process_type} onValueChange={(v) => update("process_type", v)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PROCESS_TYPES.map((t) => (
+                    <SelectItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label>Proyecto *</Label>
               <ProjectSelect
                 value={form.project_id}
-                onChange={(id, name) => setForm((p) => ({ ...p, project_id: id, project: name }))}
+                onChange={(id) => setForm((p) => ({ ...p, project_id: id }))}
               />
             </div>
 
             <div className="space-y-2">
               <Label>Título *</Label>
-              <Input value={form.title} onChange={(e) => update("title", e.target.value)} placeholder="Descripción breve del item" />
+              <Input value={form.title} onChange={(e) => update("title", e.target.value)} placeholder="Nombre del proceso" />
             </div>
 
             <div className="space-y-2">
               <Label>Descripción</Label>
-              <Textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descripción técnica detallada" rows={3} />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Área Solicitante</Label>
-                <Input value={form.requesting_area} onChange={(e) => update("requesting_area", e.target.value)} placeholder="Ej: Operaciones, Mantenimiento" />
-              </div>
-              <div className="space-y-2">
-                <Label>Responsable</Label>
-                <Input value={form.responsible_name} onChange={(e) => update("responsible_name", e.target.value)} placeholder="Nombre del responsable" />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label>Criticidad</Label>
-                <Select value={form.criticality} onValueChange={(v) => update("criticality", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="low">Baja</SelectItem>
-                    <SelectItem value="medium">Media</SelectItem>
-                    <SelectItem value="high">Alta</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Monto Estimado</Label>
-                <Input type="number" value={form.estimated_amount} onChange={(e) => update("estimated_amount", e.target.value)} placeholder="0" />
-              </div>
-              <div className="space-y-2">
-                <Label>Moneda</Label>
-                <Select value={form.currency} onValueChange={(v) => update("currency", v)}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="CLP">CLP</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+              <Textarea value={form.description} onChange={(e) => update("description", e.target.value)} placeholder="Descripción del alcance" rows={3} />
             </div>
 
             <div className="space-y-2">
-              <Label>Fecha Requerida en Obra *</Label>
-              <Input type="date" value={form.required_on_site_date} onChange={(e) => update("required_on_site_date", e.target.value)} />
+              <Label>Responsable</Label>
+              <Input value={form.responsible_name} onChange={(e) => update("responsible_name", e.target.value)} placeholder="Nombre del responsable" />
             </div>
 
             <div className="flex gap-3 pt-4">
@@ -309,7 +206,6 @@ export default function CreatePdcPage() {
               </Button>
               <Button type="button" variant="outline" onClick={() => navigate("/pdcs")}>Cancelar</Button>
             </div>
-
           </form>
         </CardContent>
       </Card>
