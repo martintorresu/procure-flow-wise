@@ -16,17 +16,6 @@ const json = (status: number, body: unknown) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const STAGES = [
-  "ingenieria",
-  "programacion",
-  "compras",
-  "licitacion",
-  "evaluacion",
-  "orden_compra",
-  "seguimiento",
-  "recepcion",
-] as const;
-
 const VALID_ROLES = [
   "admin",
   "ingenieria",

@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Trash2, UserPlus, Database, Bell, Info } from "lucide-react";
+import { UserPlus, Bell, Info } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { useAlertRules, useUpdateAlertRule, TRIGGER_DESCRIPTIONS, type AlertRule, type AlertSeverity } from "@/hooks/useAlertRules";
 import { WhatsappConfigSection } from "@/components/admin/WhatsappConfigSection";
