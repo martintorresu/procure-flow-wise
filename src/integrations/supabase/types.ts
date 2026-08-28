@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.17"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -739,28 +739,28 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "processes_paused_by_contingency_fkey"
+            foreignKeyName: "purchase_processes_paused_by_contingency_fkey"
             columns: ["paused_by_contingency"]
             isOneToOne: false
             referencedRelation: "process_contingencies"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "processes_predecessor_process_id_fkey"
+            foreignKeyName: "purchase_processes_predecessor_process_id_fkey"
             columns: ["predecessor_process_id"]
             isOneToOne: false
             referencedRelation: "processes"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "processes_project_id_fkey"
+            foreignKeyName: "purchase_processes_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "processes_tenant_id_fkey"
+            foreignKeyName: "purchase_processes_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
