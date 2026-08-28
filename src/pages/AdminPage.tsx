@@ -286,13 +286,22 @@ function AlertRulesSection() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <p className="text-xs text-muted-foreground">
-          Configura los umbrales y severidades que disparan alertas automáticas en tu organización.
-        </p>
         {isLoading ? (
           <p className="text-sm text-muted-foreground">Cargando reglas…</p>
+        ) : rules.length === 0 ? (
+          <div className="rounded-md border border-dashed p-6 text-center space-y-2">
+            <p className="text-sm text-muted-foreground">
+              Aún no hay reglas de alerta configuradas para tu organización.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Se definirán según el modelo de procesos y compromisos. Mientras tanto, las alertas existentes siguen visibles en la sección de Alertas.
+            </p>
+          </div>
         ) : (
           <>
+            <p className="text-xs text-muted-foreground">
+              Configura los umbrales y severidades que disparan alertas automáticas en tu organización.
+            </p>
             <Table>
               <TableHeader>
                 <TableRow>
