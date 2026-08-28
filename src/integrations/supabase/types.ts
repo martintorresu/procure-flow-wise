@@ -724,6 +724,7 @@ export type Database = {
           id: string
           meeting_date: string
           pdc_id: string | null
+          process_stage_id: string | null
           quality_score: number
           status: string
           tenant_id: string
@@ -736,6 +737,7 @@ export type Database = {
           id?: string
           meeting_date: string
           pdc_id?: string | null
+          process_stage_id?: string | null
           quality_score?: number
           status?: string
           tenant_id: string
@@ -748,6 +750,7 @@ export type Database = {
           id?: string
           meeting_date?: string
           pdc_id?: string | null
+          process_stage_id?: string | null
           quality_score?: number
           status?: string
           tenant_id?: string
@@ -767,6 +770,13 @@ export type Database = {
             columns: ["pdc_id"]
             isOneToOne: false
             referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minuta_sessions_process_stage_id_fkey"
+            columns: ["process_stage_id"]
+            isOneToOne: false
+            referencedRelation: "process_stages"
             referencedColumns: ["id"]
           },
           {
@@ -1042,6 +1052,7 @@ export type Database = {
       }
       process_commitments: {
         Row: {
+          activity_ref: string | null
           commitment_text: string
           created_at: string
           created_by: string | null
@@ -1057,11 +1068,13 @@ export type Database = {
           responsible_name: string | null
           responsible_user_id: string | null
           source: string
+          stage_id: string | null
           status: string
           tenant_id: string
           updated_at: string
         }
         Insert: {
+          activity_ref?: string | null
           commitment_text: string
           created_at?: string
           created_by?: string | null
@@ -1077,11 +1090,13 @@ export type Database = {
           responsible_name?: string | null
           responsible_user_id?: string | null
           source?: string
+          stage_id?: string | null
           status?: string
           tenant_id: string
           updated_at?: string
         }
         Update: {
+          activity_ref?: string | null
           commitment_text?: string
           created_at?: string
           created_by?: string | null
@@ -1097,6 +1112,7 @@ export type Database = {
           responsible_name?: string | null
           responsible_user_id?: string | null
           source?: string
+          stage_id?: string | null
           status?: string
           tenant_id?: string
           updated_at?: string
@@ -1128,6 +1144,13 @@ export type Database = {
             columns: ["responsible_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_commitments_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "process_stages"
             referencedColumns: ["id"]
           },
           {
@@ -1371,6 +1394,60 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "process_stage_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      process_stages: {
+        Row: {
+          activities: Json
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          process_id: string
+          sort_order: number
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          activities?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          process_id: string
+          sort_order: number
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          activities?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          process_id?: string
+          sort_order?: number
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "process_stages_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "process_stages_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
