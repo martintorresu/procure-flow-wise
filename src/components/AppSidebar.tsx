@@ -2,13 +2,14 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
-  Package, Shield, FolderKanban, UserCog, MessagesSquare, Mic
+  Shield, FolderKanban, UserCog, MessagesSquare, Mic
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTenant } from "@/config/tenants";
 import { useAlerts } from "@/hooks/useAlerts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ProcuremMark, ProcuremLockup } from "@/components/ProcuremMark";
 
 interface NavItem {
   to: string;
