@@ -23,6 +23,23 @@ export const isPurchaseType = (t?: string | null): boolean => (t ?? "compra") ==
 /** True si el proceso usa el flujo preestablecido de Ejecución de Obra (10 etapas). */
 export const isObraType = (t?: string | null): boolean => t === "obra";
 
+/** True si el proceso usa el flujo preestablecido de Licitación (10 etapas). */
+export const isLicitacionType = (t?: string | null): boolean => t === "licitacion";
+
+/** Etapas preestablecidas del proceso "Licitación" (con hito principal). */
+export const LICITACION_STAGES = [
+  { key: "definicion_requerimiento", label: "Definición del Requerimiento y Estrategia" },
+  { key: "bases", label: "Preparación de Antecedentes y Bases" },
+  { key: "precalificacion", label: "Precalificación de Oferentes" },
+  { key: "convocatoria", label: "Convocatoria y Entrega de Antecedentes" },
+  { key: "consultas", label: "Consultas, Aclaraciones y Modificaciones" },
+  { key: "apertura", label: "Recepción y Apertura de Ofertas" },
+  { key: "evaluacion_ofertas", label: "Evaluación Técnica y Comercial" },
+  { key: "negociacion", label: "Aclaraciones Finales y Negociación" },
+  { key: "adjudicacion", label: "Recomendación y Adjudicación" },
+  { key: "contratacion", label: "Contratación y Habilitación" },
+] as const;
+
 /** Etapas preestablecidas del proceso "Ejecución de Obra" (con hito principal). */
 export const OBRA_STAGES = [
   { key: "cierre_diseno", label: "Cierre de Diseño y Habilitación" },
