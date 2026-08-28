@@ -71,10 +71,10 @@ async function buildDomainUser(
     if (tenant?.slug) tenantSlug = tenant.slug;
   }
 
-  // Rol prioritario: admin > gerente > compras > ingenieria > planificacion > logistica
-  const priority: UserRole[] = ["admin", "gerente", "compras", "ingenieria", "planificacion", "logistica"];
+  // Nivel de acceso prioritario: admin > gestor > colaborador > lector
+  const priority: UserRole[] = ["admin", "gestor", "colaborador", "lector"];
   const roleList = (roles ?? []).map((r) => r.role as UserRole);
-  const role = priority.find((p) => roleList.includes(p)) ?? "ingenieria";
+  const role = priority.find((p) => roleList.includes(p)) ?? "colaborador";
 
   return {
     user: {

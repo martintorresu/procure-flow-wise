@@ -1,4 +1,5 @@
-export type UserRole = "admin" | "compras" | "ingenieria" | "programacion" | "gerente" | "planificacion" | "logistica";
+/** Nivel de acceso global del usuario (no es el cargo de la persona). */
+export type UserRole = "admin" | "gestor" | "colaborador" | "lector";
 
 export interface Process {
   id: string;

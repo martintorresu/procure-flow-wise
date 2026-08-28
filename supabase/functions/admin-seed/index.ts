@@ -18,12 +18,9 @@ const json = (status: number, body: unknown) =>
 
 const VALID_ROLES = [
   "admin",
-  "ingenieria",
-  "programacion",
-  "compras",
-  "gerente",
-  "planificacion",
-  "logistica",
+  "gestor",
+  "colaborador",
+  "lector",
 ] as const;
 type Role = (typeof VALID_ROLES)[number];
 
