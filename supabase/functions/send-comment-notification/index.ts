@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
 
     const { data: proc } = await admin
       .from("purchase_processes")
-      .select("id, pdc_number, name, tenant_id, created_by, engineering_responsible, responsible_name")
+      .select("id, pdc_number, name, tenant_id, created_by, responsible_name")
       .eq("id", comment.process_id)
       .maybeSingle();
     if (!proc) return json({ error: "Proceso no encontrado" }, 404);
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
         .eq("status", "accepted");
       recipients = (parts ?? []).map((p) => p.email);
     } else {
-      const ownerId = proc.created_by ?? proc.engineering_responsible;
+      const ownerId = proc.created_by;
       if (ownerId) {
         const { data: owner } = await admin.from("profiles").select("email").eq("id", ownerId).maybeSingle();
         if (owner?.email) recipients = [owner.email];
