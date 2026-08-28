@@ -2166,6 +2166,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      seed_licitacion_stages: {
+        Args: { p_process_id: string }
+        Returns: number
+      }
       seed_obra_stages: { Args: { p_process_id: string }; Returns: number }
       seed_permit_types: { Args: { _tenant_id: string }; Returns: undefined }
     }
