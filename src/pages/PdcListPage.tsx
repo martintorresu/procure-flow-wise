@@ -1,23 +1,21 @@
-import { useEffect, useState } from "react";
-import { getTrafficLight } from "@/lib/trafficLight";
+import { useState } from "react";
 import { usePdcs } from "@/hooks/usePdcs";
 import { Card, CardContent } from "@/components/ui/card";
-import { StatusBadge, CriticalityBadge } from "@/components/StatusIndicators";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Search, FileText, X, Check, AlertTriangle, Link2 } from "lucide-react";
+import { Plus, Search, FileText, Link2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
 import { useAllContingencies } from "@/hooks/useProcessContingencies";
-import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
-import { type TrafficLight } from "@/types/pdc";
+import { PROCESS_TYPES, PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
-
+import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
+import { InProgressStagesText, StageProgressBadge } from "@/components/StageProgress";
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   compra: "Cp",
@@ -28,22 +26,14 @@ const TYPE_INITIALS: Record<ProcessType, string> = {
   personalizado: "Ps",
 };
 
-const LIGHT_GLOW: Record<TrafficLight, string> = {
-  green: "hsl(var(--success))",
-  yellow: "hsl(var(--warning))",
-  red: "hsl(var(--danger))",
-};
-
 export default function PdcListPage() {
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const subscription = useTenantSubscription();
 
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [criticalityFilter, setCriticalityFilter] = useState<string>("all");
-  const [delayedFilter, setDelayedFilter] = useState<boolean>(false);
+  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const { data: pdcs = [], isLoading: loading } = usePdcs();
+  const { data: summaries = {} } = useProcessStageSummaries();
   const { data: contingencies = [] } = useAllContingencies();
   const parallelParents = new Set(
     contingencies
@@ -51,37 +41,20 @@ export default function PdcListPage() {
       .map((c) => c.parent_process_id),
   );
 
-  useEffect(() => {
-    const criticality = searchParams.get("criticality");
-    const delayed = searchParams.get("delayed");
-    if (criticality === "low" || criticality === "medium" || criticality === "high") {
-      setCriticalityFilter(criticality);
-    }
-    if (delayed === "true") {
-      setDelayedFilter(true);
-    }
-  }, [searchParams]);
-
   const filtered = pdcs.filter((pdc) => {
-    if (statusFilter !== "all" && pdc.current_status !== statusFilter) return false;
-    if (criticalityFilter !== "all" && pdc.criticality !== criticalityFilter) return false;
-    if (delayedFilter && getTrafficLight(pdc) !== "red") return false;
-    if (search && !pdc.title.toLowerCase().includes(search.toLowerCase()) && !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())) return false;
+    if (typeFilter !== "all" && (pdc.process_type ?? "compra") !== typeFilter) return false;
+    if (
+      search &&
+      !pdc.title.toLowerCase().includes(search.toLowerCase()) &&
+      !pdc.pdc_number.toLowerCase().includes(search.toLowerCase())
+    )
+      return false;
     return true;
   });
 
-  const clearDashboardFilters = () => {
-    const next = new URLSearchParams(searchParams);
-    next.delete("criticality");
-    next.delete("delayed");
-    setSearchParams(next, { replace: true });
-    setCriticalityFilter("all");
-    setDelayedFilter(false);
-  };
-
   return (
     <div className="space-y-6">
-      <SEO title="Procesos" description="Listado de procesos con filtros por estado, criticidad y semáforo." path="/pdcs" />
+      <SEO title="Procesos" description="Listado de procesos con su avance por etapas." path="/pdcs" />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Procesos</h1>
@@ -112,7 +85,6 @@ export default function PdcListPage() {
             </Link>
           )}
         </div>
-
       </div>
 
       {/* Filters */}
@@ -123,45 +95,18 @@ export default function PdcListPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input placeholder="Buscar por número o título..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[220px]"><SelectValue placeholder="Tipo de proceso" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="draft">Borrador</SelectItem>
-                <SelectItem value="technical_definition">Def. Técnica</SelectItem>
-                <SelectItem value="quotation">Cotización</SelectItem>
-                <SelectItem value="po_issued">OC Emitida</SelectItem>
-                <SelectItem value="fat">Prueba de Fábrica</SelectItem>
-                <SelectItem value="shipping">En Tránsito</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={criticalityFilter} onValueChange={setCriticalityFilter}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Criticidad" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toda criticidad</SelectItem>
-                <SelectItem value="low">Baja</SelectItem>
-                <SelectItem value="medium">Media</SelectItem>
-                <SelectItem value="high">Alta</SelectItem>
+                <SelectItem value="all">Todos los tipos</SelectItem>
+                {PROCESS_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
         </CardContent>
       </Card>
-
-      {(criticalityFilter !== "all" || delayedFilter) && (
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="font-normal">
-            {delayedFilter && criticalityFilter !== "all"
-              ? "Mostrando procesos atrasados y críticos"
-              : delayedFilter
-              ? "Mostrando solo procesos atrasados"
-              : "Mostrando solo procesos críticos"}
-          </Badge>
-          <Button variant="ghost" size="sm" className="h-7 px-2 text-muted-foreground" onClick={clearDashboardFilters}>
-            <X className="w-3 h-3 mr-1" /> Quitar filtro
-          </Button>
-        </div>
-      )}
 
       {/* List */}
       <Card>
@@ -175,7 +120,6 @@ export default function PdcListPage() {
                   <Skeleton className="h-3 w-40" />
                   <Skeleton className="h-3 w-32" />
                 </div>
-                <Skeleton className="h-4 w-20 shrink-0" />
               </div>
             ))}
             {!loading && filtered.length === 0 && (
@@ -186,32 +130,26 @@ export default function PdcListPage() {
               </div>
             )}
             {!loading && filtered.map((pdc) => {
-              const light = getTrafficLight(pdc);
-              const borderColor = light === "green" ? "border-l-success" : light === "yellow" ? "border-l-warning" : "border-l-danger";
-              const bgGradient = light === "green" ? "from-success/15 to-success/5" : light === "yellow" ? "from-warning/15 to-warning/5" : "from-danger/15 to-danger/5";
               const isChained = Boolean(pdc.predecessor_process_id || pdcs.some((o) => o.predecessor_process_id === pdc.id));
-              const initials = TYPE_INITIALS[(pdc.process_type as ProcessType) ?? "compra"];
-              const avatarBg = light === "green" ? "bg-success" : light === "yellow" ? "bg-warning" : "bg-danger";
-              const typeLabel = PROCESS_TYPE_LABELS[(pdc.process_type as ProcessType) ?? "compra"];
-              const StateIcon = light === "green" ? Check : light === "yellow" ? AlertTriangle : X;
+              const type = (pdc.process_type as ProcessType) ?? "compra";
+              const typeLabel = PROCESS_TYPE_LABELS[type];
+              const summary = summaries[pdc.id];
               return (
                 <div
                   key={pdc.id}
                   role="listitem"
                   tabIndex={0}
                   onClick={() => navigate(`/pdcs/${pdc.id}`)}
-                  className={`flex items-center gap-4 border-b last:border-0 border-border/60 bg-gradient-to-br ${bgGradient} border-l-4 ${borderColor} hover:bg-muted/50 hover:cursor-pointer transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5 shadow-md p-4`}
+                  className="flex items-center gap-4 border-b last:border-0 border-border/60 hover:bg-muted/50 hover:cursor-pointer transition-colors p-4"
                 >
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div
-                          className={`relative w-12 h-12 rounded-full flex flex-col items-center justify-center text-sm font-bold text-white shrink-0 ring-2 ring-white shadow-md ${avatarBg}`}
-                          style={{ boxShadow: `0 4px 10px ${LIGHT_GLOW[light]}`, filter: "drop-shadow(0 2px 4px rgb(0 0 0 / 0.15))" }}
-                          aria-label={`Tipo ${typeLabel}, semáforo ${light}`}
+                          className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-accent/15 text-accent"
+                          aria-label={`Tipo ${typeLabel}`}
                         >
-                          {initials}
-                          <StateIcon className="w-3 h-3 mt-0.5" strokeWidth={2.5} />
+                          {TYPE_INITIALS[type]}
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="top" className="text-xs">{typeLabel}</TooltipContent>
@@ -234,11 +172,11 @@ export default function PdcListPage() {
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground truncate">
-                      {pdc.project} · {pdc.current_owner}
+                      {pdc.project_name} · {pdc.current_owner}
                     </div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <StatusBadge status={pdc.current_status} colorizeByStage />
-                      <CriticalityBadge level={pdc.criticality} />
+                      <StageProgressBadge summary={summary} />
+                      <InProgressStagesText summary={summary} />
                       {pdc.paused_by_contingency && (
                         <Badge variant="outline" className="border-amber-500/50 text-amber-700 dark:text-amber-300">
                           ⏸️ Pausado por contingencia
@@ -250,14 +188,6 @@ export default function PdcListPage() {
                         </Badge>
                       )}
                     </div>
-
-                  </div>
-
-                  <div className="hidden sm:block text-right shrink-0">
-                    <div className="font-mono text-sm font-medium text-foreground">
-                      {pdc.currency} {(pdc.estimated_amount ?? 0).toLocaleString("es-CL")}
-                    </div>
-                    <div className="text-[10px] text-muted-foreground uppercase tracking-wide">Monto Est.</div>
                   </div>
                 </div>
               );
