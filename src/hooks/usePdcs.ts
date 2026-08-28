@@ -219,22 +219,8 @@ export function useUpdatePdc() {
   });
 }
 
-interface ApprovalRuleRow {
-  id: string;
-  condition_type: "amount" | "criticality" | "both";
-  amount_threshold: number | null;
-  criticality_level: string | null;
-  required_role: string;
-  stage: string;
-  active: boolean;
-  label: string;
-}
-
 /**
- * Avanza la etapa del PdC a la siguiente del flujo. Antes de avanzar consulta
- * `approval_matrix`: si hay regla activa para la etapa destino que aplica al PdC
- * (por monto o criticidad), deja `approval_status='pending'` y crea una alerta
- * dirigida al rol requerido en lugar de avanzar.
+ * Avanza la etapa del proceso a la siguiente del flujo.
  */
 export function useAdvanceStage() {
   const qc = useQueryClient();
@@ -252,60 +238,6 @@ export function useAdvanceStage() {
       }
       const nextStage = STAGE_ORDER[idx + 1];
 
-      // Buscar regla aplicable
-      const { data: rules, error: rulesErr } = await supabase
-        .from("approval_matrix")
-        .select("id, condition_type, amount_threshold, criticality_level, required_role, stage, active, label")
-        .eq("stage", nextStage)
-        .eq("active", true);
-      if (rulesErr) throw new Error(rulesErr.message);
-
-      const matched = (rules as unknown as ApprovalRuleRow[]).find((r) => {
-        const amountOk = r.condition_type === "amount" || r.condition_type === "both"
-          ? (pdc.estimated_amount ?? 0) > Number(r.amount_threshold ?? Infinity)
-          : true;
-        const critOk = r.condition_type === "criticality" || r.condition_type === "both"
-          ? r.criticality_level === pdc.criticality
-          : true;
-        if (r.condition_type === "amount") return amountOk;
-        if (r.condition_type === "criticality") return critOk;
-        return amountOk && critOk;
-      });
-
-      if (matched) {
-        const { error: upErr } = await supabase
-          .from("purchase_processes")
-          .update({
-            approval_status: "pending",
-            approval_required_role: matched.required_role as
-              | "admin" | "compras" | "ingenieria" | "programacion" | "gerente" | "planificacion" | "logistica",
-            approval_target_stage: nextStage,
-          })
-          .eq("id", pdcId);
-        if (upErr) throw new Error(upErr.message);
-
-        const { data: alertRow } = await supabase.from("alerts").insert({
-          tenant_id: pdc.tenant_id,
-          pdc_id: pdcId,
-          type: "approval_required",
-          severity: "high",
-          message: `${pdc.pdc_number} requiere aprobación de ${matched.required_role} para avanzar a ${nextStage}.`,
-          owner_role: matched.required_role as
-            | "admin" | "compras" | "ingenieria" | "programacion" | "gerente" | "planificacion" | "logistica",
-        }).select("id").maybeSingle();
-
-        // Notificación WhatsApp (no bloqueante): sólo si el tenant la tiene habilitada
-        if (alertRow?.id && pdc.tenant_id) {
-          void notifyWhatsappByRole({
-            alertId: alertRow.id,
-            tenantId: pdc.tenant_id,
-            role: matched.required_role,
-          });
-        }
-        return { advanced: false, pendingRole: matched.required_role };
-      }
-
-
       // Sin bloqueo → avanza
       const { error: advErr } = await supabase
         .from("purchase_processes")
@@ -317,7 +249,6 @@ export function useAdvanceStage() {
     onSuccess: (_d, pdcId) => {
       qc.invalidateQueries({ queryKey: ["pdcs"] });
       qc.invalidateQueries({ queryKey: queryKeys.pdc(pdcId) });
-      qc.invalidateQueries({ queryKey: queryKeys.milestones(pdcId) });
       qc.invalidateQueries({ queryKey: queryKeys.alerts() });
     },
   });
