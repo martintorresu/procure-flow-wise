@@ -4,6 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { UserPlus, X } from "lucide-react";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
+import { usePositions } from "@/hooks/usePositions";
 
 export interface MinutaParticipant {
   key: string;
@@ -24,6 +25,8 @@ interface Props {
 /** Selector de participantes: usuarios del tenant + invitados externos. */
 export function ParticipantsPicker({ value, onChange }: Props) {
   const { data: users = [] } = useTenantUsers();
+  const { data: positions = [] } = usePositions();
+  const positionName = (id?: string | null) => positions.find((p) => p.id === id)?.name ?? null;
   const [search, setSearch] = useState("");
   const [guestOpen, setGuestOpen] = useState(false);
   const [guestName, setGuestName] = useState("");
@@ -43,14 +46,14 @@ export function ParticipantsPicker({ value, onChange }: Props) {
       .slice(0, 6);
   }, [search, users, value]);
 
-  const addUser = (u: { id: string; full_name: string | null; email: string; area: string | null }) => {
+  const addUser = (u: { id: string; full_name: string | null; email: string; area: string | null; default_position_id?: string | null }) => {
     onChange([
       ...value,
       {
         key: u.id,
         userId: u.id,
         name: u.full_name ?? u.email,
-        role: u.area,
+        role: positionName(u.default_position_id) ?? u.area,
         email: u.email,
         company: null,
         isGuest: false,
@@ -131,7 +134,9 @@ export function ParticipantsPicker({ value, onChange }: Props) {
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
             >
               <span className="font-medium">{u.full_name ?? u.email}</span>
-              {u.area && <span className="text-muted-foreground"> — {u.area}</span>}
+              {(positionName(u.default_position_id) ?? u.area) && (
+                <span className="text-muted-foreground"> — {positionName(u.default_position_id) ?? u.area}</span>
+              )}
             </button>
           ))}
         </div>
