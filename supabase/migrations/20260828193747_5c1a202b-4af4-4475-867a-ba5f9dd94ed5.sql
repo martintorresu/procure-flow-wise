@@ -1,0 +1,1 @@
+ALTER TABLE public.alert_rules DROP CONSTRAINT IF EXISTS alert_rules_trigger_type_check;
