@@ -8,6 +8,7 @@ export interface QualityCommitmentInput {
 
 export interface QualityInput {
   hasProject: boolean;
+  hasStage?: boolean;
   hasMeetingDate: boolean;
   participantCount: number;
   commitments: QualityCommitmentInput[];
@@ -29,9 +30,10 @@ export const QUALITY_WEIGHTS = {
   project: 15,
   meetingDate: 10,
   participants: 15,
-  responsibles: 25,
-  dueDates: 25,
+  responsibles: 20,
+  dueDates: 20,
   withinMax: 10,
+  stage: 10,
 } as const;
 
 /** Color semántico del gauge según el puntaje. */
@@ -72,6 +74,12 @@ export function calculateQualityScore(input: QualityInput, maxDeliveryDays = 90)
       label: "Proyecto vinculado",
       weight: QUALITY_WEIGHTS.project,
       ok: input.hasProject,
+    },
+    {
+      key: "stage",
+      label: "Etapa principal vinculada",
+      weight: QUALITY_WEIGHTS.stage,
+      ok: !!input.hasStage,
     },
     {
       key: "meetingDate",
