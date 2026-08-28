@@ -7,23 +7,30 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
-import { useMyProfile, useUpdateProfileContact, isValidE164 } from "@/hooks/useTenantUsers";
+import { PositionSelect } from "@/components/PositionSelect";
+import {
+  useMyProfile, useUpdateProfileContact, useUpdateDefaultPosition, isValidE164,
+} from "@/hooks/useTenantUsers";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { data: profile, isLoading } = useMyProfile(user?.id);
   const update = useUpdateProfileContact();
+  const updatePosition = useUpdateDefaultPosition();
   const [phone, setPhone] = useState("");
   const [rut, setRut] = useState("");
   const [waEnabled, setWaEnabled] = useState(true);
+  const [positionId, setPositionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setPhone(profile.phone ?? "");
       setRut(profile.rut ?? "");
       setWaEnabled(profile.whatsapp_notifications_enabled);
+      setPositionId(profile.default_position_id ?? null);
     }
   }, [profile]);
+
 
   const save = async () => {
     if (phone.trim() !== "" && !isValidE164(phone)) {
