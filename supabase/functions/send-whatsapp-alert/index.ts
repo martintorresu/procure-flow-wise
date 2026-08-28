@@ -196,7 +196,8 @@ Deno.serve(async (req) => {
     // Se reintenta con las variantes regionales habituales del español.
     const url = `https://graph.facebook.com/${GRAPH_VERSION}/${phoneNumberId}/messages`;
     let res!: Response;
-    let result: Record<string, unknown> = {};
+    // deno-lint-ignore no-explicit-any
+    let result: any = {};
     for (const lang of [TEMPLATE_LANG, "es_CL", "es_ES", "es_MX", "en_US"]) {
       res = await fetch(url, {
         method: "POST",
@@ -204,7 +205,7 @@ Deno.serve(async (req) => {
         body: JSON.stringify(buildPayload(lang)),
       });
       result = await res.json().catch(() => ({}));
-      const code = (result as { error?: { code?: number } })?.error?.code;
+      const code = result?.error?.code;
       if (res.ok || code !== 132001) break;
     }
 
