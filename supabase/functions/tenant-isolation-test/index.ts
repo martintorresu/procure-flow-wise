@@ -54,7 +54,6 @@ Deno.serve(async (req) => {
   const cleanup: Array<() => Promise<void>> = [];
   const results: TestResult[] = [];
   let acmePdcId: string | null = null;
-  let acmeRfqId: string | null = null;
 
   try {
     // 1. Crear usuarios con tenant_slug en metadata
@@ -168,31 +167,12 @@ Deno.serve(async (req) => {
       return row.id;
     };
 
-    await testChildTable("purchase_milestones", {
-      pdc_id: acmePdcId, milestone_type: "Test", planned_date: "2026-12-01",
+    await testChildTable("process_stages", {
+      process_id: acmePdcId, name: "Etapa iso test", sort_order: 1, activities: {},
     });
-    await testChildTable("technical_specs", {
-      pdc_id: acmePdcId, summary_description: "iso test",
-    });
-    acmeRfqId = await testChildTable("rfqs", {
-      pdc_id: acmePdcId, sent_date: "2026-01-01", close_date: "2026-02-01",
-    });
-    if (acmeRfqId) {
-      await testChildTable("rfq_suppliers", {
-        rfq_id: acmeRfqId, supplier_name: "Iso Supplier",
-      });
-    }
-    await testChildTable("purchase_orders", {
-      pdc_id: acmePdcId, po_number: "ISO-PO-1",
-    });
-    await testChildTable("drawings", {
-      pdc_id: acmePdcId, requested_date: "2026-01-01",
-    });
-    await testChildTable("fat_events", {
-      pdc_id: acmePdcId, scheduled_date: "2026-06-01",
-    });
-    await testChildTable("logistics_events", {
-      pdc_id: acmePdcId, exwork_date: "2026-07-01",
+    await testChildTable("process_documents", {
+      process_id: acmePdcId, file_name: "iso.pdf", file_type: "pdf", file_size: 1,
+      file_path: "iso/iso.pdf", category: "otros",
     });
     await testChildTable("alerts", {
       pdc_id: acmePdcId, type: "test", severity: "low", message: "iso test alert",
