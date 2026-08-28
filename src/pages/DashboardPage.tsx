@@ -34,6 +34,7 @@ const TYPE_INITIALS: Record<ProcessType, string> = {
   licitacion: "Lt",
   contrato: "Ct",
   permiso: "Pm",
+  obra: "Ob",
   personalizado: "Ps",
 };
 
