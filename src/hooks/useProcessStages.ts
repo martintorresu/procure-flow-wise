@@ -1,0 +1,80 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export type StageStatus = "not_started" | "in_progress" | "blocked" | "completed";
+
+export interface StageActivities {
+  milestones: string[];
+  checkpoints: string[];
+  tasks: string[];
+}
+
+export interface ProcessStage {
+  id: string;
+  process_id: string;
+  name: string;
+  description: string | null;
+  activities: StageActivities;
+  sort_order: number;
+  status: StageStatus;
+}
+
+const EMPTY: StageActivities = { milestones: [], checkpoints: [], tasks: [] };
+
+function toActivities(raw: unknown): StageActivities {
+  const a = (raw ?? {}) as Record<string, unknown>;
+  const arr = (v: unknown) => (Array.isArray(v) ? v.map(String) : []);
+  return {
+    milestones: arr(a.milestones),
+    checkpoints: arr(a.checkpoints),
+    tasks: arr(a.tasks),
+  };
+}
+
+/** Etapas de un proceso ordenadas por sort_order. RLS filtra por tenant. */
+export function useProcessStages(processId: string | undefined) {
+  return useQuery({
+    queryKey: ["process-stages", processId ?? ""],
+    enabled: !!processId,
+    queryFn: async (): Promise<ProcessStage[]> => {
+      const { data, error } = await supabase
+        .from("process_stages")
+        .select("id, process_id, name, description, activities, sort_order, status")
+        .eq("process_id", processId!)
+        .order("sort_order", { ascending: true });
+      if (error) throw new Error(error.message);
+      return (data ?? []).map((r) => ({
+        id: r.id,
+        process_id: r.process_id,
+        name: r.name,
+        description: r.description,
+        sort_order: r.sort_order,
+        status: (r.status as StageStatus) ?? "not_started",
+        activities: r.activities ? toActivities(r.activities) : EMPTY,
+      }));
+    },
+  });
+}
+
+export const STAGE_STATUS_META: Record<StageStatus, { label: string; badge: string; dot: string }> = {
+  not_started: {
+    label: "No iniciada",
+    badge: "bg-muted text-muted-foreground border-border",
+    dot: "bg-muted-foreground",
+  },
+  in_progress: {
+    label: "En curso",
+    badge: "bg-info/15 text-info border-info/40",
+    dot: "bg-info",
+  },
+  blocked: {
+    label: "Bloqueada",
+    badge: "bg-warning/15 text-warning border-warning/40",
+    dot: "bg-warning",
+  },
+  completed: {
+    label: "Completada",
+    badge: "bg-success/15 text-success border-success/40",
+    dot: "bg-success",
+  },
+};
