@@ -195,7 +195,9 @@ export function usePermitDocuments(permitId: string | undefined) {
     queryFn: async (): Promise<PermitDocument[]> => {
       const { data, error } = await supabase
         .from("permit_documents")
-        .select("id, permit_id, name, file_url, document_type, uploaded_by, uploaded_at")
+        .select(
+          "id, permit_id, name, file_url, file_path, file_name, file_type, file_size, description, document_type, uploaded_by, uploaded_at",
+        )
         .eq("permit_id", permitId!)
         .order("uploaded_at", { ascending: false });
       if (error) throw new Error(error.message);
@@ -224,13 +226,19 @@ export function useAddPermitDocument() {
 export function useDeletePermitDocument(permitId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (doc: PermitDocument | string) => {
+      const target = typeof doc === "string" ? null : doc;
+      const id = typeof doc === "string" ? doc : doc.id;
       const { error } = await supabase.from("permit_documents").delete().eq("id", id);
       if (error) throw new Error(error.message);
+      if (target?.file_path) {
+        await supabase.storage.from("permit-documents").remove([target.file_path]);
+      }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: permitKeys.documents(permitId) }),
   });
 }
+
 
 /* ---------------- Renovación ---------------- */
 
