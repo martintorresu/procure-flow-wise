@@ -1,8 +1,6 @@
 // Edge function: admin-seed
 // Acciones (solo invocable por usuarios con rol 'admin'):
 //  - create_user: crea cuenta con email_confirm=true y le asigna un rol
-//  - seed_pdcs: crea 1 PdC por etapa marcado como demo (project='__DEMO__')
-//  - cleanup_demo: borra todos los PdCs demo
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -125,35 +123,6 @@ Deno.serve(async (req) => {
 
       return json(200, { ok: true, user_id: newId, email, role });
 
-    }
-
-    if (action === "seed_pdcs") {
-      const rows = STAGES.map((stage, i) => ({
-        name: `[DEMO] PdC etapa ${stage}`,
-        project: "__DEMO__",
-        requesting_area: "Demo",
-        et_document_code: `DEMO-${String(i + 1).padStart(2, "0")}`,
-        criticality: "media",
-        current_stage: stage,
-        created_by: userId,
-        description: `PdC demo en etapa ${stage} para validación de RLS.`,
-      }));
-      const { data, error } = await admin
-        .from("purchase_processes")
-        .insert(rows)
-        .select("id, pdc_number, current_stage");
-      if (error) return json(500, { error: error.message });
-      return json(200, { ok: true, count: data.length, pdcs: data });
-    }
-
-    if (action === "cleanup_demo") {
-      const { data, error } = await admin
-        .from("purchase_processes")
-        .delete()
-        .eq("project", "__DEMO__")
-        .select("id");
-      if (error) return json(500, { error: error.message });
-      return json(200, { ok: true, deleted: data.length });
     }
 
     return json(400, { error: `action desconocida: ${action}` });

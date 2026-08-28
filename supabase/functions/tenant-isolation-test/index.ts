@@ -113,8 +113,6 @@ Deno.serve(async (req) => {
     {
       const { data, error } = await acmeClient.from("purchase_processes").insert({
         name: "[ISO-TEST] Acme PdC",
-        project: "ISO-TEST",
-        criticality: "media",
         created_by: acmeUser.user.id,
         tenant_id: tenantAcme!.id,
       } as never).select("id, tenant_id").single();

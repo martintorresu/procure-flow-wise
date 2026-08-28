@@ -54,25 +54,12 @@ export default function AdminPage() {
   const subscription = useTenantSubscription();
 
   const [working, setWorking] = useState<string | null>(null);
-  const [demoCount, setDemoCount] = useState<number | null>(null);
 
   // Form individual
   const [form, setForm] = useState({
     email: "", password: "demo123456", full_name: "", role: "ingenieria", phone: "", rut: "",
   });
 
-
-  const refreshDemoCount = async () => {
-    const { count } = await supabase
-      .from("purchase_processes")
-      .select("id", { count: "exact", head: true })
-      .eq("project", "__DEMO__");
-    setDemoCount(count ?? 0);
-  };
-
-  useEffect(() => {
-    if (user?.role === "admin") refreshDemoCount();
-  }, [user]);
 
   if (loading) return <div className="text-center py-20 text-muted-foreground">Cargando…</div>;
   if (user?.role !== "admin") return <Navigate to="/" replace />;
@@ -129,33 +116,6 @@ export default function AdminPage() {
     }
     setWorking(null);
     toast.success(`Usuarios creados: ${ok}/${SAMPLE_USERS.length}${fail ? ` · ${fail} fallaron` : ""}`);
-  };
-
-  const seedPdcs = async () => {
-    setWorking("seed-pdcs");
-    try {
-      const data = await callAdmin("seed_pdcs");
-      toast.success(`${data.count} Procesos demo creados`);
-      await refreshDemoCount();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error");
-    } finally {
-      setWorking(null);
-    }
-  };
-
-  const cleanupDemo = async () => {
-    if (!confirm("¿Borrar todos los Procesos demo (project='__DEMO__')?")) return;
-    setWorking("cleanup");
-    try {
-      const data = await callAdmin("cleanup_demo");
-      toast.success(`${data.deleted} Procesos demo eliminados`);
-      await refreshDemoCount();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Error");
-    } finally {
-      setWorking(null);
-    }
   };
 
   return (
@@ -250,33 +210,6 @@ export default function AdminPage() {
             </div>
 
           </form>
-        </CardContent>
-      </Card>
-
-      {/* Procesos demo */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Database className="w-4 h-4" /> Procesos demo (1 por etapa)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-xs text-muted-foreground">
-            Crea 8 Procesos marcados con proyecto <code className="bg-muted px-1 rounded">__DEMO__</code>,
-            uno por cada etapa del flujo, todos con tu usuario como creador.
-          </p>
-          <div className="text-sm">
-            Procesos demo actuales: <span className="font-mono font-medium">{demoCount ?? "…"}</span>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={seedPdcs} disabled={working === "seed-pdcs"}>
-              {working === "seed-pdcs" ? "Creando…" : "Sembrar 8 Procesos demo"}
-            </Button>
-            <Button variant="outline" onClick={cleanupDemo} disabled={working === "cleanup"}>
-              <Trash2 className="w-4 h-4 mr-2" />
-              {working === "cleanup" ? "Limpiando…" : "Limpiar Procesos demo"}
-            </Button>
-          </div>
         </CardContent>
       </Card>
 
