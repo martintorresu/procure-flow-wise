@@ -2166,6 +2166,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      seed_administracion_contrato_stages: {
+        Args: { p_process_id: string }
+        Returns: number
+      }
       seed_licitacion_stages: {
         Args: { p_process_id: string }
         Returns: number
