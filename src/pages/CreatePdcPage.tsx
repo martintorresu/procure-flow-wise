@@ -79,6 +79,8 @@ export default function CreatePdcPage() {
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
   const isPurchase = isPurchaseType(form.process_type);
+  const isObra = isObraType(form.process_type);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
