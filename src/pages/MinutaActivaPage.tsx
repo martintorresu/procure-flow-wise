@@ -17,7 +17,7 @@ import { useTenantUsers, useMyProfile } from "@/hooks/useTenantUsers";
 import { useOnlineStatus } from "@/hooks/useOfflineSync";
 import { useMinutaConfig } from "@/hooks/useMinutaConfig";
 import { useCreateMinutaSession } from "@/hooks/useMinutaSession";
-import { useProcessStages, sortStagesForPicker } from "@/hooks/useProcessStages";
+import { useProcessStages, useProcessStagesByProcess, sortStagesForPicker } from "@/hooks/useProcessStages";
 import { useAuth } from "@/contexts/AuthContext";
 import { QualityGauge } from "@/components/minuta/QualityGauge";
 import { QualityChecklist } from "@/components/minuta/QualityChecklist";
@@ -103,10 +103,6 @@ export default function MinutaActivaPage() {
   // Etapas del proceso vinculado (dependiente del proceso seleccionado)
   const { data: stages = [] } = useProcessStages(presetProcessId ?? undefined);
   const sortedStages = useMemo(() => sortStagesForPicker(stages), [stages]);
-  const stageById = useMemo(
-    () => new Map(stages.map((s) => [s.id, s] as const)),
-    [stages],
-  );
 
   // Al cambiar el proceso se limpia la etapa seleccionada
   useEffect(() => {
@@ -132,6 +128,15 @@ export default function MinutaActivaPage() {
   const [draft, setDraft] = useState<DraftRow[]>([]);
   const [rawTranscript, setRawTranscript] = useState("");
   const [noDetected, setNoDetected] = useState(false);
+
+  // Etapas de todos los procesos involucrados (Setup + reclasificaciones por fila)
+  const involvedProcessIds = useMemo(
+    () => [presetProcessId, ...draft.map((d) => d.processId)],
+    [presetProcessId, draft],
+  );
+  const { data: stagesByProcess } = useProcessStagesByProcess(involvedProcessIds);
+  const stagesFor = (processId: string | null) =>
+    (processId ? stagesByProcess?.get(processId) : undefined) ?? [];
 
   // Timer de captura
   useEffect(() => {
@@ -184,7 +189,7 @@ export default function MinutaActivaPage() {
         ...p,
         userId: u?.id ?? null,
         processId: proc?.id ?? presetProcessId,
-        stageId: presetStageId,
+        stageId: (proc?.id ?? presetProcessId) === presetProcessId ? presetStageId : null,
         activityRef: null,
         included: true,
       };
@@ -284,6 +289,15 @@ export default function MinutaActivaPage() {
     }
     if (selected.some((d) => !d.stageId)) {
       toast.error("Cada compromiso debe tener una etapa asignada.");
+      return;
+    }
+    const mismatch = selected.findIndex(
+      (d) => !d.processId || !stagesFor(d.processId).some((s) => s.id === d.stageId),
+    );
+    if (mismatch >= 0) {
+      toast.error(
+        `El compromiso ${mismatch + 1} tiene una etapa que no pertenece a su proceso. Vuelve a seleccionarla.`,
+      );
       return;
     }
 
@@ -741,7 +755,9 @@ export default function MinutaActivaPage() {
               </div>
               <div className="space-y-1">
                 <Label className="text-xs">Proceso{d.processReference && !d.processId ? ` (detectado: ${d.processReference})` : ""}</Label>
-                <Select value={d.processId ?? "none"} onValueChange={(v) => updateDraft(i, { processId: v === "none" ? null : v })}>
+                <Select value={d.processId ?? "none"} onValueChange={(v) =>
+                    updateDraft(i, { processId: v === "none" ? null : v, stageId: null, activityRef: null })
+                  }>
                   <SelectTrigger>
                     <SelectValue placeholder="Sin proceso" />
                   </SelectTrigger>
@@ -758,13 +774,14 @@ export default function MinutaActivaPage() {
                 <Select
                   value={d.stageId ?? "none"}
                   onValueChange={(v) => updateDraft(i, { stageId: v === "none" ? null : v, activityRef: null })}
+                  disabled={!d.processId}
                 >
                   <SelectTrigger className={!d.stageId ? "border-danger/50 bg-danger/5" : undefined}>
-                    <SelectValue placeholder="Sin etapa" />
+                    <SelectValue placeholder={d.processId ? "Sin etapa" : "Selecciona primero un proceso"} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Sin etapa</SelectItem>
-                    {sortedStages.map((s) => (
+                    {stagesFor(d.processId).map((s) => (
                       <SelectItem key={s.id} value={s.id}>
                         {s.status === "in_progress" ? "🔵 " : ""}{s.sort_order}. {s.name}
                       </SelectItem>
@@ -784,7 +801,7 @@ export default function MinutaActivaPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Sin actividad</SelectItem>
-                    {(d.stageId ? stageById.get(d.stageId)?.activities.tasks ?? [] : []).map((t) => (
+                    {(d.stageId ? stagesFor(d.processId).find((s) => s.id === d.stageId)?.activities.tasks ?? [] : []).map((t) => (
                       <SelectItem key={t} value={t}>{t}</SelectItem>
                     ))}
                   </SelectContent>
