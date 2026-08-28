@@ -11,16 +11,12 @@ import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Trash2, UserPlus, Database, Bell, ShieldCheck, Info } from "lucide-react";
+import { Trash2, UserPlus, Database, Bell, Info } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { useAlertRules, useUpdateAlertRule, TRIGGER_DESCRIPTIONS, type AlertRule, type AlertSeverity } from "@/hooks/useAlertRules";
-import { useApprovalMatrix, useUpdateApprovalRule, type ApprovalRule } from "@/hooks/useApprovalMatrix";
-import { StageTemplatesSection } from "@/components/admin/StageTemplatesSection";
-import { EtFieldsAdminSection } from "@/components/admin/EtFieldsAdminSection";
 import { WhatsappConfigSection } from "@/components/admin/WhatsappConfigSection";
 import { TenantUsersContactSection } from "@/components/admin/TenantUsersContactSection";
 import { ApiKeysSection } from "@/components/admin/ApiKeysSection";
-import { PermitTypesSection } from "@/components/admin/PermitTypesSection";
 import { SubscriptionsSection } from "@/components/admin/SubscriptionsSection";
 import { ContingenciesSection } from "@/components/admin/ContingenciesSection";
 import { MinutaConfigSection } from "@/components/admin/MinutaConfigSection";
@@ -287,15 +283,11 @@ export default function AdminPage() {
       <SubscriptionsSection />
       <AlertRulesSection />
 
-      <ApprovalMatrixSection />
       <WhatsappConfigSection />
       <MinutaConfigSection />
       <TenantUsersContactSection />
       <ApiKeysSection />
       <ContingenciesSection />
-      <PermitTypesSection />
-      <StageTemplatesSection />
-      <EtFieldsAdminSection />
 
     </div>
   );
@@ -426,127 +418,4 @@ function AlertRulesSection() {
   );
 }
 
-const APPROVAL_ROLES: { value: UserRole; label: string }[] = [
-  { value: "admin", label: "Admin" },
-  { value: "gerente", label: "Gerente" },
-  { value: "compras", label: "Compras" },
-  { value: "ingenieria", label: "Ingeniería" },
-  { value: "planificacion", label: "Planificación" },
-  { value: "logistica", label: "Logística" },
-];
 
-function ApprovalMatrixSection() {
-  const { data: rules = [], isLoading } = useApprovalMatrix();
-  const updateMutation = useUpdateApprovalRule();
-  const [draft, setDraft] = useState<Record<string, ApprovalRule>>({});
-
-  useEffect(() => {
-    if (rules.length) {
-      setDraft((prev) => {
-        const next = { ...prev };
-        rules.forEach((r) => { if (!next[r.id]) next[r.id] = r; });
-        return next;
-      });
-    }
-  }, [rules]);
-
-  const setField = <K extends keyof ApprovalRule>(id: string, k: K, v: ApprovalRule[K]) => {
-    setDraft((p) => ({ ...p, [id]: { ...p[id], [k]: v } }));
-  };
-
-  const dirty = rules.some((r) => {
-    const d = draft[r.id];
-    return d && (
-      Number(d.amount_threshold ?? 0) !== Number(r.amount_threshold ?? 0) ||
-      d.required_role !== r.required_role || d.active !== r.active
-    );
-  });
-
-  const save = async () => {
-    const changed = rules.filter((r) => {
-      const d = draft[r.id];
-      return d && (
-        Number(d.amount_threshold ?? 0) !== Number(r.amount_threshold ?? 0) ||
-        d.required_role !== r.required_role || d.active !== r.active
-      );
-    });
-    try {
-      await Promise.all(changed.map((r) => {
-        const d = draft[r.id];
-        return updateMutation.mutateAsync({
-          id: r.id, amount_threshold: d.amount_threshold, required_role: d.required_role, active: d.active,
-        });
-      }));
-      toast.success(`${changed.length} regla(s) actualizada(s)`);
-    } catch (e) {
-      toast.error(`Error: ${(e as Error).message}`);
-    }
-  };
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base flex items-center gap-2">
-          <ShieldCheck className="w-4 h-4" /> Matriz de Aprobación
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <p className="text-xs text-muted-foreground">
-          Procesos que cumplan estas condiciones quedarán en estado <span className="font-medium text-foreground">Pendiente de aprobación</span> antes de avanzar a la etapa indicada.
-        </p>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Cargando reglas…</p>
-        ) : (
-          <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Regla</TableHead>
-                  <TableHead className="w-[120px]">Etapa</TableHead>
-                  <TableHead className="w-[120px]">Tipo</TableHead>
-                  <TableHead className="w-[160px]">Umbral monto</TableHead>
-                  <TableHead className="w-[160px]">Rol requerido</TableHead>
-                  <TableHead className="w-[80px]">Activa</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rules.map((r) => {
-                  const d = draft[r.id] ?? r;
-                  return (
-                    <TableRow key={r.id}>
-                      <TableCell className="font-medium text-xs">{d.label}</TableCell>
-                      <TableCell className="text-xs">{formatStageLabel(d.stage)}</TableCell>
-                      <TableCell className="text-xs capitalize">{d.condition_type}</TableCell>
-                      <TableCell>
-                        <Input
-                          type="number" min={0} disabled={d.condition_type === "criticality"}
-                          value={d.amount_threshold ?? ""}
-                          onChange={(e) => setField(r.id, "amount_threshold", e.target.value === "" ? null : Number(e.target.value))}
-                          className="h-8"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Select value={d.required_role} onValueChange={(v) => setField(r.id, "required_role", v as UserRole)}>
-                          <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {APPROVAL_ROLES.map((o) => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell>
-                        <Switch checked={d.active} onCheckedChange={(v) => setField(r.id, "active", v)} />
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-            <Button onClick={save} disabled={!dirty || updateMutation.isPending}>
-              {updateMutation.isPending ? "Guardando…" : "Guardar cambios"}
-            </Button>
-          </>
-        )}
-      </CardContent>
-    </Card>
-  );
-}

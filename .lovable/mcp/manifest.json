@@ -68,7 +68,7 @@
       {
         "name": "get_process",
         "title": "Detalle de un proceso",
-        "description": "Devuelve el detalle de un proceso de compra (por id o por número de proceso) junto con sus hitos y comentarios recientes.",
+        "description": "Devuelve el detalle de un proceso de compra (por id o por número de proceso) junto con sus etapas y comentarios recientes.",
         "annotations": {
           "readOnlyHint": true,
           "idempotentHint": true,

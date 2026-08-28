@@ -39,10 +39,6 @@ export interface Pdc {
   /** Tenant dueño del proceso. */
   tenant_id?: string | null;
 
-  /** Estado de aprobación cuando una regla bloqueó el avance. */
-  approval_status?: "pending" | "approved" | "rejected" | null;
-  approval_required_role?: string | null;
-  approval_target_stage?: string | null;
   /** Tipo de proceso: compra | licitacion | contrato | permiso | personalizado. */
   process_type?: "compra" | "licitacion" | "contrato" | "permiso" | "personalizado";
   /** Proyecto normalizado (tabla projects). */
@@ -51,79 +47,6 @@ export interface Pdc {
   predecessor_process_id?: string | null;
   /** Id de la contingencia que mantiene pausado este proceso (Modo A). */
   paused_by_contingency?: string | null;
-}
-
-export interface PdcMilestone {
-  id: string;
-  pdc_id: string;
-  milestone_type: string;
-  planned_date: string;
-  actual_date?: string;
-  deviation_days: number;
-  status: "pending" | "completed" | "overdue";
-}
-
-export interface TechnicalSpec {
-  id: string;
-  pdc_id: string;
-  summary_description: string;
-  has_studies: boolean;
-  studies_available_date?: string;
-  validation_status: "pending" | "validated" | "rejected";
-}
-
-export interface Rfq {
-  id: string;
-  pdc_id: string;
-  sent_date: string;
-  close_date: string;
-}
-
-export interface RfqSupplier {
-  id: string;
-  rfq_id: string;
-  supplier_name: string;
-  quoted_amount: number;
-  lead_time_days: number;
-  technical_score: number;
-  commercial_score: number;
-  total_score: number;
-}
-
-export interface PurchaseOrder {
-  id: string;
-  pdc_id: string;
-  po_number: string;
-  issue_date: string;
-  accepted_date?: string;
-  amount: number;
-}
-
-export interface Drawing {
-  id: string;
-  pdc_id: string;
-  requested_date: string;
-  received_date?: string;
-  approved: boolean;
-}
-
-export interface FatEvent {
-  id: string;
-  pdc_id: string;
-  scheduled_date: string;
-  executed_date?: string;
-  result?: "passed" | "failed" | "conditional";
-  report_received: boolean;
-}
-
-export interface LogisticsEvent {
-  id: string;
-  pdc_id: string;
-  exwork_date?: string;
-  shipped_date?: string;
-  chile_arrival_date?: string;
-  port_arrival_date?: string;
-  damages_reported: boolean;
 }
 
 export interface Alert {

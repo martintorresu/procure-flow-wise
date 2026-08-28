@@ -12,7 +12,6 @@ import { useProject, useProjectProcesses } from "@/hooks/useProjects";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import type { Pdc } from "@/types/pdc";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ProjectPermitsSection } from "@/components/permits/ProjectPermitsSection";
 
 /** Ordena los procesos siguiendo predecessor → continuación; los huérfanos al final. */
 function buildChains(processes: Pdc[]): Pdc[][] {
@@ -74,7 +73,6 @@ export default function ProjectChainPage() {
       <Tabs defaultValue="processes">
         <TabsList>
           <TabsTrigger value="processes">Procesos</TabsTrigger>
-          <TabsTrigger value="permits">Permisos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="processes" className="space-y-6 mt-4">
@@ -121,10 +119,6 @@ export default function ProjectChainPage() {
               </div>
             ))}
     </div>
-        </TabsContent>
-
-        <TabsContent value="permits" className="mt-4">
-          <ProjectPermitsSection projectId={id} />
         </TabsContent>
       </Tabs>
     </div>
