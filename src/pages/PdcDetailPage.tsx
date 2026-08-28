@@ -354,7 +354,7 @@ export default function PdcDetailPage() {
       {!isExternal && (
       <Tabs defaultValue="summary">
 
-        <TabsList className="grid grid-cols-4 lg:grid-cols-13 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-7 w-full h-auto">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="stages">Etapas</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
