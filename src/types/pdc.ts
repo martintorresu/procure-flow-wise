@@ -30,6 +30,7 @@ export interface Pdc {
   required_on_site_date: string;
   current_status: PdcStatus;
   current_owner: string;
+  requesting_area?: string | null;
   selected_supplier?: string;
   created_at: string;
   updated_at: string;

@@ -8,30 +8,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUpdatePdc } from "@/hooks/usePdcs";
+import { usePdc, useUpdatePdc } from "@/hooks/usePdcs";
 import { SEO } from "@/components/SEO";
 import { ProjectSelect } from "@/components/ProjectSelect";
-
-const STAGES = [
-  { value: "ingenieria", label: "Ingeniería" },
-  { value: "programacion", label: "Programación / Planificación" },
-  { value: "compras", label: "Compras" },
-  { value: "licitacion", label: "Licitación" },
-  { value: "evaluacion", label: "Evaluación" },
-  { value: "orden_compra", label: "Orden de Compra" },
-  { value: "seguimiento", label: "Seguimiento / FAT" },
-  { value: "recepcion", label: "Recepción / Logística" },
-];
+import { DB_STAGES, type DbStageValue } from "@/lib/processStages";
 
 export default function EditPdcPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
   const updatePdc = useUpdatePdc();
   const submitting = updatePdc.isPending;
+  const isAdmin = user?.role === "admin";
+  const { data: pdc, isLoading, isError } = usePdc(isAdmin ? id : undefined);
   const [pdcNumber, setPdcNumber] = useState<string>("");
   const [form, setForm] = useState({
     project_id: null as string | null,
@@ -41,40 +31,31 @@ export default function EditPdcPage() {
     required_on_site_date: "",
     requesting_area: "",
     responsible_name: "",
-    current_stage: "ingenieria",
+    current_stage: "ingenieria" as DbStageValue,
   });
 
-  const isAdmin = user?.role === "admin";
+  useEffect(() => {
+    if (isError) toast.error("No se pudo cargar el proceso");
+  }, [isError]);
 
   useEffect(() => {
-    if (!id || !isAdmin) { setLoading(false); return; }
-    (async () => {
-      const { data, error } = await supabase
-        .from("purchase_processes").select("*").eq("id", id).maybeSingle();
-      if (error || !data) {
-        toast.error("No se pudo cargar el proceso");
-        setLoading(false);
-        return;
-      }
-      setPdcNumber(data.pdc_number);
-      const critMap: Record<string, "low" | "medium" | "high"> = { baja: "low", media: "medium", alta: "high" };
-      setForm({
-        project_id: data.project_id ?? null,
-        project: data.project ?? "",
-        name: data.name ?? "",
-        description: data.description ?? "",
-        category: data.category ?? "",
-        criticality: critMap[data.criticality] ?? "medium",
-        estimated_amount: data.estimated_amount?.toString() ?? "",
-        currency: data.currency ?? "USD",
-        required_on_site_date: data.required_on_site_date ?? "",
-        requesting_area: data.requesting_area ?? "",
-        responsible_name: data.responsible_name ?? "",
-        current_stage: data.current_stage ?? "ingenieria",
-      });
-      setLoading(false);
-    })();
-  }, [id, isAdmin]);
+    if (!pdc) return;
+    setPdcNumber(pdc.pdc_number);
+    setForm({
+      project_id: pdc.project_id ?? null,
+      project: pdc.project ?? "",
+      name: pdc.title ?? "",
+      description: pdc.description ?? "",
+      category: pdc.category ?? "",
+      criticality: pdc.criticality,
+      estimated_amount: pdc.estimated_amount ? String(pdc.estimated_amount) : "",
+      currency: pdc.currency ?? "USD",
+      required_on_site_date: pdc.required_on_site_date ?? "",
+      requesting_area: pdc.requesting_area ?? "",
+      responsible_name: pdc.current_owner === "—" ? "" : (pdc.current_owner ?? ""),
+      current_stage: (pdc.current_stage ?? "ingenieria") as DbStageValue,
+    });
+  }, [pdc]);
 
   if (!isAdmin) {
     return (
@@ -89,13 +70,13 @@ export default function EditPdcPage() {
     );
   }
 
-  if (loading) return <div className="text-center py-20 text-muted-foreground">Cargando…</div>;
+  if (isLoading) return <div className="text-center py-20 text-muted-foreground">Cargando…</div>;
 
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.project || !form.name || !form.required_on_site_date) {
+    if (!form.project_id || !form.name || !form.required_on_site_date) {
       toast.error("Complete los campos obligatorios");
       return;
     }
@@ -114,9 +95,7 @@ export default function EditPdcPage() {
           required_on_site_date: form.required_on_site_date,
           requesting_area: form.requesting_area || "Sin especificar",
           responsible_name: form.responsible_name || null,
-          current_stage: form.current_stage as
-            | "ingenieria" | "programacion" | "compras" | "licitacion"
-            | "evaluacion" | "orden_compra" | "seguimiento" | "recepcion",
+          current_stage: form.current_stage,
         },
       });
       toast.success("Proceso actualizado correctamente");
@@ -226,7 +205,7 @@ export default function EditPdcPage() {
                 <Select value={form.current_stage} onValueChange={(v) => update("current_stage", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {STAGES.map((s) => (
+                    {DB_STAGES.map((s) => (
                       <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
                     ))}
                   </SelectContent>

@@ -297,6 +297,10 @@ export default function MinutaActivaPage() {
       // Fallback: si falla online, guardar en cola offline para reintento automático
       enqueueCommitments(basePayload, meetingTitle.trim());
       toast.error("Error al importar. Los compromisos se guardaron localmente y se enviarán automáticamente.");
+      setFinalScore(quality.score);
+      setImportedCount(basePayload.length);
+      if (isStandaloneApp) setImportDone(true);
+      else navigate("/commitments");
     }
   };
 

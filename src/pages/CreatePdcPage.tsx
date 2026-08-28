@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCreatePdc, usePdc } from "@/hooks/usePdcs";
 import { ProjectSelect } from "@/components/ProjectSelect";
 import { ProcessStepper } from "@/components/ProcessStepper";
+import { PURCHASE_STEPS } from "@/lib/processStages";
 import { SEO } from "@/components/SEO";
 import { GENERIC_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isPurchaseType, type ProcessType } from "@/lib/processTypes";
 import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock } from "lucide-react";
@@ -18,16 +19,6 @@ import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
 
 
-const PURCHASE_STEPS = [
-  { key: "draft", label: "Resumen", icon: FileText },
-  { key: "technical_definition", label: "Técnica", icon: Wrench },
-  { key: "planning", label: "Planificación", icon: ClipboardList },
-  { key: "quotation", label: "Cotizaciones", icon: FileSearch },
-  { key: "awarded", label: "Adjudicación", icon: Award },
-  { key: "po_issued", label: "Vendor", icon: Truck },
-  { key: "fat", label: "FAT", icon: FlaskConical },
-  { key: "shipping", label: "Logística", icon: Ship },
-];
 
 const GENERIC_STEPS = GENERIC_STAGES.map((s, i) => ({
   key: s.key,

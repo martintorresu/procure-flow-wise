@@ -20,6 +20,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { SEO } from "@/components/SEO";
 import { ProcessStepper } from "@/components/ProcessStepper";
+import { PURCHASE_STEPS, PURCHASE_STATUS_ORDER } from "@/lib/processStages";
 import { ProcessStepperZoom } from "@/components/ProcessStepperZoom";
 import { computeStageProgress } from "@/lib/stageProgress";
 import { formatDate, humanizeTechnicalText } from "@/lib/stageLabels";
@@ -57,22 +58,7 @@ function ApproveButton({ pdcId }: { pdcId: string }) {
   );
 }
 
-const PURCHASE_STEPS = [
-  { key: "draft", label: "Borrador", icon: FileText },
-  { key: "technical_definition", label: "Técnica", icon: Wrench },
-  { key: "planning", label: "Planificación", icon: ClipboardList },
-  { key: "quotation", label: "Cotización", icon: FileSearch },
-  { key: "evaluation", label: "Evaluación", icon: FileSearch },
-  { key: "awarded", label: "Adjudicación", icon: Award },
-  { key: "po_issued", label: "OC / Vendor", icon: Truck },
-  { key: "drawings", label: "Planos", icon: ClipboardList },
-  { key: "fat", label: "Prueba de Fábrica", icon: FlaskConical },
-  { key: "shipping", label: "Logística", icon: Ship },
-  { key: "arrived", label: "Arribado", icon: MapPin },
-  { key: "closed", label: "Cerrado", icon: Check },
-];
-
-const STATUS_ORDER = PURCHASE_STEPS.map((s) => s.key);
+const STATUS_ORDER = PURCHASE_STATUS_ORDER;
 
 function PurchaseStepperCard({ pdc, milestones }: { pdc: Pdc; milestones: PdcMilestone[] }) {
   const [showFull, setShowFull] = useState(false);
@@ -610,17 +596,17 @@ export default function PdcDetailPage() {
                     <div><span className="text-muted-foreground">Daños:</span> {l.damages_reported ? "Sí ⚠️" : "No"}</div>
                   </div>
                   {/* Visual timeline */}
-                  <div className="flex items-center gap-1 mt-4">
+                  <div className="relative flex items-center gap-1 mt-4 mb-6">
                     {[
                       { label: "Ex-Work", date: l.exwork_date },
                       { label: "Embarcado", date: l.shipped_date },
                       { label: "Arribo", date: l.chile_arrival_date },
                       { label: "Puerto", date: l.port_arrival_date },
                     ].map((step, i) => (
-                      <div key={i} className="flex items-center flex-1">
+                      <div key={i} className="relative flex items-center flex-1">
                         <div className={`w-3 h-3 rounded-full shrink-0 ${step.date ? "bg-success" : "bg-muted-foreground/30"}`} />
                         <div className={`h-0.5 flex-1 ${step.date ? "bg-success" : "bg-muted-foreground/20"}`} />
-                        <span className="text-[10px] text-muted-foreground absolute mt-6">{step.label}</span>
+                        <span className="absolute top-5 left-0 text-[10px] text-muted-foreground whitespace-nowrap">{step.label}</span>
                       </div>
                     ))}
                   </div>
