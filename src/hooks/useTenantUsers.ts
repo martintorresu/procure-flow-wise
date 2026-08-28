@@ -97,7 +97,7 @@ export function useMyProfile(userId?: string): UseQueryResult<TenantUser | null,
       const [{ data, error }, { data: contact }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, email, full_name, area")
+          .select("id, email, full_name, area, default_position_id")
           .eq("id", userId!)
           .maybeSingle(),
         supabase
