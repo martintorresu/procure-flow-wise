@@ -1,11 +1,10 @@
 import type { StepperStep } from "@/components/ProcessStepper";
-import type { StageProgress } from "@/lib/stageProgress";
 
 interface ProcessStepperZoomProps {
   steps: StepperStep[];
   activeIndex: number;
   /** Avance calculado desde purchase_milestones; si es null no se muestra el bloque. */
-  progress?: StageProgress | null;
+  progress?: { real: number; scheduled: number } | null;
 }
 
 const WINDOW = 2;

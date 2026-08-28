@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { getTrafficLight } from "@/lib/trafficLight";
 import { useAlerts } from "@/hooks/useAlerts";
 import { usePdcs } from "@/hooks/usePdcs";
-import { useApprovePdc } from "@/hooks/useApprovalMatrix";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge, CriticalityBadge, TrafficLightLegend } from "@/components/StatusIndicators";
 import { useAuth } from "@/contexts/AuthContext";
@@ -50,7 +49,6 @@ export default function DashboardPage() {
   const qc = useQueryClient();
   const { data: pdcs = [], isLoading: pdcsLoading } = usePdcs();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
-  const approveMutation = useApprovePdc();
   const subscription = useTenantSubscription();
 
 
@@ -63,7 +61,6 @@ export default function DashboardPage() {
   const delayedPdcs = pdcs.filter((p) => getTrafficLight(p) === "red");
   const criticalPdcs = pdcs.filter((p) => p.criticality === "high");
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
-  const pendingApprovals = pdcs.filter((p) => p.approval_status === "pending");
   const isManagerOrAdmin = user?.role === "gerente" || user?.role === "admin";
 
   const [criticalityFilter, setCriticalityFilter] = useState<Criticality | "all">("all");
@@ -78,13 +75,6 @@ export default function DashboardPage() {
     (criticalityFilter === "all" || p.criticality === criticalityFilter) &&
     (statusFilter === "all" || p.current_status === statusFilter)
   );
-
-  const handleApprove = (pdcId: string) => {
-    approveMutation.mutate(pdcId, {
-      onSuccess: () => toast.success("Proceso aprobado y avanzado a la siguiente etapa"),
-      onError: (e) => toast.error(`Error al aprobar: ${(e as Error).message}`),
-    });
-  };
 
 
   const stats = [
@@ -116,29 +106,6 @@ export default function DashboardPage() {
 
       </div>
 
-      {isManagerOrAdmin && pendingApprovals.length > 0 && (
-        <Card className="border-l-4 border-l-warning bg-warning/5">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4" /> Pendientes de aprobación ({pendingApprovals.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {pendingApprovals.map((p) => (
-              <div key={p.id} className="flex items-center justify-between border-b last:border-0 pb-2 last:pb-0">
-                <div className="text-sm">
-                  <Link to={`/pdcs/${p.id}`} className="font-mono text-xs text-accent hover:underline">{p.pdc_number}</Link>
-                  <span className="ml-2 font-medium">{p.title}</span>
-                  <span className="ml-2 text-xs text-muted-foreground">→ {p.approval_target_stage}</span>
-                </div>
-                <Button size="sm" disabled={approveMutation.isPending} onClick={() => handleApprove(p.id)}>
-                  Aprobar
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Hero: flujo visual */}
       {!pdcsLoading && <DashboardFlowHero pdcs={activePdcs} />}

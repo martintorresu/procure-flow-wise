@@ -1,11 +1,9 @@
 import { Outlet } from "react-router-dom";
 import AppSidebar from "@/components/AppSidebar";
 import { PwaInstallBanner } from "@/components/PwaInstallBanner";
-import { useEtNotifications } from "@/hooks/useEtNotifications";
 import { useOfflineSync } from "@/hooks/useOfflineSync";
 
 export default function AppLayout() {
-  useEtNotifications();
   useOfflineSync();
   return (
     <div className="flex min-h-screen">
