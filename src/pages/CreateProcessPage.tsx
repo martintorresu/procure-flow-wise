@@ -13,11 +13,13 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { SEO } from "@/components/SEO";
 import {
   ADMINISTRACION_CONTRATO_STAGES,
+  COMPRA_INDUSTRIAL_STAGES,
   LICITACION_STAGES,
   OBRA_STAGES,
   PROCESS_TYPES,
   PROCESS_TYPE_LABELS,
   isAdministracionContratoType,
+  isCompraIndustrialType,
   isLicitacionType,
   isObraType,
   type ProcessType,
