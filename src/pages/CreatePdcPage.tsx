@@ -13,8 +13,9 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { PURCHASE_STEPS } from "@/lib/processStages";
 import { SEO } from "@/components/SEO";
-import { GENERIC_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isPurchaseType, type ProcessType } from "@/lib/processTypes";
-import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock } from "lucide-react";
+import { GENERIC_STAGES, OBRA_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isObraType, isPurchaseType, type ProcessType } from "@/lib/processTypes";
+import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock, Building2, Layers, PaintRoller, MapPin } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
 
@@ -25,6 +26,14 @@ const GENERIC_STEPS = GENERIC_STAGES.map((s, i) => ({
   label: s.label,
   icon: [FileText, ClipboardList, Wrench, Check][i],
 }));
+
+const OBRA_ICONS = [FileText, Truck, MapPin, Layers, Building2, Ship, Wrench, PaintRoller, FlaskConical, Check];
+const OBRA_STEPS = OBRA_STAGES.map((s, i) => ({
+  key: s.key,
+  label: s.label,
+  icon: OBRA_ICONS[i],
+}));
+
 
 export default function CreatePdcPage() {
   const navigate = useNavigate();
@@ -70,6 +79,8 @@ export default function CreatePdcPage() {
   const update = (field: string, value: string) => setForm((p) => ({ ...p, [field]: value }));
 
   const isPurchase = isPurchaseType(form.process_type);
+  const isObra = isObraType(form.process_type);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +119,13 @@ export default function CreatePdcPage() {
         created_by: user.id,
       });
 
+      // Los procesos de obra reciben las 10 etapas preestablecidas
+      if (isObra) {
+        const { error: stagesError } = await supabase.rpc("seed_obra_stages", { p_process_id: data.id });
+        if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
+      }
       toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
+
       // Los procesos tipo "permiso" continúan en Permisología para completar el trámite
       if (form.process_type === "permiso") {
         navigate(`/permits?pdc=${data.id}&project=${form.project_id ?? ""}`);
@@ -158,9 +175,14 @@ export default function CreatePdcPage() {
       <Card>
         <CardContent className="p-6 space-y-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
-            {isPurchase ? "Flujo de compra (8 etapas)" : "Flujo genérico (4 etapas)"}
+            {isObra
+              ? "Flujo de ejecución de obra (10 etapas preestablecidas)"
+              : isPurchase
+                ? "Flujo de compra (8 etapas)"
+                : "Flujo genérico (4 etapas)"}
           </p>
-          <ProcessStepper steps={isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
+          <ProcessStepper steps={isObra ? OBRA_STEPS : isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
+
         </CardContent>
       </Card>
 
