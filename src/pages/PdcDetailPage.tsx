@@ -33,6 +33,7 @@ import { useProcessParticipants } from "@/hooks/useProcessParticipants";
 import { InviteExternalDialog } from "@/components/InviteExternalDialog";
 import { ProcessComments } from "@/components/ProcessComments";
 import { ProcessCommitments } from "@/components/ProcessCommitments";
+import { ProcessStages } from "@/components/ProcessStages";
 import { ProcessDocuments } from "@/components/ProcessDocuments";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ContingencyDialog } from "@/components/ContingencyDialog";
