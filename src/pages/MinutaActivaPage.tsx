@@ -129,6 +129,15 @@ export default function MinutaActivaPage() {
   const [rawTranscript, setRawTranscript] = useState("");
   const [noDetected, setNoDetected] = useState(false);
 
+  // Etapas de todos los procesos involucrados (Setup + reclasificaciones por fila)
+  const involvedProcessIds = useMemo(
+    () => [presetProcessId, ...draft.map((d) => d.processId)],
+    [presetProcessId, draft],
+  );
+  const { data: stagesByProcess } = useProcessStagesByProcess(involvedProcessIds);
+  const stagesFor = (processId: string | null) =>
+    (processId ? stagesByProcess?.get(processId) : undefined) ?? [];
+
   // Timer de captura
   useEffect(() => {
     if (phase !== "capture" || startedAt === null) return;
