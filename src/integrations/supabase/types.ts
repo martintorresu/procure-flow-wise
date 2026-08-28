@@ -291,6 +291,44 @@ export type Database = {
           },
         ]
       }
+      positions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          process_type: string | null
+          sort_order: number
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          process_type?: string | null
+          sort_order?: number
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          process_type?: string | null
+          sort_order?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "positions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       process_comments: {
         Row: {
           author_user_id: string
@@ -580,13 +618,14 @@ export type Database = {
       process_participants: {
         Row: {
           accepted_at: string | null
-          email: string
+          email: string | null
           external_company: string | null
           external_role: string
           id: string
           invited_at: string
           invited_by: string | null
           permission_level: string
+          position_id: string | null
           process_id: string
           status: string
           tenant_id: string
@@ -594,13 +633,14 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
-          email: string
+          email?: string | null
           external_company?: string | null
           external_role?: string
           id?: string
           invited_at?: string
           invited_by?: string | null
           permission_level?: string
+          position_id?: string | null
           process_id: string
           status?: string
           tenant_id: string
@@ -608,19 +648,27 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
-          email?: string
+          email?: string | null
           external_company?: string | null
           external_role?: string
           id?: string
           invited_at?: string
           invited_by?: string | null
           permission_level?: string
+          position_id?: string | null
           process_id?: string
           status?: string
           tenant_id?: string
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "process_participants_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "process_participants_process_id_fkey"
             columns: ["process_id"]
@@ -807,34 +855,41 @@ export type Database = {
         Row: {
           area: string | null
           created_at: string
+          default_position_id: string | null
           email: string
           full_name: string | null
           id: string
-          position: string | null
           tenant_id: string
           updated_at: string
         }
         Insert: {
           area?: string | null
           created_at?: string
+          default_position_id?: string | null
           email: string
           full_name?: string | null
           id: string
-          position?: string | null
           tenant_id: string
           updated_at?: string
         }
         Update: {
           area?: string | null
           created_at?: string
+          default_position_id?: string | null
           email?: string
           full_name?: string | null
           id?: string
-          position?: string | null
           tenant_id?: string
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_default_position_id_fkey"
+            columns: ["default_position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -1078,6 +1133,7 @@ export type Database = {
         Returns: number
       }
       seed_obra_stages: { Args: { p_process_id: string }; Returns: number }
+      seed_positions: { Args: { p_tenant_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "gestor" | "colaborador" | "lector"

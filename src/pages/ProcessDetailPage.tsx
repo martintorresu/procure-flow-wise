@@ -100,7 +100,7 @@ export default function ProcessDetailPage() {
                 !isPaused && <ContingencyDialog process={process} createdBy={user.id} />
               )}
               {isAdmin && process.tenant_id && user && (
-                <InviteExternalDialog processId={process.id} tenantId={process.tenant_id} invitedBy={user.id} />
+                <InviteExternalDialog processId={process.id} tenantId={process.tenant_id} invitedBy={user.id} processType={process.process_type} />
               )}
               {isAdmin && (
                 isPaused ? (

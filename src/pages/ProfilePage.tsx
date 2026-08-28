@@ -7,23 +7,30 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
-import { useMyProfile, useUpdateProfileContact, isValidE164 } from "@/hooks/useTenantUsers";
+import { PositionSelect } from "@/components/PositionSelect";
+import {
+  useMyProfile, useUpdateProfileContact, useUpdateDefaultPosition, isValidE164,
+} from "@/hooks/useTenantUsers";
 
 export default function ProfilePage() {
   const { user } = useAuth();
   const { data: profile, isLoading } = useMyProfile(user?.id);
   const update = useUpdateProfileContact();
+  const updatePosition = useUpdateDefaultPosition();
   const [phone, setPhone] = useState("");
   const [rut, setRut] = useState("");
   const [waEnabled, setWaEnabled] = useState(true);
+  const [positionId, setPositionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (profile) {
       setPhone(profile.phone ?? "");
       setRut(profile.rut ?? "");
       setWaEnabled(profile.whatsapp_notifications_enabled);
+      setPositionId(profile.default_position_id ?? null);
     }
   }, [profile]);
+
 
   const save = async () => {
     if (phone.trim() !== "" && !isValidE164(phone)) {
@@ -37,11 +44,13 @@ export default function ProfilePage() {
         rut: rut.trim() || null,
         whatsapp_notifications_enabled: waEnabled,
       });
+      await updatePosition.mutateAsync({ id: user!.id, default_position_id: positionId });
       toast.success("Perfil actualizado");
     } catch (e) {
       toast.error((e as Error).message);
     }
   };
+
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
@@ -75,14 +84,26 @@ export default function ProfilePage() {
                 <Label>RUT / Identificador fiscal</Label>
                 <Input value={rut} onChange={(e) => setRut(e.target.value)} placeholder="12.345.678-9" />
               </div>
+              <div className="space-y-2">
+                <PositionSelect
+                  id="default-position"
+                  label="Cargo por defecto"
+                  value={positionId}
+                  onChange={setPositionId}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Describe qué haces; se propone al sumarte a un proceso. No define tus permisos.
+                </p>
+              </div>
               <div className="flex items-center gap-3 pt-2">
                 <Switch checked={waEnabled} onCheckedChange={setWaEnabled} />
                 <span className="text-sm">Recibir alertas por WhatsApp</span>
               </div>
-              <Button onClick={save} disabled={update.isPending}>
-                {update.isPending ? "Guardando…" : "Guardar cambios"}
+              <Button onClick={save} disabled={update.isPending || updatePosition.isPending}>
+                {update.isPending || updatePosition.isPending ? "Guardando…" : "Guardar cambios"}
               </Button>
             </>
+
           )}
         </CardContent>
       </Card>

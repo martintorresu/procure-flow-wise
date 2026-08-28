@@ -8,15 +8,18 @@ export interface ProcessParticipant {
   id: string;
   process_id: string;
   tenant_id: string;
-  email: string;
+  email: string | null;
   external_company: string | null;
   external_role: ExternalRole;
   permission_level: PermissionLevel;
   status: "pending" | "accepted";
   user_id: string | null;
+  /** Cargo descriptivo (opcional). No influye en permisos. */
+  position_id: string | null;
   invited_at: string;
   accepted_at: string | null;
 }
+
 
 export const EXTERNAL_ROLE_LABELS: Record<ExternalRole, string> = {
   mandante: "Mandante",
@@ -59,7 +62,9 @@ export interface InviteInput {
   externalRole: ExternalRole;
   permissionLevel: Exclude<PermissionLevel, "upload">;
   invitedBy: string;
+  positionId?: string | null;
 }
+
 
 /** Dispara el email de invitación. No lanza: el envío es best-effort. */
 export async function sendInviteEmail(participantId: string): Promise<{ ok: boolean; error?: string }> {
@@ -92,6 +97,7 @@ export function useInviteParticipant() {
           external_role: input.externalRole,
           permission_level: input.permissionLevel,
           invited_by: input.invitedBy,
+          position_id: input.positionId ?? null,
         })
         .select("*")
         .single();
@@ -102,6 +108,66 @@ export function useInviteParticipant() {
       qc.invalidateQueries({ queryKey: ["process_participants", vars.processId] }),
   });
 }
+
+export interface AddMemberInput {
+  processId: string;
+  tenantId: string;
+  userId: string;
+  email: string;
+  invitedBy: string;
+  positionId?: string | null;
+}
+
+/**
+ * Agrega a un usuario interno del tenant como participante del proceso.
+ * No hay invitación que aceptar: queda `accepted`. Su acceso real lo define
+ * su nivel de acceso global, no `permission_level`.
+ */
+export function useAddTeamMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: AddMemberInput) => {
+      const { data, error } = await supabase
+        .from("process_participants")
+        .insert({
+          process_id: input.processId,
+          tenant_id: input.tenantId,
+          user_id: input.userId,
+          email: input.email.trim().toLowerCase(),
+          external_company: null,
+          external_role: "mandante",
+          permission_level: "view",
+          status: "accepted",
+          accepted_at: new Date().toISOString(),
+          invited_by: input.invitedBy,
+          position_id: input.positionId ?? null,
+        })
+        .select("*")
+        .single();
+      if (error) throw new Error(error.message);
+      return data as unknown as ProcessParticipant;
+    },
+    onSuccess: (_d, vars) =>
+      qc.invalidateQueries({ queryKey: ["process_participants", vars.processId] }),
+  });
+}
+
+/** Cambia el cargo de un participante. */
+export function useUpdateParticipantPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; processId: string; positionId: string | null }) => {
+      const { error } = await supabase
+        .from("process_participants")
+        .update({ position_id: input.positionId })
+        .eq("id", input.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: (_d, vars) =>
+      qc.invalidateQueries({ queryKey: ["process_participants", vars.processId] }),
+  });
+}
+
 
 /** Reenvía la invitación por email a un participante pendiente. */
 export function useResendInvite() {

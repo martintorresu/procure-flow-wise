@@ -6,6 +6,8 @@ export interface TenantUser {
   email: string;
   full_name: string | null;
   area: string | null;
+  /** Cargo por defecto (catálogo positions). Descriptivo, no da permisos. */
+  default_position_id: string | null;
   phone: string | null;
   rut: string | null;
   whatsapp_notifications_enabled: boolean;
@@ -23,7 +25,10 @@ export function useTenantUsers(): UseQueryResult<TenantUser[], Error> {
     queryKey: KEY,
     queryFn: async () => {
       const [{ data, error }, { data: contacts }] = await Promise.all([
-        supabase.from("profiles").select("id, email, full_name, area").order("full_name"),
+        supabase
+          .from("profiles")
+          .select("id, email, full_name, area, default_position_id")
+          .order("full_name"),
         supabase
           .from("profile_contacts")
           .select("id, phone, rut, whatsapp_notifications_enabled"),
@@ -40,6 +45,25 @@ export function useTenantUsers(): UseQueryResult<TenantUser[], Error> {
     },
   });
 }
+
+/** Actualiza el cargo por defecto de un perfil (propio o, si es admin, de otro). */
+export function useUpdateDefaultPosition() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { id: string; default_position_id: string | null }) => {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ default_position_id: input.default_position_id })
+        .eq("id", input.id);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: KEY });
+      qc.invalidateQueries({ queryKey: ["my-profile"] });
+    },
+  });
+}
+
 
 /** Actualiza teléfono / RUT / preferencia de WhatsApp de un perfil. */
 export function useUpdateProfileContact() {
@@ -73,7 +97,7 @@ export function useMyProfile(userId?: string): UseQueryResult<TenantUser | null,
       const [{ data, error }, { data: contact }] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, email, full_name, area")
+          .select("id, email, full_name, area, default_position_id")
           .eq("id", userId!)
           .maybeSingle(),
         supabase

@@ -20,6 +20,7 @@ import { ApiKeysSection } from "@/components/admin/ApiKeysSection";
 import { SubscriptionsSection } from "@/components/admin/SubscriptionsSection";
 import { ContingenciesSection } from "@/components/admin/ContingenciesSection";
 import { MinutaConfigSection } from "@/components/admin/MinutaConfigSection";
+import { PositionsSection } from "@/components/admin/PositionsSection";
 
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/process";
@@ -217,6 +218,8 @@ export default function AdminPage() {
 
       <SubscriptionsSection />
       <AlertRulesSection />
+      <PositionsSection />
+
 
       <WhatsappConfigSection />
       <MinutaConfigSection />
