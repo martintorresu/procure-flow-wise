@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
-  Package, Shield, FolderKanban, UserCog, MessagesSquare, FileCheck, Mic
+  Package, Shield, FolderKanban, UserCog, MessagesSquare, Mic
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -42,7 +42,6 @@ const navSections: NavSection[] = [
   {
     label: "MÓDULOS",
     items: [
-      { to: "/permits", icon: FileCheck, label: "Permisología" },
     ],
   },
 ];

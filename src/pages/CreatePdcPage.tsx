@@ -147,7 +147,7 @@ export default function CreatePdcPage() {
 
       // Los procesos tipo "permiso" continúan en Permisología para completar el trámite
       if (form.process_type === "permiso") {
-        navigate(`/permits?pdc=${data.id}&project=${form.project_id ?? ""}`);
+        navigate(`/pdcs/${data.id}`);
         return;
       }
       navigate(`/pdcs/${data.id}`);

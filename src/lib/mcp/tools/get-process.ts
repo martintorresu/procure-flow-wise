@@ -6,7 +6,7 @@ export default defineTool({
   name: "get_process",
   title: "Detalle de un proceso",
   description:
-    "Devuelve el detalle de un proceso de compra (por id o por número de proceso) junto con sus hitos y comentarios recientes.",
+    "Devuelve el detalle de un proceso de compra (por id o por número de proceso) junto con sus etapas y comentarios recientes.",
   inputSchema: {
     id: z.string().uuid().optional().describe("Identificador único del proceso."),
     pdc_number: z.string().trim().min(1).optional().describe("Número del proceso, por ejemplo PC-0001."),
@@ -26,12 +26,12 @@ export default defineTool({
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     if (!process) return { content: [{ type: "text", text: "Proceso no encontrado" }], isError: true };
 
-    const [{ data: milestones }, { data: comments }] = await Promise.all([
+    const [{ data: stages }, { data: comments }] = await Promise.all([
       supabase
-        .from("purchase_milestones")
-        .select("id, milestone_type, planned_date, actual_date, status, deviation_days")
-        .eq("pdc_id", process.id)
-        .order("planned_date", { ascending: true }),
+        .from("process_stages")
+        .select("id, name, status, sort_order")
+        .eq("process_id", process.id)
+        .order("sort_order", { ascending: true }),
       supabase
         .from("process_comments")
         .select("id, body, created_at, author_user_id")
@@ -40,7 +40,7 @@ export default defineTool({
         .limit(10),
     ]);
 
-    const payload = { process, milestones: milestones ?? [], comments: comments ?? [] };
+    const payload = { process, stages: stages ?? [], comments: comments ?? [] };
     return {
       content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
       structuredContent: payload,
