@@ -129,20 +129,15 @@ export default function AppSidebar() {
       </div>
 
       {/* Header */}
-      <div className="relative flex items-center gap-3 px-4 h-16 border-b border-sidebar-border/60 shrink-0 backdrop-blur-sm">
-        <div className="relative shrink-0">
-          <div className="absolute inset-0 rounded-lg bg-sidebar-primary/40 blur-md" />
-          <div className="relative w-9 h-9 rounded-lg bg-gradient-to-br from-sidebar-primary to-sidebar-accent flex items-center justify-center shadow-lg">
-            <Package className="w-5 h-5 text-sidebar-primary-foreground" />
-          </div>
-        </div>
-        {!collapsed && (
-          <div className="overflow-hidden flex-1">
-            <h1 className="text-sm font-bold text-sidebar-foreground tracking-wide truncate">{tenant.name}</h1>
-            <p className="text-[10px] text-sidebar-primary uppercase tracking-[0.2em] font-semibold">
-              {tenant.slug === "default" ? "Insight" : tenant.slug}
-            </p>
-          </div>
+      <div className="relative flex items-center justify-center px-4 h-16 border-b border-sidebar-border/60 shrink-0 backdrop-blur-sm">
+        {collapsed ? (
+          <Link to="/" aria-label="Ir al panel de control" className="flex items-center justify-center">
+            <ProcuremMark className="h-[30px] w-[30px]" />
+          </Link>
+        ) : (
+          <Link to="/" aria-label="Ir al panel de control" className="block">
+            <ProcuremLockup className="text-[20px]" />
+          </Link>
         )}
       </div>
 
