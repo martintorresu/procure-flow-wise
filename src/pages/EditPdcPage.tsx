@@ -51,7 +51,7 @@ export default function EditPdcPage() {
       estimated_amount: pdc.estimated_amount ? String(pdc.estimated_amount) : "",
       currency: pdc.currency ?? "USD",
       required_on_site_date: pdc.required_on_site_date ?? "",
-      requesting_area: (pdc as { requesting_area?: string }).requesting_area ?? "",
+      requesting_area: pdc.requesting_area ?? "",
       responsible_name: pdc.current_owner === "—" ? "" : (pdc.current_owner ?? ""),
       current_stage: (pdc.current_stage ?? "ingenieria") as DbStageValue,
     });
