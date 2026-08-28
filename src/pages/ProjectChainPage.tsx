@@ -46,6 +46,7 @@ export default function ProjectChainPage() {
   const { id } = useParams();
   const { data: project } = useProject(id);
   const { data: processes = [], isLoading } = useProjectProcesses(id);
+  const { data: summaries = {} } = useProcessStageSummaries();
 
   const chains = useMemo(() => buildChains(processes), [processes]);
 
