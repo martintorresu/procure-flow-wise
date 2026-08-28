@@ -69,16 +69,20 @@ export const PERMIT_CATEGORY_LABELS: Record<string, string> = {
 export const PERMIT_DOCUMENT_TYPES = [
   "solicitud",
   "resolucion",
-  "plano",
   "certificado",
+  "plano",
+  "informe",
+  "anexo",
   "otro",
 ] as const;
 
 export const PERMIT_DOCUMENT_TYPE_LABELS: Record<string, string> = {
   solicitud: "Solicitud",
   resolucion: "Resolución",
-  plano: "Plano",
   certificado: "Certificado",
+  plano: "Plano",
+  informe: "Informe",
+  anexo: "Anexo",
   otro: "Otro",
 };
 

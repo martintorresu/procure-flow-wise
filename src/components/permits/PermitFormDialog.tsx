@@ -6,24 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Paperclip, Trash2 } from "lucide-react";
 import {
   useCreatePermit,
   useUpdatePermit,
   usePermitTypes,
-  usePermitDocuments,
-  useAddPermitDocument,
-  useDeletePermitDocument,
   type Permit,
 } from "@/hooks/usePermits";
+import { PermitDocumentsSection } from "@/components/permits/PermitDocumentsSection";
 import { useProjects } from "@/hooks/useProjects";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
 import { useProcessOptions } from "@/hooks/useCommitments";
 import {
   PERMIT_STATUSES,
   PERMIT_STATUS_LABELS,
-  PERMIT_DOCUMENT_TYPES,
-  PERMIT_DOCUMENT_TYPE_LABELS,
   addDaysIso,
   type PermitStatus,
 } from "@/lib/permits";
@@ -280,63 +275,3 @@ export function PermitFormDialog({
   );
 }
 
-function PermitDocumentsSection({ permitId }: { permitId: string }) {
-  const { data: docs = [] } = usePermitDocuments(permitId);
-  const addMutation = useAddPermitDocument();
-  const delMutation = useDeletePermitDocument(permitId);
-  const [name, setName] = useState("");
-  const [url, setUrl] = useState("");
-  const [docType, setDocType] = useState<string>("solicitud");
-
-  const add = async () => {
-    if (!name.trim()) { toast.error("Indica el nombre del documento"); return; }
-    try {
-      await addMutation.mutateAsync({ permit_id: permitId, name: name.trim(), file_url: url.trim() || null, document_type: docType });
-      setName(""); setUrl("");
-      toast.success("Documento agregado");
-    } catch (e) {
-      toast.error((e as Error).message);
-    }
-  };
-
-  return (
-    <div className="border rounded-lg p-4 space-y-3">
-      <h3 className="text-sm font-semibold flex items-center gap-2">
-        <Paperclip className="w-4 h-4" /> Documentos del trámite
-      </h3>
-      <p className="text-[11px] text-muted-foreground">
-        Registra la referencia o URL del documento (la carga de archivos se habilitará con almacenamiento).
-      </p>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-        <Input placeholder="Nombre" value={name} onChange={(e) => setName(e.target.value)} className="md:col-span-1" />
-        <Select value={docType} onValueChange={setDocType}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {PERMIT_DOCUMENT_TYPES.map((t) => (
-              <SelectItem key={t} value={t}>{PERMIT_DOCUMENT_TYPE_LABELS[t]}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Input placeholder="URL o referencia" value={url} onChange={(e) => setUrl(e.target.value)} />
-        <Button variant="outline" onClick={add} disabled={addMutation.isPending}>Agregar</Button>
-      </div>
-      <ul className="space-y-1">
-        {docs.map((d) => (
-          <li key={d.id} className="flex items-center justify-between text-sm border rounded px-3 py-2">
-            <span className="truncate">
-              <span className="font-medium">{d.name}</span>
-              {d.document_type && <span className="text-muted-foreground"> · {PERMIT_DOCUMENT_TYPE_LABELS[d.document_type] ?? d.document_type}</span>}
-              {d.file_url && (
-                <a href={d.file_url} target="_blank" rel="noreferrer" className="ml-2 text-accent underline">abrir</a>
-              )}
-            </span>
-            <Button variant="ghost" size="icon" onClick={() => delMutation.mutate(d.id)} aria-label="Eliminar documento">
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </li>
-        ))}
-        {!docs.length && <li className="text-xs text-muted-foreground">Sin documentos registrados.</li>}
-      </ul>
-    </div>
-  );
-}
