@@ -2,15 +2,12 @@ import { useMutation, useQuery, useQueryClient, type UseQueryResult } from "@tan
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
 import type { ContingencyMode, ContingencyStatus } from "@/lib/contingencies";
-import { CRIT_FE_TO_DB } from "@/hooks/usePdcs";
-import type { Criticality } from "@/types/pdc";
 
 export interface ProcessRef {
   id: string;
   pdc_number: string;
   name: string;
-  project: string;
-  current_stage: string;
+  project_id: string | null;
 }
 
 export interface Contingency {
@@ -31,8 +28,8 @@ export interface Contingency {
 const SELECT = `
   id, tenant_id, parent_process_id, child_process_id, execution_mode, reason,
   status, created_by, created_at, completed_at,
-  parent:purchase_processes!process_contingencies_parent_process_id_fkey(id, pdc_number, name, project, current_stage),
-  child:purchase_processes!process_contingencies_child_process_id_fkey(id, pdc_number, name, project, current_stage)
+  parent:purchase_processes!process_contingencies_parent_process_id_fkey(id, pdc_number, name, project_id),
+  child:purchase_processes!process_contingencies_child_process_id_fkey(id, pdc_number, name, project_id)
 `;
 
 /** Contingencias donde el proceso participa como padre o como hijo. */
@@ -87,9 +84,6 @@ export interface CreateContingencyInput {
   executionMode: ContingencyMode;
   reason: string;
   title: string;
-  criticality: Criticality;
-  project: string;
-  projectId: string | null;
   createdBy: string;
 }
 
@@ -103,7 +97,6 @@ export function useCreateContingency() {
         p_execution_mode: input.executionMode,
         p_reason: input.reason,
         p_child_name: input.title,
-        p_child_criticality: CRIT_FE_TO_DB[input.criticality],
       });
       if (error) throw new Error(error.message);
       const res = data as unknown as {
