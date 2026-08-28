@@ -353,8 +353,9 @@ export default function PdcDetailPage() {
       {!isExternal && (
       <Tabs defaultValue="summary">
 
-        <TabsList className="grid grid-cols-4 lg:grid-cols-12 w-full">
+        <TabsList className="grid grid-cols-4 lg:grid-cols-13 w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
+          <TabsTrigger value="stages">Etapas</TabsTrigger>
           <TabsTrigger value="technical">Técnica</TabsTrigger>
           <TabsTrigger value="planning">Planificación</TabsTrigger>
           <TabsTrigger value="quotations">Cotización</TabsTrigger>
@@ -368,6 +369,10 @@ export default function PdcDetailPage() {
           <TabsTrigger value="closed">Cerrada</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="stages">
+          <ProcessStages processId={pdc.id} />
+        </TabsContent>
+
         <TabsContent value="contingencies">
           <ProcessContingencies processId={pdc.id} canManage={canBifurcate} />
         </TabsContent>
@@ -380,6 +385,7 @@ export default function PdcDetailPage() {
         <TabsContent value="commitments">
           <ProcessCommitments pdcId={pdc.id} />
         </TabsContent>
+
 
 
         {/* Summary */}
