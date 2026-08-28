@@ -217,7 +217,10 @@ Deno.serve(async (req) => {
       ? null
       : recipientNotAllowed
         ? "El número destinatario no está habilitado en la lista de números permitidos de Meta WhatsApp. Agrégalo y verifícalo en la configuración de la app de Meta, o pasa la cuenta a producción."
-        : (result?.error?.message ?? `HTTP ${res.status}`);
+        : metaErrorCode === 132001
+          ? `La plantilla "${TEMPLATE_NAME}" no existe o no está aprobada en español para esta cuenta de WhatsApp Business. Créala/aprobala en Meta con ese nombre exacto y 4 variables de cuerpo.`
+          : (result?.error?.message ?? `HTTP ${res.status}`);
+
 
 
     await admin.from("whatsapp_log").insert({
