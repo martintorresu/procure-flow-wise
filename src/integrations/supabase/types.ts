@@ -1080,14 +1080,7 @@ export type Database = {
       seed_obra_stages: { Args: { p_process_id: string }; Returns: number }
     }
     Enums: {
-      app_role:
-        | "admin"
-        | "ingenieria"
-        | "programacion"
-        | "compras"
-        | "gerente"
-        | "planificacion"
-        | "logistica"
+      app_role: "admin" | "gestor" | "colaborador" | "lector"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1215,15 +1208,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: [
-        "admin",
-        "ingenieria",
-        "programacion",
-        "compras",
-        "gerente",
-        "planificacion",
-        "logistica",
-      ],
+      app_role: ["admin", "gestor", "colaborador", "lector"],
     },
   },
 } as const

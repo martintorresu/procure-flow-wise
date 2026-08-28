@@ -14,7 +14,7 @@ import {
 
 interface Props {
   processId: string;
-  /** Habilita completar/cancelar (roles admin, gerente, compras). */
+  /** Habilita completar/cancelar (niveles admin, gestor). */
   canManage: boolean;
 }
 

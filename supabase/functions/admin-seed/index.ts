@@ -18,12 +18,9 @@ const json = (status: number, body: unknown) =>
 
 const VALID_ROLES = [
   "admin",
-  "ingenieria",
-  "programacion",
-  "compras",
-  "gerente",
-  "planificacion",
-  "logistica",
+  "gestor",
+  "colaborador",
+  "lector",
 ] as const;
 type Role = (typeof VALID_ROLES)[number];
 
@@ -100,9 +97,9 @@ Deno.serve(async (req) => {
       }
 
 
-      // El trigger handle_new_user crea profile y rol 'ingenieria' por defecto.
-      // Si el rol pedido es distinto, lo reemplazamos.
-      if (role !== "ingenieria") {
+      // El trigger handle_new_user crea profile y nivel 'colaborador' por defecto.
+      // Si el nivel pedido es distinto, lo reemplazamos.
+      if (role !== "colaborador") {
         await admin.from("user_roles").delete().eq("user_id", newId);
         const { error: roleInsErr } = await admin.from("user_roles").insert({
           user_id: newId, role,

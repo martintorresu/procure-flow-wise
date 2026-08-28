@@ -30,14 +30,12 @@ import { USER_LIMIT_MESSAGE } from "@/lib/plans";
 
 
 
-const ROLES = [
-  { value: "admin", label: "Admin" },
-  { value: "ingenieria", label: "Ingeniería" },
-  { value: "programacion", label: "Programación" },
-  { value: "compras", label: "Compras" },
-  { value: "gerente", label: "Gerente" },
-  { value: "planificacion", label: "Planificación" },
-  { value: "logistica", label: "Logística" },
+/** Niveles de acceso globales (no son cargos: el cargo es descriptivo y va aparte). */
+const ROLES: { value: UserRole; label: string; hint: string }[] = [
+  { value: "admin", label: "Administrador", hint: "Todo, incluida configuración del tenant, usuarios y niveles de acceso" },
+  { value: "gestor", label: "Gestor", hint: "Crea y edita procesos, marca estados de etapa, crea y envía minutas, invita participantes" },
+  { value: "colaborador", label: "Colaborador", hint: "Trabaja dentro de procesos existentes: comenta, sube documentos, registra avances y participa en minutas" },
+  { value: "lector", label: "Lector", hint: "Solo consulta" },
 ];
 
 const SAMPLE_USERS = ROLES.map((r) => ({
@@ -57,7 +55,7 @@ export default function AdminPage() {
 
   // Form individual
   const [form, setForm] = useState({
-    email: "", password: "demo123456", full_name: "", role: "ingenieria", phone: "", rut: "",
+    email: "", password: "demo123456", full_name: "", role: "colaborador", phone: "", rut: "",
   });
 
 
@@ -132,13 +130,14 @@ export default function AdminPage() {
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
-            <UserPlus className="w-4 h-4" /> Usuarios de ejemplo (1 por rol)
+            <UserPlus className="w-4 h-4" /> Usuarios de ejemplo (1 por nivel de acceso)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-xs text-muted-foreground">
-            Crea un usuario por cada rol con password <code className="bg-muted px-1 rounded">demo123456</code>.
-            Email format: <code className="bg-muted px-1 rounded">{"{rol}"}@demo.local</code>. Se omiten los que ya existen.
+            Crea un usuario por cada nivel de acceso con password <code className="bg-muted px-1 rounded">demo123456</code>.
+            Email format: <code className="bg-muted px-1 rounded">{"{nivel}"}@demo.local</code>. Se omiten los que ya existen.
+            El nivel de acceso define qué puede hacer la persona en el sistema; no es su cargo.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
             {SAMPLE_USERS.map((u) => (
@@ -177,13 +176,16 @@ export default function AdminPage() {
               <Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
             </div>
             <div className="space-y-2">
-              <Label>Rol</Label>
+              <Label>Nivel de acceso</Label>
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ROLES.map((r) => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}
                 </SelectContent>
               </Select>
+              <p className="text-[11px] text-muted-foreground">
+                {ROLES.find((r) => r.value === form.role)?.hint} · Es el nivel de acceso, no el cargo de la persona.
+              </p>
             </div>
             <div className="space-y-2">
               <Label>Teléfono (E.164)</Label>

@@ -48,8 +48,8 @@ export function timeAgo(iso: string | null | undefined): string {
   return `hace ${days} ${days === 1 ? "día" : "días"}`;
 }
 
-/** Roles autorizados a bifurcar un proceso por contingencia. */
-export const CONTINGENCY_ROLES = ["admin", "gerente", "compras"] as const;
+/** Niveles de acceso autorizados a bifurcar un proceso por contingencia. */
+export const CONTINGENCY_ROLES = ["admin", "gestor"] as const;
 
 export function canManageContingencies(role?: string | null): boolean {
   return !!role && (CONTINGENCY_ROLES as readonly string[]).includes(role);
