@@ -80,7 +80,15 @@ function LoginRoute() {
   return <LoginPage />;
 }
 
+/** Redirige enlaces antiguos /pdcs/... a /procesos/... conservando el resto de la ruta. */
+function LegacyProcessRedirect() {
+  const location = useLocation();
+  const target = location.pathname.replace(/\/pdcs(\/|$)/, "/procesos$1") + location.search;
+  return <Navigate to={target} replace />;
+}
+
 const App = () => (
+
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
