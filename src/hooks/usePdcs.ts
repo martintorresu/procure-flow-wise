@@ -8,7 +8,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Pdc, Criticality, PdcStatus } from "@/types/pdc";
 import { queryKeys, type PdcFilters } from "@/lib/queryKeys";
 import type { ProcessType } from "@/lib/processTypes";
-import { notifyWhatsappByRole } from "@/lib/whatsapp";
 
 
 // Mapas DB ↔ FE
