@@ -84,14 +84,26 @@ export default function ProfilePage() {
                 <Label>RUT / Identificador fiscal</Label>
                 <Input value={rut} onChange={(e) => setRut(e.target.value)} placeholder="12.345.678-9" />
               </div>
+              <div className="space-y-2">
+                <PositionSelect
+                  id="default-position"
+                  label="Cargo por defecto"
+                  value={positionId}
+                  onChange={setPositionId}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Describe qué haces; se propone al sumarte a un proceso. No define tus permisos.
+                </p>
+              </div>
               <div className="flex items-center gap-3 pt-2">
                 <Switch checked={waEnabled} onCheckedChange={setWaEnabled} />
                 <span className="text-sm">Recibir alertas por WhatsApp</span>
               </div>
-              <Button onClick={save} disabled={update.isPending}>
-                {update.isPending ? "Guardando…" : "Guardar cambios"}
+              <Button onClick={save} disabled={update.isPending || updatePosition.isPending}>
+                {update.isPending || updatePosition.isPending ? "Guardando…" : "Guardar cambios"}
               </Button>
             </>
+
           )}
         </CardContent>
       </Card>
