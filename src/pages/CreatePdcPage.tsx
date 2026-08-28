@@ -119,7 +119,13 @@ export default function CreatePdcPage() {
         created_by: user.id,
       });
 
+      // Los procesos de obra reciben las 10 etapas preestablecidas
+      if (isObra) {
+        const { error: stagesError } = await supabase.rpc("seed_obra_stages", { p_process_id: data.id });
+        if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
+      }
       toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
+
       // Los procesos tipo "permiso" continúan en Permisología para completar el trámite
       if (form.process_type === "permiso") {
         navigate(`/permits?pdc=${data.id}&project=${form.project_id ?? ""}`);
