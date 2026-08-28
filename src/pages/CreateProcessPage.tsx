@@ -64,6 +64,7 @@ export default function CreateProcessPage() {
   const isObra = isObraType(form.process_type);
   const isLicitacion = isLicitacionType(form.process_type);
   const isContrato = isAdministracionContratoType(form.process_type);
+  const isCompraIndustrial = isCompraIndustrialType(form.process_type);
 
   const presetStages = isObra
     ? OBRA_STAGES
@@ -71,7 +72,19 @@ export default function CreateProcessPage() {
       ? LICITACION_STAGES
       : isContrato
         ? ADMINISTRACION_CONTRATO_STAGES
-        : null;
+        : isCompraIndustrial
+          ? COMPRA_INDUSTRIAL_STAGES
+          : null;
+
+  const seedRpc = isObra
+    ? "seed_obra_stages"
+    : isLicitacion
+      ? "seed_licitacion_stages"
+      : isContrato
+        ? "seed_administracion_contrato_stages"
+        : isCompraIndustrial
+          ? "seed_compra_industrial_stages"
+          : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
