@@ -78,3 +78,12 @@ export const STAGE_STATUS_META: Record<StageStatus, { label: string; badge: stri
     dot: "bg-success",
   },
 };
+
+/** Etapas en curso primero, luego el resto por sort_order (para selectores). */
+export function sortStagesForPicker(stages: ProcessStage[]): ProcessStage[] {
+  return [...stages].sort((a, b) => {
+    const ai = a.status === "in_progress" ? 0 : 1;
+    const bi = b.status === "in_progress" ? 0 : 1;
+    return ai !== bi ? ai - bi : a.sort_order - b.sort_order;
+  });
+}

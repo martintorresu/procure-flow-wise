@@ -9,6 +9,8 @@ export interface Commitment {
   source: string;
   meeting_date: string | null;
   meeting_title: string | null;
+  stage_id?: string | null;
+  activity_ref?: string | null;
   commitment_text: string;
   responsible_user_id: string | null;
   responsible_name: string | null;
@@ -70,6 +72,8 @@ export interface NewCommitment {
   priority: CommitmentPriority | null;
   meeting_title: string | null;
   meeting_date: string | null;
+  stage_id?: string | null;
+  activity_ref?: string | null;
   meeting_session_id?: string | null;
   raw_json?: unknown;
 }
