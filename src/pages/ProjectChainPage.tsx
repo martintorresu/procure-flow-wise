@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, ArrowDown, User, FolderKanban } from "lucide-react";
 import { SEO } from "@/components/SEO";
-import { StatusBadge, TrafficLightIndicator } from "@/components/StatusIndicators";
-import { getTrafficLight } from "@/lib/trafficLight";
+import { StageProgressBadge } from "@/components/StageProgress";
+import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
 import { useProject, useProjectProcesses } from "@/hooks/useProjects";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import type { Pdc } from "@/types/pdc";
@@ -91,13 +91,12 @@ export default function ProjectChainPage() {
                   <div key={`${ci}-${p.id}`} className="space-y-2">
                     <Card className="transition-colors hover:border-primary/40">
                       <CardContent className="p-4 flex flex-wrap items-center gap-3">
-                        <TrafficLightIndicator color={getTrafficLight(p)} />
                         <Badge variant="outline" className="text-xs">
                           {PROCESS_TYPE_LABELS[(p.process_type ?? "compra") as ProcessType]}
                         </Badge>
                         <span className="font-mono text-xs">{p.pdc_number}</span>
                         <span className="font-medium flex-1 min-w-[160px] truncate">{p.title}</span>
-                        <StatusBadge status={p.current_status} />
+                        <StageProgressBadge summary={summaries[p.id]} />
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <User className="w-3 h-3" /> {p.current_owner}
                         </span>
