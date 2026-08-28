@@ -58,7 +58,7 @@ export default function ProcessDetailPage() {
     );
   }
 
-  const processType = (process.process_type ?? "compra") as ProcessType;
+  const processType = (process.process_type ?? "personalizado") as ProcessType;
   const showChainButton = canChain();
   const alerts = allAlerts.filter((a) => a.process_id === process.id);
 

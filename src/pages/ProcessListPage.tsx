@@ -18,10 +18,8 @@ import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
 import { InProgressStagesText, StageProgressBadge } from "@/components/StageProgress";
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
-  compra: "Cp",
   licitacion: "Lt",
   contrato: "Ct",
-  permiso: "Pm",
   obra: "Ob",
   personalizado: "Ps",
 };
@@ -42,7 +40,7 @@ export default function ProcessListPage() {
   );
 
   const filtered = processes.filter((process) => {
-    if (typeFilter !== "all" && (process.process_type ?? "compra") !== typeFilter) return false;
+    if (typeFilter !== "all" && (process.process_type ?? "personalizado") !== typeFilter) return false;
     if (
       search &&
       !process.title.toLowerCase().includes(search.toLowerCase()) &&
@@ -131,7 +129,7 @@ export default function ProcessListPage() {
             )}
             {!loading && filtered.map((process) => {
               const isChained = Boolean(process.predecessor_process_id || processes.some((o) => o.predecessor_process_id === process.id));
-              const type = (process.process_type as ProcessType) ?? "compra";
+              const type = (process.process_type as ProcessType) ?? "personalizado";
               const typeLabel = PROCESS_TYPE_LABELS[type];
               const summary = summaries[process.id];
               return (
