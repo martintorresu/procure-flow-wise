@@ -13,7 +13,7 @@ import { ProjectSelect } from "@/components/ProjectSelect";
 import { ProcessStepper } from "@/components/ProcessStepper";
 import { PURCHASE_STEPS } from "@/lib/processStages";
 import { SEO } from "@/components/SEO";
-import { GENERIC_STAGES, OBRA_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isObraType, isPurchaseType, type ProcessType } from "@/lib/processTypes";
+import { GENERIC_STAGES, LICITACION_STAGES, OBRA_STAGES, PROCESS_TYPES, PROCESS_TYPE_LABELS, isLicitacionType, isObraType, isPurchaseType, type ProcessType } from "@/lib/processTypes";
 import { FileText, Wrench, ClipboardList, FileSearch, Award, Truck, FlaskConical, Ship, Check, Link2, Lock, Building2, Layers, PaintRoller, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
@@ -32,6 +32,13 @@ const OBRA_STEPS = OBRA_STAGES.map((s, i) => ({
   key: s.key,
   label: s.label,
   icon: OBRA_ICONS[i],
+}));
+
+const LICITACION_ICONS = [FileText, ClipboardList, FileSearch, Truck, Wrench, FileSearch, Award, Layers, Award, Check];
+const LICITACION_STEPS = LICITACION_STAGES.map((s, i) => ({
+  key: s.key,
+  label: s.label,
+  icon: LICITACION_ICONS[i],
 }));
 
 
@@ -80,6 +87,7 @@ export default function CreatePdcPage() {
 
   const isPurchase = isPurchaseType(form.process_type);
   const isObra = isObraType(form.process_type);
+  const isLicitacion = isLicitacionType(form.process_type);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -120,8 +128,11 @@ export default function CreatePdcPage() {
       });
 
       // Los procesos de obra reciben las 10 etapas preestablecidas
-      if (isObra) {
-        const { error: stagesError } = await supabase.rpc("seed_obra_stages", { p_process_id: data.id });
+      if (isObra || isLicitacion) {
+        const { error: stagesError } = await supabase.rpc(
+          isObra ? "seed_obra_stages" : "seed_licitacion_stages",
+          { p_process_id: data.id },
+        );
         if (stagesError) toast.error(`Proceso creado, pero no se pudieron crear las etapas: ${stagesError.message}`);
       }
       toast.success(`Proceso ${data.pdc_number} creado exitosamente`);
@@ -177,11 +188,13 @@ export default function CreatePdcPage() {
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
             {isObra
               ? "Flujo de ejecución de obra (10 etapas preestablecidas)"
-              : isPurchase
+              : isLicitacion
+                ? "Flujo de licitación (10 etapas preestablecidas)"
+                : isPurchase
                 ? "Flujo de compra (8 etapas)"
                 : "Flujo genérico (4 etapas)"}
           </p>
-          <ProcessStepper steps={isObra ? OBRA_STEPS : isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
+          <ProcessStepper steps={isObra ? OBRA_STEPS : isLicitacion ? LICITACION_STEPS : isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
 
         </CardContent>
       </Card>
