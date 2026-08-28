@@ -175,9 +175,14 @@ export default function CreatePdcPage() {
       <Card>
         <CardContent className="p-6 space-y-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wide">
-            {isPurchase ? "Flujo de compra (8 etapas)" : "Flujo genérico (4 etapas)"}
+            {isObra
+              ? "Flujo de ejecución de obra (10 etapas preestablecidas)"
+              : isPurchase
+                ? "Flujo de compra (8 etapas)"
+                : "Flujo genérico (4 etapas)"}
           </p>
-          <ProcessStepper steps={isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
+          <ProcessStepper steps={isObra ? OBRA_STEPS : isPurchase ? PURCHASE_STEPS : GENERIC_STEPS} activeIndex={0} compact />
+
         </CardContent>
       </Card>
 
