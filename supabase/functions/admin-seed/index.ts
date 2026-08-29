@@ -44,13 +44,15 @@ Deno.serve(async (req) => {
   if (userErr || !userData?.user?.id) return json(401, { error: "Unauthorized" });
   const userId = userData.user.id;
 
-  // 2. Confirmar que es admin
+  // 2. Confirmar que es admin (consulta directa: has_role vive en el esquema privado)
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
-  const { data: isAdmin, error: roleErr } = await admin.rpc("has_role", {
-    _user_id: userId,
-    _role: "admin",
-  });
-  if (roleErr || !isAdmin) return json(403, { error: "Solo administradores" });
+  const { data: adminRole, error: roleErr } = await admin
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
+  if (roleErr || !adminRole) return json(403, { error: "Solo administradores" });
 
   // 3. Parse body
   let body: { action?: string; payload?: Record<string, unknown> };
