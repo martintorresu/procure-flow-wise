@@ -281,7 +281,9 @@ const PRESEGMENT_VERBS =
   "se\\s+compromete|debe|deberá|tiene\\s+que|va\\s+a|queda\\s+(?:de|en)|se\\s+encarga|" +
   "enviará|entregará|coordinará|revisará|gestionará|confirmará|cotizará|subirá|reparará|corregirá";
 
-const PRESEGMENT_RE = new RegExp(`\\b(?:${NAME})\\s+(?:${PRESEGMENT_VERBS})\\b`, "u");
+const PRESEGMENT_NAME = "[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,2}";
+
+const PRESEGMENT_RE = new RegExp(`\\b(?:${PRESEGMENT_NAME})\\s+(?:${PRESEGMENT_VERBS})\\b`, "u");
 
 /**
  * La voz dictada (Web Speech API) llega sin puntuación ni saltos de línea.
