@@ -40,9 +40,9 @@ Deno.serve(async (req) => {
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
   });
-  const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
-  if (claimsErr || !claims?.claims?.sub) return json(401, { error: "Unauthorized" });
-  const userId = claims.claims.sub as string;
+  const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+  if (userErr || !userData?.user?.id) return json(401, { error: "Unauthorized" });
+  const userId = userData.user.id;
 
   // 2. Confirmar que es admin
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
