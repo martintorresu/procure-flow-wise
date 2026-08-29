@@ -273,13 +273,42 @@ const TRIGGERS =
 const PRIORITY_HINT = /(urgente|critic|prioridad alta|cuanto antes|inmediato)/;
 const LOW_HINT = /(cuando se pueda|sin apuro|baja prioridad)/;
 
+/* ------------------------------------------------------------------ */
+/* Pre-segmentación de transcripciones sin puntuación                  */
+/* ------------------------------------------------------------------ */
+
+const PRESEGMENT_VERBS =
+  "se\\s+compromete|debe|deberá|tiene\\s+que|va\\s+a|queda\\s+(?:de|en)|se\\s+encarga|" +
+  "enviará|entregará|coordinará|revisará|gestionará|confirmará|cotizará|subirá|reparará|corregirá";
+
+const PRESEGMENT_RE = new RegExp(`\\b(?:${NAME})\\s+(?:${PRESEGMENT_VERBS})\\b`, "u");
+
+/**
+ * La voz dictada (Web Speech API) llega sin puntuación ni saltos de línea.
+ * Detecta el inicio de cada compromiso —nombre propio + verbo de compromiso—
+ * e inserta un salto de línea antes de cada uno (salvo al inicio del texto),
+ * para que parseTranscriptText pueda separarlos en chunks.
+ */
+export function presegmentTranscript(input: string): string {
+  const re = new RegExp(PRESEGMENT_RE.source, PRESEGMENT_RE.flags + "g");
+  let out = "";
+  let last = 0;
+  for (const m of input.matchAll(re)) {
+    const idx = m.index ?? 0;
+    out += input.slice(last, idx);
+    if (idx > 0) out += "\n";
+    last = idx;
+  }
+  return out + input.slice(last);
+}
+
 /**
  * Parser tolerante para transcripciones de reunión / notas de voz.
  * Detecta frases con verbos de compromiso, responsable, fecha y prioridad.
  */
 export function parseTranscriptText(input: string, today = new Date()): ParsedCommitment[] {
   const out: ParsedCommitment[] = [];
-  const chunks = input
+  const chunks = presegmentTranscript(input)
     .split(/\r?\n|(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ¿¡])/u)
     .map((c) => c.replace(/^[-*•·\d.)\s]+/, "").trim())
     .filter(Boolean);
