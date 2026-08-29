@@ -281,7 +281,7 @@ const PRESEGMENT_VERBS =
   "se\\s+compromete|debe|deberá|tiene\\s+que|va\\s+a|queda\\s+(?:de|en)|se\\s+encarga|" +
   "enviará|entregará|coordinará|revisará|gestionará|confirmará|cotizará|subirá|reparará|corregirá";
 
-const PRESEGMENT_NAME = "[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){1,2}";
+const PRESEGMENT_NAME = "[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){0,2}";
 
 const PRESEGMENT_RE = new RegExp(`\\b(?:${PRESEGMENT_NAME})\\s+(?:${PRESEGMENT_VERBS})\\b`, "u");
 
@@ -315,7 +315,18 @@ export function parseTranscriptText(input: string, today = new Date()): ParsedCo
     .map((c) => c.replace(/^[-*•·\d.)\s]+/, "").trim())
     .filter(Boolean);
 
-  for (const chunk of chunks) {
+  // Deduplicate: remove chunks whose text is fully contained in another chunk
+  const dedupedChunks = chunks.filter((chunk, i) => {
+    const normChunk = norm(chunk);
+    if (normChunk.length < 20) return true; // don't filter very short chunks
+    return !chunks.some((other, j) => {
+      if (i === j) return false;
+      const normOther = norm(other);
+      return normOther.length > normChunk.length && normOther.includes(normChunk);
+    });
+  });
+
+  for (const chunk of dedupedChunks) {
     const flat = norm(chunk);
     if (flat.length < 12) continue;
     if (!TRIGGERS.test(flat)) continue;
