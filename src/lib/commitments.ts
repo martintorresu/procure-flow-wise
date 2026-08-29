@@ -262,7 +262,7 @@ export function extractNaturalDate(sentence: string, today = new Date()): string
 const NAME = "[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+){0,2}";
 
 const COMMIT_PATTERNS: RegExp[] = [
-  new RegExp(`\\b(${NAME})\\s+(?:se\\s+compromete\\s+a|queda\\s+(?:de|en)|se\\s+encarga\\s+de|debe|deberá|tiene\\s+que|va\\s+a|enviará|entregará|coordinará|revisará|subirá|gestionará|confirmará|cotizará)\\b`, "u"),
+  new RegExp(`\\b(${NAME})\\s+(?:se\\s+compromete(?:\\s+a)?|queda\\s+(?:de|en)|se\\s+encarga\\s+de|debe|deberá|tiene\\s+que|va\\s+a|enviará|entregará|coordinará|revisará|subirá|gestionará|confirmará|cotizará)\\b`, "u"),
   /\bresponsable\s*:\s*([^.,;\n]+)/iu,
   /\ba cargo de\s+([^.,;\n]+)/iu,
 ];
