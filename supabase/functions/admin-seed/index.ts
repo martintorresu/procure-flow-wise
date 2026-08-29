@@ -40,9 +40,9 @@ Deno.serve(async (req) => {
   const userClient = createClient(SUPABASE_URL, ANON_KEY, {
     global: { headers: { Authorization: authHeader } },
   });
-  const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
-  if (claimsErr || !claims?.claims?.sub) return json(401, { error: "Unauthorized" });
-  const userId = claims.claims.sub as string;
+  const { data: userData, error: userErr } = await userClient.auth.getUser(token);
+  if (userErr || !userData?.user?.id) return json(401, { error: "Unauthorized" });
+  const userId = userData.user.id;
 
   // 2. Confirmar que es admin
   const admin = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -77,12 +77,22 @@ Deno.serve(async (req) => {
         return json(400, { error: "phone debe estar en formato E.164 (ej: +56912345678)" });
       }
 
+      // El nuevo usuario hereda el tenant del admin que lo crea
+      const { data: adminProfile } = await admin
+        .from("profiles").select("tenant_id").eq("id", userId).maybeSingle();
+      let tenantSlug: string | undefined;
+      if (adminProfile?.tenant_id) {
+        const { data: tenant } = await admin
+          .from("tenants").select("slug").eq("id", adminProfile.tenant_id).maybeSingle();
+        tenantSlug = tenant?.slug ?? undefined;
+      }
+
       // Crear usuario con email confirmado
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
         password,
         email_confirm: true,
-        user_metadata: { full_name: fullName },
+        user_metadata: { full_name: fullName, ...(tenantSlug ? { tenant_slug: tenantSlug } : {}) },
       });
       if (createErr) return json(400, { error: createErr.message });
 
