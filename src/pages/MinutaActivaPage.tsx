@@ -1123,23 +1123,41 @@ export default function MinutaActivaPage() {
         style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
       >
         <div className="max-w-2xl mx-auto space-y-2">
-          {!qualityOk && (
+          {!qualityOk && !minutaSent && (
             <p className="text-xs text-center text-danger">
               Calidad {quality.score}% · se requiere al menos {qualityThreshold}% para importar.
             </p>
           )}
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={addManualDraft}>
-              <Plus className="w-4 h-4 mr-1" /> Agregar compromiso manual
-            </Button>
-            <Button
-              className="flex-1"
-              onClick={handleImport}
-              disabled={importMutation.isPending || selectedCount === 0 || !qualityOk}
-            >
-              {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
-            </Button>
-          </div>
+          {minutaSent ? (
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center justify-center gap-2 rounded-md border border-success/40 bg-success/10 px-3 py-2 text-sm font-medium text-success">
+                <CheckCircle2 className="w-4 h-4" /> Minuta enviada ✓
+              </div>
+              <Button variant="outline" onClick={handleDownloadPdf}>
+                📄 Acta
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => setResendConfirmOpen(true)}
+                disabled={importMutation.isPending}
+              >
+                <RefreshCw className="w-4 h-4 mr-1" /> Reenviar
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={addManualDraft}>
+                <Plus className="w-4 h-4 mr-1" /> Agregar compromiso manual
+              </Button>
+              <Button
+                className="flex-1"
+                onClick={handleImport}
+                disabled={importMutation.isPending || selectedCount === 0 || !qualityOk}
+              >
+                {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1149,6 +1167,55 @@ export default function MinutaActivaPage() {
           <Square className="w-3 h-3 mr-1" /> Volver a la captura
         </Button>
       </div>
+
+      {/* Confirmación de envío */}
+      <Dialog open={successOpen} onOpenChange={setSuccessOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-success" /> ¡Éxito! Minuta enviada
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            {offlineSend ? (
+              <p>
+                Sin conexión: los {importedCount} compromiso{importedCount === 1 ? "" : "s"} quedaron
+                en cola y se enviarán automáticamente al recuperar Internet.
+              </p>
+            ) : (
+              <p>
+                Se registraron {importedCount} compromiso{importedCount === 1 ? "" : "s"} con{" "}
+                {finalScore}% de calidad y se notificó a los responsables.
+              </p>
+            )}
+            <p>El botón de envío quedó bloqueado para evitar duplicados.</p>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={handleDownloadPdf}>
+              📄 Descargar Acta (PDF)
+            </Button>
+            <Button onClick={finishAfterSend}>Continuar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmación de reenvío */}
+      <AlertDialog open={resendConfirmOpen} onOpenChange={setResendConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Reenviar esta minuta?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta minuta ya fue enviada. Al reenviarla se crearán compromisos duplicados y se
+              notificará nuevamente a los responsables. ¿Deseas continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmResend}>Sí, reenviar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 }
