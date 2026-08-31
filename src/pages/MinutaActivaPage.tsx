@@ -708,8 +708,8 @@ export default function MinutaActivaPage() {
             </p>
             <Textarea
               rows={10}
-              value={rawTranscript}
-              onChange={(e) => setRawTranscript(e.target.value)}
+              value={approvedTranscript}
+              onChange={(e) => setApprovedTranscript(e.target.value)}
               className="text-sm"
             />
             <Button variant="secondary" onClick={reprocess}>
