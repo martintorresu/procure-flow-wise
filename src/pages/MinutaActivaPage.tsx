@@ -24,6 +24,7 @@ import { QualityChecklist } from "@/components/minuta/QualityChecklist";
 import { ParticipantsPicker, type MinutaParticipant } from "@/components/minuta/ParticipantsPicker";
 import { calculateQualityScore, isWithinMaxDelivery } from "@/lib/minutaQuality";
 import { enqueueCommitments } from "@/lib/offlineQueue";
+import { downloadMinutaPdf } from "@/lib/minutaPdf";
 import {
   matchProcess,
   matchUser,
