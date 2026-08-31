@@ -84,6 +84,12 @@ export default function MinutaActivaPage() {
   const [importDone, setImportDone] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
   const [importedCount, setImportedCount] = useState(0);
+  // Envío de la minuta: bloquea re-envíos accidentales
+  const [minutaSent, setMinutaSent] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [resendConfirmOpen, setResendConfirmOpen] = useState(false);
+  const [offlineSend, setOfflineSend] = useState(false);
+
 
   // Fase 1
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
