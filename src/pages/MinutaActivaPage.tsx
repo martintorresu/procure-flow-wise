@@ -128,6 +128,7 @@ export default function MinutaActivaPage() {
   // Fase 3
   const [draft, setDraft] = useState<DraftRow[]>([]);
   const [rawTranscript, setRawTranscript] = useState("");
+  const [approvedTranscript, setApprovedTranscript] = useState("");
   const [noDetected, setNoDetected] = useState(false);
 
   // Etapas de todos los procesos involucrados (Setup + reclasificaciones por fila)
