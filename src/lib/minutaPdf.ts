@@ -48,6 +48,37 @@ function buildHtml(data: MinutaPdfData): string {
         .join("")
     : `<tr><td colspan="5">Sin compromisos registrados.</td></tr>`;
 
+  const llm = data.llmAnalysis;
+  const llmCompromisoRows = llm?.compromisos.length
+    ? llm.compromisos
+        .map(
+          (c) => `<tr>
+            <td>${esc(c.id)}</td>
+            <td>${esc(c.tipo)}</td>
+            <td>${esc(c.tarea)}</td>
+            <td>${esc(c.responsable || "—")}</td>
+            <td>${esc(c.fechaCompromiso || "—")}</td>
+            <td>${esc(c.estado || "—")}</td>
+            <td>${esc(c.origen || "—")}</td>
+            <td>${esc(c.observaciones || "—")}</td>
+          </tr>`,
+        )
+        .join("")
+    : `<tr><td colspan="8">Sin compromisos registrados.</td></tr>`;
+
+  const nr = llm?.proximaReunion ?? null;
+  const nextMeetingSection = llm
+    ? nr && (nr.fecha || nr.hora || nr.objetivo)
+      ? `
+  <h2>Próxima Reunión</h2>
+  ${nr.fecha ? `<p class="meta"><strong>Fecha:</strong> ${esc(nr.fecha)}</p>` : ""}
+  ${nr.hora ? `<p class="meta"><strong>Hora:</strong> ${esc(nr.hora)}</p>` : ""}
+  ${nr.objetivo ? `<p class="meta"><strong>Objetivo:</strong> ${esc(nr.objetivo)}</p>` : ""}`
+      : `
+  <h2>Próxima Reunión</h2>
+  <p class="meta">No se acordó una próxima reunión.</p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
@@ -80,20 +111,34 @@ function buildHtml(data: MinutaPdfData): string {
     <tbody>${participantRows}</tbody>
   </table>
 
-  ${data.llmAnalysis ? `
+  ${llm ? `
   <h2>Resumen Ejecutivo (IA)</h2>
-  <div class="transcript">${esc(data.llmAnalysis.resumenEjecutivo)}</div>
-  ${data.llmAnalysis.decisiones.length ? `
-  <h2>Decisiones (${data.llmAnalysis.decisiones.length})</h2>
-  <ul style="font-size:12px; padding-left:18px; margin:8px 0;">${data.llmAnalysis.decisiones.map((d) => `<li>${esc(d)}</li>`).join("")}</ul>` : ""}
-  ${data.llmAnalysis.riesgos.length ? `
-  <h2>Riesgos (${data.llmAnalysis.riesgos.length})</h2>
-  <ul style="font-size:12px; padding-left:18px; margin:8px 0;">${data.llmAnalysis.riesgos.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
-  ${data.llmAnalysis.alertas.criticas.length || data.llmAnalysis.alertas.pendientes.length ? `
-  <h2>Alertas</h2>
-  ${data.llmAnalysis.alertas.criticas.map((a) => `<p style="font-size:12px; margin:2px 0;">&#128308; ${esc(a)}</p>`).join("")}
-  ${data.llmAnalysis.alertas.pendientes.map((a) => `<p style="font-size:12px; margin:2px 0;">&#9888; ${esc(a)}</p>`).join("")}` : ""}` : ""}
+  <div class="transcript">${esc(llm.resumenEjecutivo)}</div>
 
+  ${llm.decisiones.length ? `
+  <h2>Decisiones (${llm.decisiones.length})</h2>
+  <ul style="font-size:12px; padding-left:18px; margin:8px 0;">${llm.decisiones.map((d) => `<li>${esc(d)}</li>`).join("")}</ul>` : ""}
+
+  <h2>Compromisos y Plan de Acción</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Tipo</th><th>Tarea</th><th>Responsable</th><th>Fecha Compromiso</th><th>Estado</th><th>Origen</th><th>Observaciones</th></tr></thead>
+    <tbody>${llmCompromisoRows}</tbody>
+  </table>
+
+  ${llm.riesgos.length ? `
+  <h2>Riesgos (${llm.riesgos.length})</h2>
+  <ul style="font-size:12px; padding-left:18px; margin:8px 0;">${llm.riesgos.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
+
+  ${llm.alertas.criticas.length || llm.alertas.pendientes.length ? `
+  <h2>Alertas</h2>
+  ${llm.alertas.criticas.map((a) => `<p style="font-size:12px; margin:2px 0;">&#128308; ${esc(a)}</p>`).join("")}
+  ${llm.alertas.pendientes.map((a) => `<p style="font-size:12px; margin:2px 0;">&#9888; ${esc(a)}</p>`).join("")}` : ""}
+
+  ${nextMeetingSection}
+
+  <h2>Transcripción</h2>
+  <div class="transcript">${esc(data.transcript) || "Sin transcripción."}</div>
+  ` : `
   <h2>Transcripción</h2>
   <div class="transcript">${esc(data.transcript) || "Sin transcripción."}</div>
 
@@ -102,6 +147,7 @@ function buildHtml(data: MinutaPdfData): string {
     <thead><tr><th class="num">#</th><th>Compromiso</th><th>Responsable</th><th>Fecha límite</th><th>Prioridad</th></tr></thead>
     <tbody>${commitmentRows}</tbody>
   </table>
+  `}
 
   <footer>
     <span>Pro·Curem Flow</span>
