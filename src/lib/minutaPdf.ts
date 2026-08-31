@@ -80,6 +80,20 @@ function buildHtml(data: MinutaPdfData): string {
     <tbody>${participantRows}</tbody>
   </table>
 
+  ${data.llmAnalysis ? `
+  <h2>Resumen Ejecutivo (IA)</h2>
+  <div class="transcript">${esc(data.llmAnalysis.resumenEjecutivo)}</div>
+  ${data.llmAnalysis.decisiones.length ? `
+  <h2>Decisiones (${data.llmAnalysis.decisiones.length})</h2>
+  <ul style="font-size:12px; padding-left:18px; margin:8px 0;">${data.llmAnalysis.decisiones.map((d) => `<li>${esc(d)}</li>`).join("")}</ul>` : ""}
+  ${data.llmAnalysis.riesgos.length ? `
+  <h2>Riesgos (${data.llmAnalysis.riesgos.length})</h2>
+  <ul style="font-size:12px; padding-left:18px; margin:8px 0;">${data.llmAnalysis.riesgos.map((r) => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}
+  ${data.llmAnalysis.alertas.criticas.length || data.llmAnalysis.alertas.pendientes.length ? `
+  <h2>Alertas</h2>
+  ${data.llmAnalysis.alertas.criticas.map((a) => `<p style="font-size:12px; margin:2px 0;">&#128308; ${esc(a)}</p>`).join("")}
+  ${data.llmAnalysis.alertas.pendientes.map((a) => `<p style="font-size:12px; margin:2px 0;">&#9888; ${esc(a)}</p>`).join("")}` : ""}` : ""}
+
   <h2>Transcripción</h2>
   <div class="transcript">${esc(data.transcript) || "Sin transcripción."}</div>
 
