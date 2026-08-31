@@ -184,7 +184,9 @@ export default function MinutaActivaPage() {
     const structured = parseCommitmentsText(presegmentTranscript(text));
     const seen = new Set(parsed.map((p) => p.text));
     for (const s of structured) {
-      if (!seen.has(s.text) && s.text.length >= 12) parsed.push(s);
+      if (!seen.has(s.text) && s.text.length >= 12 && (s.responsible || s.dueDate)) {
+        parsed.push(s);
+      }
     }
     return parsed.map((p): DraftRow => {
       const u = p.responsible ? matchUser(p.responsible, users) : null;
