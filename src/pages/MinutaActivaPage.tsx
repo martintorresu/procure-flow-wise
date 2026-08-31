@@ -225,7 +225,7 @@ export default function MinutaActivaPage() {
 
 
   const reprocess = () => {
-    const rows = buildDraft(rawTranscript);
+    const rows = buildDraft(approvedTranscript || rawTranscript);
     setDraft(rows);
     setNoDetected(rows.length === 0);
     if (rows.length) toast.success(`${rows.length} compromiso(s) detectado(s)`);
