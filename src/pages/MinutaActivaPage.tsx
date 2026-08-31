@@ -434,8 +434,9 @@ export default function MinutaActivaPage() {
       toast.info("📴 Sin conexión. Los compromisos se enviarán automáticamente cuando vuelva Internet.");
       setFinalScore(quality.score);
       setImportedCount(basePayload.length);
-      if (isStandaloneApp) setImportDone(true);
-      else navigate("/commitments");
+      setOfflineSend(true);
+      setMinutaSent(true);
+      setSuccessOpen(true);
       return;
     }
 
@@ -469,17 +470,31 @@ export default function MinutaActivaPage() {
       );
       setFinalScore(quality.score);
       setImportedCount(res.inserted);
-      if (isStandaloneApp) setImportDone(true);
-      else navigate("/commitments");
+      setOfflineSend(false);
+      setMinutaSent(true);
+      setSuccessOpen(true);
     } catch {
       // Fallback: si falla online, guardar en cola offline para reintento automático
       enqueueCommitments(basePayload, meetingTitle.trim());
       toast.error("Error al importar. Los compromisos se guardaron localmente y se enviarán automáticamente.");
       setFinalScore(quality.score);
       setImportedCount(basePayload.length);
-      if (isStandaloneApp) setImportDone(true);
-      else navigate("/commitments");
+      setOfflineSend(true);
+      setMinutaSent(true);
+      setSuccessOpen(true);
     }
+  };
+
+  const confirmResend = async () => {
+    setResendConfirmOpen(false);
+    setMinutaSent(false);
+    await handleImport();
+  };
+
+  const finishAfterSend = () => {
+    setSuccessOpen(false);
+    if (isStandaloneApp) setImportDone(true);
+    else navigate("/commitments");
   };
 
   const startNewCapture = () => {
@@ -499,8 +514,13 @@ export default function MinutaActivaPage() {
     setStartedAt(null);
     setPresetProcessId(null);
     setPresetStageId(null);
+    setMinutaSent(false);
+    setSuccessOpen(false);
+    setResendConfirmOpen(false);
+    setOfflineSend(false);
     setParticipants((prev) => prev.filter((p) => p.locked));
   };
+
 
   const handleDownloadPdf = () => {
     downloadMinutaPdf({
