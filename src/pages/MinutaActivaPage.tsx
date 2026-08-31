@@ -879,6 +879,57 @@ export default function MinutaActivaPage() {
         </p>
       )}
 
+      {/* Analysis mode indicator */}
+      {analysisMode === 'llm' && (
+        <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-md p-3 flex items-center gap-2 dark:bg-emerald-950 dark:text-emerald-300 dark:border-emerald-800">
+          <Brain className="w-4 h-4" /> Análisis con IA · {llmAnalysis?.compromisos.length} compromiso(s), {llmAnalysis?.decisiones.length} decisión(es), calidad {llmAnalysis?.qualityScore}%
+        </div>
+      )}
+      {analysisMode === 'regex' && (
+        <div className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-md p-3 flex items-center gap-2 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800">
+          <Cpu className="w-4 h-4" /> {isOnline ? "Análisis por patrones (IA no disponible)" : "Modo offline — análisis básico por patrones"}
+        </div>
+      )}
+
+      {llmAnalysis && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div>
+              <h3 className="text-sm font-semibold mb-1">📋 Resumen Ejecutivo</h3>
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{llmAnalysis.resumenEjecutivo}</p>
+            </div>
+            {llmAnalysis.decisiones.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-1">✅ Decisiones ({llmAnalysis.decisiones.length})</h3>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-0.5">
+                  {llmAnalysis.decisiones.map((d, i) => <li key={i}>{d}</li>)}
+                </ul>
+              </div>
+            )}
+            {llmAnalysis.riesgos.length > 0 && (
+              <div>
+                <h3 className="text-sm font-semibold mb-1">⚠️ Riesgos ({llmAnalysis.riesgos.length})</h3>
+                <ul className="list-disc list-inside text-sm text-muted-foreground space-y-0.5">
+                  {llmAnalysis.riesgos.map((r, i) => <li key={i}>{r}</li>)}
+                </ul>
+              </div>
+            )}
+            {(llmAnalysis.alertas.criticas.length > 0 || llmAnalysis.alertas.pendientes.length > 0) && (
+              <div>
+                <h3 className="text-sm font-semibold mb-1">🔔 Alertas</h3>
+                {llmAnalysis.alertas.criticas.map((a, i) => (
+                  <p key={`c-${i}`} className="text-sm text-danger">🔴 {a}</p>
+                ))}
+                {llmAnalysis.alertas.pendientes.map((a, i) => (
+                  <p key={`p-${i}`} className="text-sm text-warning">⚠ {a}</p>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+
       {noDetected && (
         <Card>
           <CardContent className="p-4 space-y-3">

@@ -1,5 +1,7 @@
 /** Generación del acta de minuta como documento imprimible (Guardar como PDF). */
 
+import type { LLMAnalysis } from "@/lib/analyzeTranscript";
+
 export interface MinutaPdfData {
   title: string;
   meetingDate: string;
@@ -8,6 +10,7 @@ export interface MinutaPdfData {
   transcript: string;
   commitments: Array<{ text: string; responsible: string; dueDate: string | null; priority: string | null }>;
   qualityScore: number;
+  llmAnalysis?: LLMAnalysis;
 }
 
 function esc(value?: string | null): string {
