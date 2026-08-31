@@ -315,18 +315,7 @@ export function parseTranscriptText(input: string, today = new Date()): ParsedCo
     .map((c) => c.replace(/^[-*•·\d.)\s]+/, "").trim())
     .filter(Boolean);
 
-  // Deduplicate: remove chunks whose text is fully contained in another chunk
-  const dedupedChunks = chunks.filter((chunk, i) => {
-    const normChunk = norm(chunk);
-    if (normChunk.length < 20) return true; // don't filter very short chunks
-    return !chunks.some((other, j) => {
-      if (i === j) return false;
-      const normOther = norm(other);
-      return normOther.length > normChunk.length && normOther.includes(normChunk);
-    });
-  });
-
-  for (const chunk of dedupedChunks) {
+  for (const chunk of chunks) {
     const flat = norm(chunk);
     if (flat.length < 12) continue;
     if (!TRIGGERS.test(flat)) continue;

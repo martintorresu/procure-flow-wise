@@ -29,6 +29,7 @@ import {
   matchUser,
   parseCommitmentsText,
   parseTranscriptText,
+  presegmentTranscript,
   type CommitmentPriority,
   type ParsedCommitment,
 } from "@/lib/commitments";
@@ -177,7 +178,8 @@ export default function MinutaActivaPage() {
   const buildDraft = (text: string) => {
     let parsed = parseTranscriptText(text);
     // Complementar con parser estructurado por si el usuario pegó líneas con formato
-    const structured = parseCommitmentsText(text);
+    // Presegmentar para que el texto de voz (una sola línea) se divida antes de parseCommitmentsText
+    const structured = parseCommitmentsText(presegmentTranscript(text));
     const seen = new Set(parsed.map((p) => p.text));
     for (const s of structured) {
       if (!seen.has(s.text) && s.text.length >= 12) parsed.push(s);
