@@ -202,16 +202,27 @@ export default function MinutaActivaPage() {
   const closeCapture = () => {
     if (voice.isListening || voice.isPaused) voice.stop();
     const text = fullTranscript;
-    setRawTranscript(text);
     if (!text.trim()) {
       toast.error("No hay transcripción para procesar. Agrega texto manual primero.");
       return;
     }
-    const rows = buildDraft(text);
+    setRawTranscript(text);
+    setApprovedTranscript(text);
+    setPhase("transcript");
+  };
+
+  const approveTranscript = () => {
+    const text = approvedTranscript.trim();
+    if (!text) {
+      toast.error("La transcripción está vacía.");
+      return;
+    }
+    const rows = buildDraft(approvedTranscript);
     setDraft(rows);
     setNoDetected(rows.length === 0);
     setPhase("review");
   };
+
 
   const reprocess = () => {
     const rows = buildDraft(rawTranscript);
