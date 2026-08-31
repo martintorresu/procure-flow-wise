@@ -82,6 +82,10 @@ export function parseCommitmentsText(input: string): ParsedCommitment[] {
     if (/^(formato|ejemplo)\b/i.test(line)) continue;
     line = line.replace(/^[-*•·]+\s*/, "").replace(/^\d+[.)]\s*/, "").trim();
     if (!line) continue;
+    // Ignorar líneas muy cortas (menos de 12 chars normalizados)
+    if (norm(line).length < 12) continue;
+    // Ignorar encabezados/títulos ("Resumen Reunión:") sin contenido sustantivo
+    if (/^[^|;]*:\s*$/.test(line) && line.length < 60) continue;
 
     let responsible = "";
     const bracket = line.match(/^\[([^\]]+)\]\s*/);
