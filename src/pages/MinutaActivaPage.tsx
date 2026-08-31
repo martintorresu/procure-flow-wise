@@ -24,6 +24,7 @@ import { QualityChecklist } from "@/components/minuta/QualityChecklist";
 import { ParticipantsPicker, type MinutaParticipant } from "@/components/minuta/ParticipantsPicker";
 import { calculateQualityScore, isWithinMaxDelivery } from "@/lib/minutaQuality";
 import { enqueueCommitments } from "@/lib/offlineQueue";
+import { downloadMinutaPdf } from "@/lib/minutaPdf";
 import {
   matchProcess,
   matchUser,
@@ -34,7 +35,7 @@ import {
   type ParsedCommitment,
 } from "@/lib/commitments";
 
-type Phase = "dashboard" | "setup" | "capture" | "review";
+type Phase = "dashboard" | "setup" | "capture" | "transcript" | "review";
 
 interface DraftRow extends ParsedCommitment {
   userId: string | null;
@@ -128,6 +129,7 @@ export default function MinutaActivaPage() {
   // Fase 3
   const [draft, setDraft] = useState<DraftRow[]>([]);
   const [rawTranscript, setRawTranscript] = useState("");
+  const [approvedTranscript, setApprovedTranscript] = useState("");
   const [noDetected, setNoDetected] = useState(false);
 
   // Etapas de todos los procesos involucrados (Setup + reclasificaciones por fila)
@@ -201,19 +203,30 @@ export default function MinutaActivaPage() {
   const closeCapture = () => {
     if (voice.isListening || voice.isPaused) voice.stop();
     const text = fullTranscript;
-    setRawTranscript(text);
     if (!text.trim()) {
       toast.error("No hay transcripción para procesar. Agrega texto manual primero.");
       return;
     }
-    const rows = buildDraft(text);
+    setRawTranscript(text);
+    setApprovedTranscript(text);
+    setPhase("transcript");
+  };
+
+  const approveTranscript = () => {
+    const text = approvedTranscript.trim();
+    if (!text) {
+      toast.error("La transcripción está vacía.");
+      return;
+    }
+    const rows = buildDraft(approvedTranscript);
     setDraft(rows);
     setNoDetected(rows.length === 0);
     setPhase("review");
   };
 
+
   const reprocess = () => {
-    const rows = buildDraft(rawTranscript);
+    const rows = buildDraft(approvedTranscript || rawTranscript);
     setDraft(rows);
     setNoDetected(rows.length === 0);
     if (rows.length) toast.success(`${rows.length} compromiso(s) detectado(s)`);
@@ -343,6 +356,7 @@ export default function MinutaActivaPage() {
             guestCompany: p.isGuest ? p.company : null,
             isGuest: p.isGuest,
           })),
+          transcript: approvedTranscript,
         });
       } catch (e) {
         console.warn("[minuta] no se pudo crear la sesión:", e);
@@ -375,6 +389,7 @@ export default function MinutaActivaPage() {
     setPhase("dashboard");
     setDraft([]);
     setRawTranscript("");
+    setApprovedTranscript("");
     setNoDetected(false);
     setMeetingTitle("");
     setManualText("");
@@ -383,6 +398,33 @@ export default function MinutaActivaPage() {
     setPresetProcessId(null);
     setPresetStageId(null);
     setParticipants((prev) => prev.filter((p) => p.locked));
+  };
+
+  const handleDownloadPdf = () => {
+    downloadMinutaPdf({
+      title: meetingTitle.trim() || "Minuta",
+      meetingDate: meetingDate || todayISO,
+      createdBy: myProfile?.full_name ?? myProfile?.email ?? "—",
+      participants: participants.map((p) => ({
+        name: p.name,
+        role: p.role ?? undefined,
+        email: p.email ?? undefined,
+        company: p.company ?? undefined,
+        isGuest: p.isGuest,
+      })),
+      transcript: approvedTranscript || rawTranscript,
+      commitments: draft
+        .filter((d) => d.included && d.text.trim())
+        .map((d) => ({
+          text: d.text.trim(),
+          responsible: d.userId
+            ? (users.find((u) => u.id === d.userId)?.full_name ?? d.responsible ?? "")
+            : (d.responsible ?? ""),
+          dueDate: d.dueDate,
+          priority: d.priority,
+        })),
+      qualityScore: finalScore || quality.score,
+    });
   };
 
   /* --------------------- ÉXITO (PWA dedicada) --------------------- */
@@ -397,12 +439,16 @@ export default function MinutaActivaPage() {
           {importedCount === 1 ? "" : "s"} con {finalScore}% de calidad. Se enviaron alertas
           WhatsApp a los responsables.
         </p>
+        <Button size="lg" variant="outline" onClick={handleDownloadPdf}>
+          📄 Descargar Acta (PDF)
+        </Button>
         <Button size="lg" onClick={startNewCapture}>
           🎙️ Nueva captura
         </Button>
       </div>
     );
   }
+
 
   /* ------------------------------ FASE 0 ------------------------------ */
   if (phase === "dashboard") {
@@ -660,18 +706,72 @@ export default function MinutaActivaPage() {
     );
   }
 
+  /* --------------------- FASE 2.5 — TRANSCRIPCIÓN --------------------- */
+  if (phase === "transcript") {
+    return (
+      <div className="fixed inset-0 z-40 bg-background flex flex-col">
+        <SEO title="Transcripción | Minuta Activa" description="Revisa y corrige la transcripción de la reunión." />
+        <header className="shrink-0 px-4 py-3 border-b border-border bg-card">
+          <h1 className="text-base font-bold">Transcripción de la reunión</h1>
+          <p className="text-xs text-muted-foreground truncate">
+            {meetingTitle} · {meetingDate}
+          </p>
+        </header>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+          <Textarea
+            className="min-h-[50vh] text-base leading-relaxed"
+            value={approvedTranscript}
+            onChange={(e) => setApprovedTranscript(e.target.value)}
+            placeholder="Transcripción de la reunión…"
+          />
+          <p className="text-xs text-muted-foreground">
+            Revisa y corrige el texto antes de extraer los compromisos.
+          </p>
+        </div>
+
+        <div
+          className="shrink-0 border-t border-border bg-card px-4 pt-3"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        >
+          <div className="flex items-center justify-between gap-2 max-w-md mx-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setPhase("capture");
+                setStartedAt(Date.now() - elapsed * 1000);
+              }}
+            >
+              ← Volver a captura
+            </Button>
+            <Button size="sm" onClick={approveTranscript}>
+              Aprobar y extraer compromisos ✓
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   /* ------------------------------ FASE 3 ------------------------------ */
   const selectedCount = draft.filter((d) => d.included && d.text.trim()).length;
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-28">
       <SEO title="Revisar compromisos | Minuta Activa" description="Revisa y confirma los compromisos detectados." />
-      <header>
-        <h1 className="text-xl font-bold">Revisión de compromisos</h1>
-        <p className="text-sm text-muted-foreground">
-          {meetingTitle} · {meetingDate}
-        </p>
+      <header className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold">Revisión de compromisos</h1>
+          <p className="text-sm text-muted-foreground">
+            {meetingTitle} · {meetingDate}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+          📄 Acta (PDF)
+        </Button>
       </header>
+
 
       <Card>
         <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
@@ -696,8 +796,8 @@ export default function MinutaActivaPage() {
             </p>
             <Textarea
               rows={10}
-              value={rawTranscript}
-              onChange={(e) => setRawTranscript(e.target.value)}
+              value={approvedTranscript}
+              onChange={(e) => setApprovedTranscript(e.target.value)}
               className="text-sm"
             />
             <Button variant="secondary" onClick={reprocess}>
