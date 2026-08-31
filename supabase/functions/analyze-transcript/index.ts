@@ -160,7 +160,7 @@ Responde con un JSON que contenga exactamente estas claves:
       method: "POST",
       headers: anthropicHeaders,
       body: JSON.stringify({
-        model: "claude-haiku-4-20250414",
+        model: "claude-haiku-4-5",
         max_tokens: 4096,
         messages: [
           {
