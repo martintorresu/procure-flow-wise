@@ -45,7 +45,8 @@ export function useCreateMinutaSession() {
           quality_score: input.qualityScore,
           status: "submitted",
           created_by: uid,
-        })
+          transcript: input.transcript ?? null,
+        } as never)
         .select("id")
         .single();
       if (error) throw new Error(error.message);
