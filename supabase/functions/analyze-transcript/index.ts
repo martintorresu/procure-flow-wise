@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+const ANTHROPIC_WORKSPACE_ID = Deno.env.get("ANTHROPIC_WORKSPACE_ID");
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -145,13 +146,19 @@ Responde con un JSON que contenga exactamente estas claves:
 }`;
 
     // Call Claude Haiku API
+    // Some Anthropic keys are "identity-linked" and require the workspace id header.
+    const anthropicHeaders: Record<string, string> = {
+      "Content-Type": "application/json",
+      "x-api-key": ANTHROPIC_API_KEY,
+      "anthropic-version": "2023-06-01",
+    };
+    if (ANTHROPIC_WORKSPACE_ID) {
+      anthropicHeaders["anthropic-workspace-id"] = ANTHROPIC_WORKSPACE_ID;
+    }
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-      },
+      headers: anthropicHeaders,
       body: JSON.stringify({
         model: "claude-haiku-4-20250414",
         max_tokens: 4096,
