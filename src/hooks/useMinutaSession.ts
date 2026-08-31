@@ -16,7 +16,9 @@ export interface CreateSessionInput {
   processStageId?: string | null;
   qualityScore: number;
   participants: MinutaParticipantInput[];
+  transcript?: string;
 }
+
 
 /** Crea la sesión de minuta y registra sus participantes. Devuelve el id de la sesión. */
 export function useCreateMinutaSession() {
