@@ -8,6 +8,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
 import { toast } from "sonner";
 import { Mic, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff, Brain, Cpu } from "lucide-react";
 import { analyzeTranscriptWithLLM, type LLMAnalysis } from "@/lib/analyzeTranscript";
