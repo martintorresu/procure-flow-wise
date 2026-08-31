@@ -705,18 +705,72 @@ export default function MinutaActivaPage() {
     );
   }
 
+  /* --------------------- FASE 2.5 — TRANSCRIPCIÓN --------------------- */
+  if (phase === "transcript") {
+    return (
+      <div className="fixed inset-0 z-40 bg-background flex flex-col">
+        <SEO title="Transcripción | Minuta Activa" description="Revisa y corrige la transcripción de la reunión." />
+        <header className="shrink-0 px-4 py-3 border-b border-border bg-card">
+          <h1 className="text-base font-bold">Transcripción de la reunión</h1>
+          <p className="text-xs text-muted-foreground truncate">
+            {meetingTitle} · {meetingDate}
+          </p>
+        </header>
+
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
+          <Textarea
+            className="min-h-[50vh] text-base leading-relaxed"
+            value={approvedTranscript}
+            onChange={(e) => setApprovedTranscript(e.target.value)}
+            placeholder="Transcripción de la reunión…"
+          />
+          <p className="text-xs text-muted-foreground">
+            Revisa y corrige el texto antes de extraer los compromisos.
+          </p>
+        </div>
+
+        <div
+          className="shrink-0 border-t border-border bg-card px-4 pt-3"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}
+        >
+          <div className="flex items-center justify-between gap-2 max-w-md mx-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setPhase("capture");
+                setStartedAt(Date.now() - elapsed * 1000);
+              }}
+            >
+              ← Volver a captura
+            </Button>
+            <Button size="sm" onClick={approveTranscript}>
+              Aprobar y extraer compromisos ✓
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   /* ------------------------------ FASE 3 ------------------------------ */
   const selectedCount = draft.filter((d) => d.included && d.text.trim()).length;
 
   return (
     <div className="max-w-2xl mx-auto space-y-4 pb-28">
       <SEO title="Revisar compromisos | Minuta Activa" description="Revisa y confirma los compromisos detectados." />
-      <header>
-        <h1 className="text-xl font-bold">Revisión de compromisos</h1>
-        <p className="text-sm text-muted-foreground">
-          {meetingTitle} · {meetingDate}
-        </p>
+      <header className="flex items-start justify-between gap-2">
+        <div>
+          <h1 className="text-xl font-bold">Revisión de compromisos</h1>
+          <p className="text-sm text-muted-foreground">
+            {meetingTitle} · {meetingDate}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+          📄 Acta (PDF)
+        </Button>
       </header>
+
 
       <Card>
         <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
