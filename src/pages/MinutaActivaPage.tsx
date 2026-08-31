@@ -9,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { Mic, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff } from "lucide-react";
+import { Mic, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff, Brain, Cpu } from "lucide-react";
+import { analyzeTranscriptWithLLM, type LLMAnalysis } from "@/lib/analyzeTranscript";
 import { SEO } from "@/components/SEO";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/hooks/useCommitments";
@@ -130,7 +131,10 @@ export default function MinutaActivaPage() {
   const [draft, setDraft] = useState<DraftRow[]>([]);
   const [rawTranscript, setRawTranscript] = useState("");
   const [approvedTranscript, setApprovedTranscript] = useState("");
-  const [noDetected, setNoDetected] = useState(false);
+  const [noDetected, setNoDetected] = useState(false ذذ// LLM analysis state
+  const [llmAnalysis, setLlmAnalysis] = useState<LLMAnalysis | null>(null);
+  const [analysisMode, setAnalysisMode] = useState<'llm' | 'regex' | 'pending'>('pending');
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   // Etapas de todos los procesos involucrados (Setup + reclasificaciones por fila)
   const involvedProcessIds = useMemo(
