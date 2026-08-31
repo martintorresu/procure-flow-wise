@@ -830,6 +830,7 @@ export default function MinutaActivaPage() {
             >
               ← Volver a captura
             </Button>
+            <Button size="sm" onClick={approveTranscript} disabled={isAnalyzing}>
             {isAnalyzing ? (
               <>
                 <Brain className="w-4 h-4 mr-1 animate-pulse" /> Analizando con IA…
