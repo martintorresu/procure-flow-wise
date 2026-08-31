@@ -48,6 +48,37 @@ function buildHtml(data: MinutaPdfData): string {
         .join("")
     : `<tr><td colspan="5">Sin compromisos registrados.</td></tr>`;
 
+  const llm = data.llmAnalysis;
+  const llmCompromisoRows = llm?.compromisos.length
+    ? llm.compromisos
+        .map(
+          (c) => `<tr>
+            <td>${esc(c.id)}</td>
+            <td>${esc(c.tipo)}</td>
+            <td>${esc(c.tarea)}</td>
+            <td>${esc(c.responsable || "—")}</td>
+            <td>${esc(c.fechaCompromiso || "—")}</td>
+            <td>${esc(c.estado || "—")}</td>
+            <td>${esc(c.origen || "—")}</td>
+            <td>${esc(c.observaciones || "—")}</td>
+          </tr>`,
+        )
+        .join("")
+    : `<tr><td colspan="8">Sin compromisos registrados.</td></tr>`;
+
+  const nr = llm?.proximaReunion ?? null;
+  const nextMeetingSection = llm
+    ? nr && (nr.fecha || nr.hora || nr.objetivo)
+      ? `
+  <h2>Próxima Reunión</h2>
+  ${nr.fecha ? `<p class="meta"><strong>Fecha:</strong> ${esc(nr.fecha)}</p>` : ""}
+  ${nr.hora ? `<p class="meta"><strong>Hora:</strong> ${esc(nr.hora)}</p>` : ""}
+  ${nr.objetivo ? `<p class="meta"><strong>Objetivo:</strong> ${esc(nr.objetivo)}</p>` : ""}`
+      : `
+  <h2>Próxima Reunión</h2>
+  <p class="meta">No se acordó una próxima reunión.</p>`
+    : "";
+
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
