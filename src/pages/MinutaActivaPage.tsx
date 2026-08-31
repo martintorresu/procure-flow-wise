@@ -220,17 +220,90 @@ export default function MinutaActivaPage() {
     setPhase("transcript");
   };
 
-  const approveTranscript = () => {
+  const approveTranscript = async () => {
     const text = approvedTranscript.trim();
     if (!text) {
       toast.error("La transcripción está vacía.");
       return;
     }
-    const rows = buildDraft(approvedTranscript);
+
+    // If online, try LLM analysis first
+    if (isOnline) {
+      setIsAnalyzing(true);
+      setAnalysisMode('pending');
+      try {
+        const analysis = await analyzeTranscriptWithLLM({
+          transcript: text,
+          meetingTitle: meetingTitle.trim(),
+          meetingDate: meetingDate || todayISO,
+          participants: participants.map(p => p.name),
+          projectPrefix: processes.find(p => p.id === presetProcessId)?.process_number?.split('-')[0] || "GEN",
+        });
+
+        setLlmAnalysis(analysis);
+        setAnalysisMode('llm');
+
+        // Convert LLM compromisos to DraftRows
+        const rows: DraftRow[] = analysis.compromisos.map((c) => {
+          const u = c.responsable ? matchUser(c.responsable, users) : null;
+          return {
+            text: c.tarea,
+            responsible: c.responsable,
+            dueDate: convertLLMDate(c.fechaCompromiso),
+            priority: null,
+            processReference: "",
+            userId: u?.id ?? null,
+            processId: presetProcessId,
+            stageId: presetStageId,
+            activityRef: null,
+            included: true,
+          };
+        });
+
+        setDraft(rows);
+        setNoDetected(rows.length === 0);
+        setIsAnalyzing(false);
+        setPhase("review");
+        toast.success(`🧠 Análisis IA completado: ${rows.length} compromiso(s), ${analysis.decisiones.length} decisión(es)`);
+      } catch (err) {
+        console.warn("[minuta] LLM analysis failed, falling back to regex:", err);
+        setIsAnalyzing(false);
+        // Fallback to regex
+        fallbackToRegex(text);
+        toast.info("⚡ Análisis IA no disponible. Se usó detección por patrones.");
+      }
+    } else {
+      // Offline: use regex directly
+      fallbackToRegex(text);
+      toast.info("📴 Modo offline — análisis básico por patrones");
+    }
+  };
+
+  /** Convert LLM date format (dd-mmm-aaaa) to ISO (yyyy-mm-dd) */
+  const convertLLMDate = (dateStr: string): string | null => {
+    if (!dateStr || dateStr.includes("⚠")) return null;
+    const months: Record<string, string> = {
+      ene: "01", feb: "02", mar: "03", abr: "04", may: "05", jun: "06",
+      jul: "07", ago: "08", sep: "09", oct: "10", nov: "11", dic: "12",
+    };
+    const match = dateStr.match(/^(\d{1,2})-(\w{3})-(\d{4})$/);
+    if (!match) return null;
+    const [, day, monthStr, year] = match;
+    const month = months[monthStr.toLowerCase()];
+    if (!month) return null;
+    return `${year}-${month}-${day.padStart(2, "0")}`;
+  };
+
+  /** Fallback: use the existing regex-based parser */
+  const fallbackToRegex = (text: string) => {
+    setAnalysisMode('regex');
+    setLlmAnalysis(null);
+    const rows = buildDraft(text);
     setDraft(rows);
     setNoDetected(rows.length === 0);
     setPhase("review");
   };
+
 
 
   const reprocess = () => {
@@ -399,6 +472,9 @@ export default function MinutaActivaPage() {
     setRawTranscript("");
     setApprovedTranscript("");
     setNoDetected(false);
+    setLlmAnalysis(null);
+    setAnalysisMode('pending');
+    setIsAnalyzing(false);
     setMeetingTitle("");
     setManualText("");
     setElapsed(0);
@@ -432,6 +508,7 @@ export default function MinutaActivaPage() {
           priority: d.priority,
         })),
       qualityScore: finalScore || quality.score,
+      llmAnalysis: llmAnalysis ?? undefined,
     });
   };
 
@@ -753,9 +830,14 @@ export default function MinutaActivaPage() {
             >
               ← Volver a captura
             </Button>
-            <Button size="sm" onClick={approveTranscript}>
-              Aprobar y extraer compromisos ✓
-            </Button>
+            {isAnalyzing ? (
+              <>
+                <Brain className="w-4 h-4 mr-1 animate-pulse" /> Analizando con IA…
+              </>
+            ) : (
+              <>Aprobar y extraer compromisos ✓</>
+            )}
+          </Button>
           </div>
         </div>
       </div>
