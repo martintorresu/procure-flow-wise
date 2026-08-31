@@ -388,6 +388,7 @@ export default function MinutaActivaPage() {
     setPhase("dashboard");
     setDraft([]);
     setRawTranscript("");
+    setApprovedTranscript("");
     setNoDetected(false);
     setMeetingTitle("");
     setManualText("");
@@ -396,6 +397,33 @@ export default function MinutaActivaPage() {
     setPresetProcessId(null);
     setPresetStageId(null);
     setParticipants((prev) => prev.filter((p) => p.locked));
+  };
+
+  const handleDownloadPdf = () => {
+    downloadMinutaPdf({
+      title: meetingTitle.trim() || "Minuta",
+      meetingDate: meetingDate || todayISO,
+      createdBy: myProfile?.full_name ?? myProfile?.email ?? "—",
+      participants: participants.map((p) => ({
+        name: p.name,
+        role: p.role ?? undefined,
+        email: p.email ?? undefined,
+        company: p.company ?? undefined,
+        isGuest: p.isGuest,
+      })),
+      transcript: approvedTranscript || rawTranscript,
+      commitments: draft
+        .filter((d) => d.included && d.text.trim())
+        .map((d) => ({
+          text: d.text.trim(),
+          responsible: d.userId
+            ? (users.find((u) => u.id === d.userId)?.full_name ?? d.responsible ?? "")
+            : (d.responsible ?? ""),
+          dueDate: d.dueDate,
+          priority: d.priority,
+        })),
+      qualityScore: finalScore || quality.score,
+    });
   };
 
   /* --------------------- ÉXITO (PWA dedicada) --------------------- */
@@ -410,12 +438,16 @@ export default function MinutaActivaPage() {
           {importedCount === 1 ? "" : "s"} con {finalScore}% de calidad. Se enviaron alertas
           WhatsApp a los responsables.
         </p>
+        <Button size="lg" variant="outline" onClick={handleDownloadPdf}>
+          📄 Descargar Acta (PDF)
+        </Button>
         <Button size="lg" onClick={startNewCapture}>
           🎙️ Nueva captura
         </Button>
       </div>
     );
   }
+
 
   /* ------------------------------ FASE 0 ------------------------------ */
   if (phase === "dashboard") {
