@@ -355,6 +355,7 @@ export default function MinutaActivaPage() {
             guestCompany: p.isGuest ? p.company : null,
             isGuest: p.isGuest,
           })),
+          transcript: approvedTranscript,
         });
       } catch (e) {
         console.warn("[minuta] no se pudo crear la sesión:", e);
