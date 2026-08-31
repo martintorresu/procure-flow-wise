@@ -164,7 +164,7 @@ export function ParticipantsPicker({ value, onChange }: Props) {
         id="minuta-participants"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
-        placeholder="Buscar por nombre, correo o área…"
+        placeholder="Buscar por nombre, correo, área o empresa…"
       />
       {results.length > 0 && (
         <div className="rounded-md border border-border divide-y divide-border overflow-hidden">
@@ -184,11 +184,36 @@ export function ParticipantsPicker({ value, onChange }: Props) {
         </div>
       )}
 
+      {contactResults.length > 0 && (
+        <div className="rounded-md border border-dashed border-border overflow-hidden">
+          <p className="px-3 py-1.5 text-[11px] uppercase tracking-wide text-muted-foreground bg-muted/40">
+            Externos guardados
+          </p>
+          <div className="divide-y divide-border">
+            {contactResults.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => addContact(c)}
+                className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-2"
+              >
+                <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <span className="font-medium">{c.full_name}</span>
+                <span className="text-muted-foreground truncate">
+                  — {c.company ? `${c.company} · ` : ""}{c.email}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!guestOpen ? (
         <Button type="button" variant="outline" size="sm" onClick={() => setGuestOpen(true)}>
-          <UserPlus className="w-4 h-4 mr-1" /> Invitado externo
+          <UserPlus className="w-4 h-4 mr-1" /> Nuevo invitado externo
         </Button>
       ) : (
+
         <div className="rounded-md border border-dashed border-border p-3 space-y-2">
           <Input
             value={guestName}
