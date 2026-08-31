@@ -46,11 +46,13 @@ export function useSaveExternalContact() {
         return data as ExternalContact;
       }
 
+      // tenant_id lo completa el trigger set_tenant_id_from_user
       const { data, error } = await supabase
         .from("external_contacts")
-        .insert({ full_name: input.fullName.trim(), email, company: input.company })
+        .insert({ full_name: input.fullName.trim(), email, company: input.company } as never)
         .select("id, full_name, email, company")
         .single();
+
       if (error) throw error;
       return data as ExternalContact;
     },
