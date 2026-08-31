@@ -131,7 +131,9 @@ export default function MinutaActivaPage() {
   const [draft, setDraft] = useState<DraftRow[]>([]);
   const [rawTranscript, setRawTranscript] = useState("");
   const [approvedTranscript, setApprovedTranscript] = useState("");
-  const [noDetected, setNoDetected] = useState(false ذذ// LLM analysis state
+  const [noDetected, setNoDetected] = useState(false);
+
+  // LLM analysis state
   const [llmAnalysis, setLlmAnalysis] = useState<LLMAnalysis | null>(null);
   const [analysisMode, setAnalysisMode] = useState<'llm' | 'regex' | 'pending'>('pending');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
