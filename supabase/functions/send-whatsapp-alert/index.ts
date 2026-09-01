@@ -5,7 +5,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const GRAPH_VERSION = "v21.0";
-const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://minuta-activa.lovable.app";
+const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://procurement.demo.inovahr-app.com";
 const TEMPLATE_NAME = "procurem_alerta";
 const TEMPLATE_LANG = "es_CL";
 
