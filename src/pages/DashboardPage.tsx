@@ -83,7 +83,17 @@ export default function DashboardPage() {
         </Badge>
       </div>
 
+      {criticalCount > 0 && (
+        <Link
+          to="/alerts"
+          className="flex items-center gap-2 rounded-lg border-l-4 border-l-danger bg-danger/10 px-4 py-3 text-sm font-medium text-danger hover:bg-danger/15 transition-colors"
+        >
+          ⚠️ {criticalCount} {criticalCount === 1 ? "alerta crítica requiere" : "alertas críticas requieren"} atención
+        </Link>
+      )}
+
       {/* Hero: procesos por tipo */}
+
       {!processesLoading && <DashboardFlowHero processes={processes} summaries={summaries} />}
       {processesLoading && <Skeleton className="h-64 w-full rounded-xl" />}
 
