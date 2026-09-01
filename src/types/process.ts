@@ -33,6 +33,9 @@ export interface Alert {
   due_date?: string;
   resolved: boolean;
   created_at: string;
+  /** Timestamp de lectura; null = no leída. */
+  read_at?: string | null;
+
 }
 
 export interface User {
