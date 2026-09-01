@@ -8,9 +8,20 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import { PositionSelect } from "@/components/PositionSelect";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useMyProfile, useUpdateProfileContact, useUpdateDefaultPosition, isValidE164,
 } from "@/hooks/useTenantUsers";
+import {
+  useNotificationPreferences, useUpsertNotificationPreferences, DEFAULT_PREFS,
+} from "@/hooks/useNotificationPreferences";
+
+const SEVERITY_OPTIONS = [
+  { value: "low", label: "Baja" },
+  { value: "medium", label: "Media" },
+  { value: "high", label: "Alta" },
+  { value: "critical", label: "Crítica" },
+];
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -22,6 +33,18 @@ export default function ProfilePage() {
   const [waEnabled, setWaEnabled] = useState(true);
   const [positionId, setPositionId] = useState<string | null>(null);
 
+  // Preferencias de notificación (capa adicional sobre profile_contacts)
+  const { data: prefs } = useNotificationPreferences(user?.id);
+  const upsertPrefs = useUpsertNotificationPreferences(user?.id, user?.tenantId);
+  const [emailEnabled, setEmailEnabled] = useState(DEFAULT_PREFS.channel_email);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(DEFAULT_PREFS.channel_whatsapp);
+  const [minSevEmail, setMinSevEmail] = useState(DEFAULT_PREFS.min_severity_email);
+  const [minSevWa, setMinSevWa] = useState(DEFAULT_PREFS.min_severity_whatsapp);
+  const [quietEnabled, setQuietEnabled] = useState(DEFAULT_PREFS.quiet_enabled);
+  const [quietStart, setQuietStart] = useState(DEFAULT_PREFS.quiet_start ?? "22:00");
+  const [quietEnd, setQuietEnd] = useState(DEFAULT_PREFS.quiet_end ?? "07:00");
+  const [emailGrouping, setEmailGrouping] = useState<string>(DEFAULT_PREFS.email_grouping);
+
   useEffect(() => {
     if (profile) {
       setPhone(profile.phone ?? "");
@@ -30,6 +53,38 @@ export default function ProfilePage() {
       setPositionId(profile.default_position_id ?? null);
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (prefs) {
+      setEmailEnabled(prefs.channel_email);
+      setWhatsappEnabled(prefs.channel_whatsapp);
+      setMinSevEmail(prefs.min_severity_email);
+      setMinSevWa(prefs.min_severity_whatsapp);
+      setQuietEnabled(prefs.quiet_enabled);
+      setQuietStart(prefs.quiet_start?.slice(0, 5) ?? "22:00");
+      setQuietEnd(prefs.quiet_end?.slice(0, 5) ?? "07:00");
+      setEmailGrouping(prefs.email_grouping);
+    }
+  }, [prefs]);
+
+  const savePrefs = async () => {
+    try {
+      await upsertPrefs.mutateAsync({
+        channel_inapp: true,
+        channel_email: emailEnabled,
+        channel_whatsapp: whatsappEnabled,
+        quiet_enabled: quietEnabled,
+        quiet_start: quietEnabled ? quietStart : (quietStart || "22:00"),
+        quiet_end: quietEnabled ? quietEnd : (quietEnd || "07:00"),
+        email_grouping: (emailGrouping as "immediate" | "daily_digest"),
+        min_severity_email: minSevEmail,
+        min_severity_whatsapp: minSevWa,
+      });
+      toast.success("Preferencias de notificación guardadas");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
 
 
   const save = async () => {
@@ -105,6 +160,111 @@ export default function ProfilePage() {
             </>
 
           )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Preferencias de notificación</CardTitle>
+          <p className="text-sm text-muted-foreground">Configura cómo y cuándo recibes alertas.</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Canales */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Canales activos</Label>
+            <div className="flex items-center gap-3">
+              <Switch checked disabled />
+              <span className="text-sm">In-app (siempre activo)</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
+              <span className="text-sm">Email</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={whatsappEnabled} onCheckedChange={setWhatsappEnabled} />
+              <span className="text-sm">WhatsApp</span>
+            </div>
+          </div>
+
+          {/* Severidad mínima por canal */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Severidad mínima por canal</Label>
+            <p className="text-[11px] text-muted-foreground">
+              Solo recibirás notificaciones de esta severidad o superior.
+            </p>
+            {emailEnabled && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm w-24">Email:</span>
+                <Select value={minSevEmail} onValueChange={setMinSevEmail}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SEVERITY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {whatsappEnabled && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm w-24">WhatsApp:</span>
+                <Select value={minSevWa} onValueChange={setMinSevWa}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SEVERITY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {/* Horario de silencio */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Switch checked={quietEnabled} onCheckedChange={setQuietEnabled} />
+              <span className="text-sm font-medium">Horario de silencio</span>
+            </div>
+            {quietEnabled && (
+              <div className="flex items-center gap-3">
+                <Input
+                  type="time"
+                  value={quietStart}
+                  onChange={(e) => setQuietStart(e.target.value)}
+                  className="w-32"
+                />
+                <span className="text-sm">a</span>
+                <Input
+                  type="time"
+                  value={quietEnd}
+                  onChange={(e) => setQuietEnd(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              Durante el horario de silencio, las alertas se acumulan y se entregan al terminar el período.
+            </p>
+          </div>
+
+          {/* Agrupación email */}
+          {emailEnabled && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Agrupación de emails</Label>
+              <Select value={emailGrouping} onValueChange={setEmailGrouping}>
+                <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="immediate">Inmediata</SelectItem>
+                  <SelectItem value="daily_digest">Resumen diario</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <Button onClick={savePrefs} disabled={upsertPrefs.isPending}>
+            {upsertPrefs.isPending ? "Guardando…" : "Guardar preferencias"}
+          </Button>
         </CardContent>
       </Card>
     </div>

@@ -341,6 +341,65 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          channel_email: boolean
+          channel_inapp: boolean
+          channel_whatsapp: boolean
+          created_at: string
+          email_grouping: string
+          id: string
+          min_severity_email: string
+          min_severity_whatsapp: string
+          quiet_enabled: boolean
+          quiet_end: string | null
+          quiet_start: string | null
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_email?: boolean
+          channel_inapp?: boolean
+          channel_whatsapp?: boolean
+          created_at?: string
+          email_grouping?: string
+          id?: string
+          min_severity_email?: string
+          min_severity_whatsapp?: string
+          quiet_enabled?: boolean
+          quiet_end?: string | null
+          quiet_start?: string | null
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_email?: boolean
+          channel_inapp?: boolean
+          channel_whatsapp?: boolean
+          created_at?: string
+          email_grouping?: string
+          id?: string
+          min_severity_email?: string
+          min_severity_whatsapp?: string
+          quiet_enabled?: boolean
+          quiet_end?: string | null
+          quiet_start?: string | null
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       positions: {
         Row: {
           created_at: string

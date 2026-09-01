@@ -38,6 +38,21 @@ export interface Alert {
 
 }
 
+export interface NotificationPreferences {
+  id: string;
+  user_id: string;
+  tenant_id: string;
+  channel_inapp: boolean;
+  channel_email: boolean;
+  channel_whatsapp: boolean;
+  quiet_start: string | null;
+  quiet_end: string | null;
+  quiet_enabled: boolean;
+  email_grouping: 'immediate' | 'daily_digest';
+  min_severity_email: string;
+  min_severity_whatsapp: string;
+}
+
 export interface User {
   id: string;
   name: string;
