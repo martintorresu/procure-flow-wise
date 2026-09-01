@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
   const since = new Date(Date.now() - WEEK_MS).toISOString();
 
   try {
-    const { data: tenants, error: tErr } = await supabase.from("tenants").select("id, name");
+    const { data: tenants, error: tErr } = await supabase.from("tenants").select("id, name, slug");
     if (tErr) throw tErr;
 
     let sent = 0;
@@ -53,6 +53,8 @@ Deno.serve(async (req) => {
         skippedTenants++;
         continue;
       }
+
+      const alertsUrl = `${APP_BASE_URL}/t/${tenant.slug}/alerts`;
 
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
