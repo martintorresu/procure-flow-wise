@@ -35,8 +35,12 @@ export interface Alert {
   created_at: string;
   /** Timestamp de lectura; null = no leída. */
   read_at?: string | null;
-
+  /** Última modificación; se usa como proxy de fecha de resolución. */
+  updated_at?: string | null;
+  /** Timestamp de escalamiento; null = no escalada. */
+  escalated_at?: string | null;
 }
+
 
 export interface NotificationPreferences {
   id: string;
