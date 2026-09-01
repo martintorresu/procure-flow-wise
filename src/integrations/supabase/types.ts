@@ -69,6 +69,7 @@ export type Database = {
           process_id: string | null
           resolved: boolean
           severity: string
+          source_ref: Json | null
           tenant_id: string
           type: string
           updated_at: string
@@ -83,6 +84,7 @@ export type Database = {
           process_id?: string | null
           resolved?: boolean
           severity?: string
+          source_ref?: Json | null
           tenant_id: string
           type: string
           updated_at?: string
@@ -97,6 +99,7 @@ export type Database = {
           process_id?: string | null
           resolved?: boolean
           severity?: string
+          source_ref?: Json | null
           tenant_id?: string
           type?: string
           updated_at?: string
