@@ -5,7 +5,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendEmail, layout, button, escapeHtml } from "../_shared/resend.ts";
 
-const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://minuta-activa.lovable.app";
+const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://procurement.demo.inovahr-app.com";
 
 const SEVERITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
 
