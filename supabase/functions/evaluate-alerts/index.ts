@@ -152,10 +152,51 @@ Deno.serve(async (req) => {
 
     let inserted = 0;
     if (pending.length) {
-      const { error, count } = await supabase.from("alerts").insert(pending, { count: "exact" });
+      const { data: insertedRows, error } = await supabase
+        .from("alerts")
+        .insert(pending)
+        .select("id, process_id, tenant_id");
       if (error) throw error;
-      inserted = count ?? pending.length;
+      inserted = insertedRows?.length ?? pending.length;
+
+      // Despacho de notificaciones (best-effort, fire-and-forget)
+      const dispatchUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/dispatch-notification`;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const recipientsCache = new Map<string, string[]>();
+
+      for (const row of insertedRows ?? []) {
+        const processId = row.process_id as string | null;
+        if (!processId) continue;
+        try {
+          let recipients = recipientsCache.get(processId);
+          if (!recipients) {
+            const [{ data: parts }, { data: proc }] = await Promise.all([
+              supabase
+                .from("process_participants")
+                .select("user_id")
+                .eq("process_id", processId)
+                .not("user_id", "is", null),
+              supabase.from("processes").select("created_by").eq("id", processId).maybeSingle(),
+            ]);
+            const set = new Set<string>();
+            for (const p of parts ?? []) if (p.user_id) set.add(p.user_id as string);
+            if (proc?.created_by) set.add(proc.created_by as string);
+            recipients = [...set];
+            recipientsCache.set(processId, recipients);
+          }
+          for (const userId of recipients) {
+            fetch(dispatchUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+              body: JSON.stringify({ alert_id: row.id, user_id: userId, tenant_id: row.tenant_id }),
+            }).catch((err) => console.error("dispatch-notification fetch error", err));
+          }
+        } catch (err) {
+          console.error("dispatch recipients error", err);
+        }
+      }
     }
+
 
     return new Response(JSON.stringify({ ok: true, evaluated_tenants: tenants?.length ?? 0, inserted }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
