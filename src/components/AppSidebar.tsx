@@ -10,6 +10,8 @@ import { useEffect, useState } from "react";
 import { useAlerts } from "@/hooks/useAlerts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProcuremMark, ProcuremLockup } from "@/components/ProcuremMark";
+import { NotificationBell } from "@/components/NotificationBell";
+
 
 interface NavItem {
   to: string;
