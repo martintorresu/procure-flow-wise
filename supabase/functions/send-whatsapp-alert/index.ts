@@ -253,7 +253,7 @@ Deno.serve(async (req) => {
       test: isTest,
       message_id: metaMessageId,
       phone: maskedPhone,
-      link: alert?.process_id ? `${APP_BASE_URL}/process/${alert.process_id}` : null,
+      link: alert?.process_id ? `${APP_BASE_URL}/t/${tenantSlug}/procesos/${alert.process_id}` : null,
     });
   } catch (e) {
     return json({ error: e instanceof Error ? e.message : "Error desconocido" }, 500);
