@@ -13,6 +13,8 @@ import { PROCESS_TYPES, PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/proc
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SEO } from "@/components/SEO";
 import { humanizeTechnicalText } from "@/lib/stageLabels";
+import { formatAlertType, relativeTime } from "@/lib/alertLabels";
+
 import { queryKeys } from "@/lib/queryKeys";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
