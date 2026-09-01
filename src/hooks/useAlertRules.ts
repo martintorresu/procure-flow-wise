@@ -5,7 +5,8 @@ import { queryKeys } from "@/lib/queryKeys";
 export type AlertSeverity = "low" | "medium" | "high" | "critical";
 export type AlertTriggerType =
   | "et_incomplete" | "rfq_overdue" | "po_unaccepted"
-  | "fat_unscheduled" | "shipping_delayed" | "arrival_overdue" | "damage_reported";
+  | "fat_unscheduled" | "shipping_delayed" | "arrival_overdue" | "damage_reported"
+  | "commitment_overdue" | "permit_expiring" | "stage_stalled" | "contingency_open";
 
 export interface AlertRule {
   id: string;
@@ -25,7 +26,12 @@ export const TRIGGER_DESCRIPTIONS: Record<AlertTriggerType, string> = {
   shipping_delayed: "Despacho sin embarque tras N días desde el plan.",
   arrival_overdue: "Arribo posterior a la fecha planificada por N días.",
   damage_reported: "Daños reportados en recepción (umbral inmediato).",
+  commitment_overdue: "Compromiso con fecha de entrega vencida hace N días y aún no completado.",
+  permit_expiring: "Permiso próximo a vencer dentro de N días.",
+  stage_stalled: "Etapa en curso sin cambios durante N días.",
+  contingency_open: "Contingencia activa sin cerrar hace N días.",
 };
+
 
 export function useAlertRules(): UseQueryResult<AlertRule[], Error> {
   return useQuery({
