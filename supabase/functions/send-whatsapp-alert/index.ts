@@ -5,7 +5,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 const GRAPH_VERSION = "v21.0";
-const APP_BASE_URL = "https://app.pro-curem.com";
+const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://minuta-activa.lovable.app";
 const TEMPLATE_NAME = "procurem_alerta";
 const TEMPLATE_LANG = "es_CL";
 
@@ -146,6 +146,11 @@ Deno.serve(async (req) => {
     let requiredAction = "Mensaje de verificación desde Pro.Curem. No requiere acción.";
 
     if (alert) {
+      let tenantSlug = "default";
+      const [{ data: tenantRow }, ] = await Promise.all([
+        admin.from("tenants").select("slug").eq("id", tenantId).maybeSingle(),
+      ]);
+      if (tenantRow?.slug) tenantSlug = tenantRow.slug;
       if (alert.process_id) {
         const { data: process } = await admin
           .from("processes").select("process_number, name").eq("id", alert.process_id).maybeSingle();
