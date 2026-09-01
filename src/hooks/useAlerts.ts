@@ -18,7 +18,7 @@ export function useAlerts(): UseQueryResult<Alert[], Error> {
     queryFn: async (): Promise<Alert[]> => {
       const { data, error } = await supabase
         .from("alerts")
-        .select("id, process_id, type, severity, message, due_date, resolved, created_at, read_at");
+        .select("id, process_id, type, severity, message, due_date, resolved, created_at, read_at, updated_at, escalated_at");
       if (error) throw new Error(error.message);
       const rows = (data ?? []) as unknown as Alert[];
       return [...rows].sort((a, b) => {
