@@ -168,6 +168,57 @@ export type Database = {
           },
         ]
       }
+      email_log: {
+        Row: {
+          alert_id: string | null
+          created_at: string
+          email: string
+          error_message: string | null
+          id: string
+          status: string
+          subject: string
+          tenant_id: string
+          user_id: string | null
+        }
+        Insert: {
+          alert_id?: string | null
+          created_at?: string
+          email: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          subject: string
+          tenant_id: string
+          user_id?: string | null
+        }
+        Update: {
+          alert_id?: string | null
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          id?: string
+          status?: string
+          subject?: string
+          tenant_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_log_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "alerts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_contacts: {
         Row: {
           company: string | null
