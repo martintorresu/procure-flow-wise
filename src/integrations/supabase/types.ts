@@ -67,6 +67,7 @@ export type Database = {
           message: string
           owner_role: Database["public"]["Enums"]["app_role"] | null
           process_id: string | null
+          read_at: string | null
           resolved: boolean
           severity: string
           source_ref: Json | null
@@ -82,6 +83,7 @@ export type Database = {
           message: string
           owner_role?: Database["public"]["Enums"]["app_role"] | null
           process_id?: string | null
+          read_at?: string | null
           resolved?: boolean
           severity?: string
           source_ref?: Json | null
@@ -97,6 +99,7 @@ export type Database = {
           message?: string
           owner_role?: Database["public"]["Enums"]["app_role"] | null
           process_id?: string | null
+          read_at?: string | null
           resolved?: boolean
           severity?: string
           source_ref?: Json | null

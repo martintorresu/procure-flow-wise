@@ -13,6 +13,8 @@ import { PROCESS_TYPES, PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/proc
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SEO } from "@/components/SEO";
 import { humanizeTechnicalText } from "@/lib/stageLabels";
+import { formatAlertType, relativeTime } from "@/lib/alertLabels";
+
 import { queryKeys } from "@/lib/queryKeys";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
@@ -46,6 +48,8 @@ export default function DashboardPage() {
   }, [qc]);
 
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
+  const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical").length;
+
   const stagesInProgress = Object.values(summaries).reduce((acc, s) => acc + s.inProgress.length, 0);
   const finishedProcesses = processes.filter((p) => {
     const s = summaries[p.id];
@@ -81,7 +85,17 @@ export default function DashboardPage() {
         </Badge>
       </div>
 
+      {criticalCount > 0 && (
+        <Link
+          to="/alerts"
+          className="flex items-center gap-2 rounded-lg border-l-4 border-l-danger bg-danger/10 px-4 py-3 text-sm font-medium text-danger hover:bg-danger/15 transition-colors"
+        >
+          ⚠️ {criticalCount} {criticalCount === 1 ? "alerta crítica requiere" : "alertas críticas requieren"} atención
+        </Link>
+      )}
+
       {/* Hero: procesos por tipo */}
+
       {!processesLoading && <DashboardFlowHero processes={processes} summaries={summaries} />}
       {processesLoading && <Skeleton className="h-64 w-full rounded-xl" />}
 
@@ -236,7 +250,7 @@ export default function DashboardPage() {
                 <p className="text-xs">Todo en orden por ahora.</p>
               </div>
             )}
-            {!alertsLoading && unresolvedAlerts.slice(0, 3).map((alert) => {
+            {!alertsLoading && unresolvedAlerts.slice(0, 5).map((alert) => {
               const process = processes.find((p) => p.id === alert.process_id);
               const severityColors = {
                 low: "border-l-success", medium: "border-l-warning",
@@ -244,12 +258,16 @@ export default function DashboardPage() {
               };
               return (
                 <div key={alert.id} className={`border-l-4 ${severityColors[alert.severity]} bg-muted/30 rounded-r-md p-3`}>
-                  <div className="flex justify-between items-start">
-                    <div>
+                  <div className="flex justify-between items-start gap-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Badge variant="outline" className="text-[10px]">{formatAlertType(alert.type)}</Badge>
+                        {!alert.read_at && <span className="text-[10px] font-semibold text-danger">Nueva</span>}
+                      </div>
                       <p className="text-sm font-medium">{humanizeTechnicalText(alert.message)}</p>
                       <p className="text-xs text-muted-foreground mt-1">{process?.process_number ?? "—"} {process?.title ? `— ${process.title}` : ""}</p>
                     </div>
-                    <span className="text-xs text-muted-foreground">{alert.created_at?.slice(0, 10)}</span>
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">{relativeTime(alert.created_at)}</span>
                   </div>
                 </div>
               );
@@ -260,3 +278,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
