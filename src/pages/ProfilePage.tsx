@@ -162,6 +162,111 @@ export default function ProfilePage() {
           )}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Preferencias de notificación</CardTitle>
+          <p className="text-sm text-muted-foreground">Configura cómo y cuándo recibes alertas.</p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {/* Canales */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Canales activos</Label>
+            <div className="flex items-center gap-3">
+              <Switch checked disabled />
+              <span className="text-sm">In-app (siempre activo)</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={emailEnabled} onCheckedChange={setEmailEnabled} />
+              <span className="text-sm">Email</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Switch checked={whatsappEnabled} onCheckedChange={setWhatsappEnabled} />
+              <span className="text-sm">WhatsApp</span>
+            </div>
+          </div>
+
+          {/* Severidad mínima por canal */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Severidad mínima por canal</Label>
+            <p className="text-[11px] text-muted-foreground">
+              Solo recibirás notificaciones de esta severidad o superior.
+            </p>
+            {emailEnabled && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm w-24">Email:</span>
+                <Select value={minSevEmail} onValueChange={setMinSevEmail}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SEVERITY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+            {whatsappEnabled && (
+              <div className="flex items-center gap-3">
+                <span className="text-sm w-24">WhatsApp:</span>
+                <Select value={minSevWa} onValueChange={setMinSevWa}>
+                  <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SEVERITY_OPTIONS.map((o) => (
+                      <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+
+          {/* Horario de silencio */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <Switch checked={quietEnabled} onCheckedChange={setQuietEnabled} />
+              <span className="text-sm font-medium">Horario de silencio</span>
+            </div>
+            {quietEnabled && (
+              <div className="flex items-center gap-3">
+                <Input
+                  type="time"
+                  value={quietStart}
+                  onChange={(e) => setQuietStart(e.target.value)}
+                  className="w-32"
+                />
+                <span className="text-sm">a</span>
+                <Input
+                  type="time"
+                  value={quietEnd}
+                  onChange={(e) => setQuietEnd(e.target.value)}
+                  className="w-32"
+                />
+              </div>
+            )}
+            <p className="text-[11px] text-muted-foreground">
+              Durante el horario de silencio, las alertas se acumulan y se entregan al terminar el período.
+            </p>
+          </div>
+
+          {/* Agrupación email */}
+          {emailEnabled && (
+            <div className="space-y-2">
+              <Label className="text-sm font-medium">Agrupación de emails</Label>
+              <Select value={emailGrouping} onValueChange={setEmailGrouping}>
+                <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="immediate">Inmediata</SelectItem>
+                  <SelectItem value="daily_digest">Resumen diario</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <Button onClick={savePrefs} disabled={upsertPrefs.isPending}>
+            {upsertPrefs.isPending ? "Guardando…" : "Guardar preferencias"}
+          </Button>
+        </CardContent>
+      </Card>
     </div>
   );
 }
