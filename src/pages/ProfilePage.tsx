@@ -8,9 +8,20 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { SEO } from "@/components/SEO";
 import { PositionSelect } from "@/components/PositionSelect";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   useMyProfile, useUpdateProfileContact, useUpdateDefaultPosition, isValidE164,
 } from "@/hooks/useTenantUsers";
+import {
+  useNotificationPreferences, useUpsertNotificationPreferences, DEFAULT_PREFS,
+} from "@/hooks/useNotificationPreferences";
+
+const SEVERITY_OPTIONS = [
+  { value: "low", label: "Baja" },
+  { value: "medium", label: "Media" },
+  { value: "high", label: "Alta" },
+  { value: "critical", label: "Crítica" },
+];
 
 export default function ProfilePage() {
   const { user } = useAuth();
