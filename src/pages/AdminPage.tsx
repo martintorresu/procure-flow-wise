@@ -219,7 +219,9 @@ export default function AdminPage() {
 
       <SubscriptionsSection />
       <AlertRulesSection />
+      <EscalationRulesSection />
       <PositionsSection />
+
 
 
       <WhatsappConfigSection />
