@@ -145,12 +145,11 @@ Deno.serve(async (req) => {
     let actionType = "Prueba de configuración";
     let requiredAction = "Mensaje de verificación desde Pro.Curem. No requiere acción.";
 
+    let tenantSlug = "default";
+    const { data: tenantRow } = await admin.from("tenants").select("slug").eq("id", tenantId).maybeSingle();
+    if (tenantRow?.slug) tenantSlug = tenantRow.slug;
+
     if (alert) {
-      let tenantSlug = "default";
-      const [{ data: tenantRow }, ] = await Promise.all([
-        admin.from("tenants").select("slug").eq("id", tenantId).maybeSingle(),
-      ]);
-      if (tenantRow?.slug) tenantSlug = tenantRow.slug;
       if (alert.process_id) {
         const { data: process } = await admin
           .from("processes").select("process_number, name").eq("id", alert.process_id).maybeSingle();
