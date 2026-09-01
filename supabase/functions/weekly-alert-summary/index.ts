@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
   </tbody>
 </table>
 ${urgency}
-${button(APP_ALERTS_URL, "Ver alertas en Pro.Curem")}
+${button(alertsUrl, "Ver alertas en Pro.Curem")}
 <p style="font-size:12px;color:#94a3b8">Este resumen se envía automáticamente cada lunes.</p>`,
         );
 

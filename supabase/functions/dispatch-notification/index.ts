@@ -82,6 +82,8 @@ Deno.serve(async (req) => {
     if (!alert) return json({ error: "Alerta no encontrada" }, 404);
 
     const tenantId = (alert.tenant_id as string) ?? tenantIdIn;
+    const { data: tenantRow } = await admin.from("tenants").select("slug").eq("id", tenantId).maybeSingle();
+    const tenantSlug = tenantRow?.slug || "default";
     const proc = (alert.processes ?? null) as { process_number?: string; name?: string } | null;
     const processLabel = proc ? `${proc.process_number ?? ""} ${proc.name ?? ""}`.trim() : "Sin proceso";
     const typeLabel = TYPE_LABELS[alert.type as string] ?? (alert.type as string);
