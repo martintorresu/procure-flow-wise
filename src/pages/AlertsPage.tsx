@@ -12,6 +12,7 @@ import { SEO } from "@/components/SEO";
 import { Skeleton } from "@/components/ui/skeleton";
 import { humanizeTechnicalText } from "@/lib/stageLabels";
 import { formatAlertType, relativeTime, SEVERITY_LABELS } from "@/lib/alertLabels";
+import { AlertsDashboard } from "@/components/alerts/AlertsDashboard";
 
 export default function AlertsPage() {
   const { data: alerts = [], isLoading, isError, error } = useAlerts();
@@ -76,6 +77,8 @@ export default function AlertsPage() {
           <CheckCheck className="w-4 h-4 mr-1" /> Marcar todas como leídas
         </Button>
       </div>
+
+      {!isLoading && !isError && <AlertsDashboard alerts={alerts} processes={processes} />}
 
       <div className="flex flex-wrap gap-2">
         <Select value={typeFilter} onValueChange={setTypeFilter}>
