@@ -48,6 +48,8 @@ export default function DashboardPage() {
   }, [qc]);
 
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
+  const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical").length;
+
   const stagesInProgress = Object.values(summaries).reduce((acc, s) => acc + s.inProgress.length, 0);
   const finishedProcesses = processes.filter((p) => {
     const s = summaries[p.id];
