@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
     // ---- Email ----
     if (prefs.channel_email && meets(severity, prefs.min_severity_email)) {
       const subject = `[Pro.Curem] ${typeLabel}: ${proc?.name ?? "Notificación"}`;
-      const link = alert.process_id ? `${APP_BASE_URL}/procesos/${alert.process_id}` : `${APP_BASE_URL}/alertas`;
+      const link = alert.process_id ? `${APP_BASE_URL}/t/${tenantSlug}/procesos/${alert.process_id}` : `${APP_BASE_URL}/t/${tenantSlug}/alerts`;
       const html = layout(
         `${escapeHtml(typeLabel)}`,
         `<p style="font-size:15px;line-height:1.6;margin:0 0 12px">Hola ${escapeHtml(profile.full_name ?? "")},</p>
