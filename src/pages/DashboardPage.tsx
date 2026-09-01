@@ -265,7 +265,7 @@ export default function DashboardPage() {
                         {!alert.read_at && <span className="text-[10px] font-semibold text-danger">Nueva</span>}
                       </div>
                       <p className="text-sm font-medium">{humanizeTechnicalText(alert.message)}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{process?.process_number ?? "—"} {process?.name ? `— ${process.name}` : ""}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{process?.process_number ?? "—"} {process?.title ? `— ${process.title}` : ""}</p>
                     </div>
                     <span className="text-xs text-muted-foreground whitespace-nowrap">{relativeTime(alert.created_at)}</span>
                   </div>
