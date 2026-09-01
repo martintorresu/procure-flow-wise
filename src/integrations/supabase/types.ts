@@ -63,6 +63,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           due_date: string | null
+          escalated_at: string | null
           id: string
           message: string
           owner_role: Database["public"]["Enums"]["app_role"] | null
@@ -79,6 +80,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           due_date?: string | null
+          escalated_at?: string | null
           id?: string
           message: string
           owner_role?: Database["public"]["Enums"]["app_role"] | null
@@ -95,6 +97,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           due_date?: string | null
+          escalated_at?: string | null
           id?: string
           message?: string
           owner_role?: Database["public"]["Enums"]["app_role"] | null
@@ -212,6 +215,50 @@ export type Database = {
           },
           {
             foreignKeyName: "email_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escalation_rules: {
+        Row: {
+          active: boolean
+          created_at: string
+          escalation_hours: number
+          id: string
+          notify_manager: boolean
+          re_notify_assignee: boolean
+          severity: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          escalation_hours?: number
+          id?: string
+          notify_manager?: boolean
+          re_notify_assignee?: boolean
+          severity: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          escalation_hours?: number
+          id?: string
+          notify_manager?: boolean
+          re_notify_assignee?: boolean
+          severity?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escalation_rules_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
