@@ -5,7 +5,7 @@ import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { sendEmail, layout, button, escapeHtml } from "../_shared/resend.ts";
 
-const APP_BASE_URL = "https://app.pro-curem.com";
+const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://minuta-activa.lovable.app";
 
 const SEVERITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
 
@@ -82,6 +82,8 @@ Deno.serve(async (req) => {
     if (!alert) return json({ error: "Alerta no encontrada" }, 404);
 
     const tenantId = (alert.tenant_id as string) ?? tenantIdIn;
+    const { data: tenantRow } = await admin.from("tenants").select("slug").eq("id", tenantId).maybeSingle();
+    const tenantSlug = tenantRow?.slug || "default";
     const proc = (alert.processes ?? null) as { process_number?: string; name?: string } | null;
     const processLabel = proc ? `${proc.process_number ?? ""} ${proc.name ?? ""}`.trim() : "Sin proceso";
     const typeLabel = TYPE_LABELS[alert.type as string] ?? (alert.type as string);
@@ -120,7 +122,7 @@ Deno.serve(async (req) => {
     // ---- Email ----
     if (prefs.channel_email && meets(severity, prefs.min_severity_email)) {
       const subject = `[Pro.Curem] ${typeLabel}: ${proc?.name ?? "Notificación"}`;
-      const link = alert.process_id ? `${APP_BASE_URL}/procesos/${alert.process_id}` : `${APP_BASE_URL}/alertas`;
+      const link = alert.process_id ? `${APP_BASE_URL}/t/${tenantSlug}/procesos/${alert.process_id}` : `${APP_BASE_URL}/t/${tenantSlug}/alerts`;
       const html = layout(
         `${escapeHtml(typeLabel)}`,
         `<p style="font-size:15px;line-height:1.6;margin:0 0 12px">Hola ${escapeHtml(profile.full_name ?? "")},</p>

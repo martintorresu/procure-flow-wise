@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { sendEmail, layout, button, escapeHtml } from "../_shared/resend.ts";
 
-const APP_ALERTS_URL = "https://app.pro-curem.com/alertas";
+const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://minuta-activa.lovable.app";
 const SUBJECT = "[Pro.Curem] Resumen semanal de alertas";
 const WEEK_MS = 7 * 24 * 3_600_000;
 
@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
   const since = new Date(Date.now() - WEEK_MS).toISOString();
 
   try {
-    const { data: tenants, error: tErr } = await supabase.from("tenants").select("id, name");
+    const { data: tenants, error: tErr } = await supabase.from("tenants").select("id, name, slug");
     if (tErr) throw tErr;
 
     let sent = 0;
@@ -53,6 +53,8 @@ Deno.serve(async (req) => {
         skippedTenants++;
         continue;
       }
+
+      const alertsUrl = `${APP_BASE_URL}/t/${tenant.slug}/alerts`;
 
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
@@ -102,7 +104,7 @@ Deno.serve(async (req) => {
   </tbody>
 </table>
 ${urgency}
-${button(APP_ALERTS_URL, "Ver alertas en Pro.Curem")}
+${button(alertsUrl, "Ver alertas en Pro.Curem")}
 <p style="font-size:12px;color:#94a3b8">Este resumen se envía automáticamente cada lunes.</p>`,
         );
 
