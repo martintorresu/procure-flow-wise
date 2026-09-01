@@ -33,6 +33,18 @@ export default function ProfilePage() {
   const [waEnabled, setWaEnabled] = useState(true);
   const [positionId, setPositionId] = useState<string | null>(null);
 
+  // Preferencias de notificación (capa adicional sobre profile_contacts)
+  const { data: prefs } = useNotificationPreferences(user?.id);
+  const upsertPrefs = useUpsertNotificationPreferences(user?.id, user?.tenantId);
+  const [emailEnabled, setEmailEnabled] = useState(DEFAULT_PREFS.channel_email);
+  const [whatsappEnabled, setWhatsappEnabled] = useState(DEFAULT_PREFS.channel_whatsapp);
+  const [minSevEmail, setMinSevEmail] = useState(DEFAULT_PREFS.min_severity_email);
+  const [minSevWa, setMinSevWa] = useState(DEFAULT_PREFS.min_severity_whatsapp);
+  const [quietEnabled, setQuietEnabled] = useState(DEFAULT_PREFS.quiet_enabled);
+  const [quietStart, setQuietStart] = useState(DEFAULT_PREFS.quiet_start ?? "22:00");
+  const [quietEnd, setQuietEnd] = useState(DEFAULT_PREFS.quiet_end ?? "07:00");
+  const [emailGrouping, setEmailGrouping] = useState<string>(DEFAULT_PREFS.email_grouping);
+
   useEffect(() => {
     if (profile) {
       setPhone(profile.phone ?? "");
@@ -41,6 +53,38 @@ export default function ProfilePage() {
       setPositionId(profile.default_position_id ?? null);
     }
   }, [profile]);
+
+  useEffect(() => {
+    if (prefs) {
+      setEmailEnabled(prefs.channel_email);
+      setWhatsappEnabled(prefs.channel_whatsapp);
+      setMinSevEmail(prefs.min_severity_email);
+      setMinSevWa(prefs.min_severity_whatsapp);
+      setQuietEnabled(prefs.quiet_enabled);
+      setQuietStart(prefs.quiet_start?.slice(0, 5) ?? "22:00");
+      setQuietEnd(prefs.quiet_end?.slice(0, 5) ?? "07:00");
+      setEmailGrouping(prefs.email_grouping);
+    }
+  }, [prefs]);
+
+  const savePrefs = async () => {
+    try {
+      await upsertPrefs.mutateAsync({
+        channel_inapp: true,
+        channel_email: emailEnabled,
+        channel_whatsapp: whatsappEnabled,
+        quiet_enabled: quietEnabled,
+        quiet_start: quietEnabled ? quietStart : (quietStart || "22:00"),
+        quiet_end: quietEnabled ? quietEnd : (quietEnd || "07:00"),
+        email_grouping: (emailGrouping as "immediate" | "daily_digest"),
+        min_severity_email: minSevEmail,
+        min_severity_whatsapp: minSevWa,
+      });
+      toast.success("Preferencias de notificación guardadas");
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
 
 
   const save = async () => {
