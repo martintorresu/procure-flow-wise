@@ -35,9 +35,8 @@ function ProtectedRoutes() {
   const pathSlug = params.tenantSlug;
   // Si el path no trae slug, resolver desde el hostname (p.ej. procurement.<slug>.inovahr-app.com)
   const urlTenant = pathSlug ?? resolveTenant(location.pathname, window.location.hostname).slug;
-  // Convención de home: tenant por hostname → "/", por path → "/t/<slug>"
-  const homeFor = (slug: string) =>
-    !pathSlug || slug === "default" ? "/" : `/t/${slug}`;
+  // Home del usuario: default → "/", cualquier otro tenant → "/t/<slug>"
+  const homeFor = (slug: string) => (slug === "default" ? "/" : `/t/${slug}`);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Cargando…</div>;
@@ -68,9 +67,8 @@ function LoginRoute() {
   const pathSlug = params.tenantSlug;
   // Si el path no trae slug, resolver desde el hostname (p.ej. procurement.<slug>.inovahr-app.com)
   const urlTenant = pathSlug ?? resolveTenant(location.pathname, window.location.hostname).slug;
-  // Convención de home: tenant por hostname → "/", por path → "/t/<slug>"
-  const homeFor = (slug: string) =>
-    !pathSlug || slug === "default" ? "/" : `/t/${slug}`;
+  // Home del usuario: default → "/", cualquier otro tenant → "/t/<slug>"
+  const homeFor = (slug: string) => (slug === "default" ? "/" : `/t/${slug}`);
 
   const nextParam = new URLSearchParams(window.location.search).get("next");
   const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
