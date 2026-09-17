@@ -24,7 +24,7 @@ import CommitmentsPage from "@/pages/CommitmentsPage";
 import MinutaActivaPage from "@/pages/MinutaActivaPage";
 import OAuthConsent from "@/pages/OAuthConsent";
 import NotFound from "./pages/NotFound.tsx";
-import { TENANTS } from "@/config/tenants";
+import { TENANTS, resolveTenant } from "@/config/tenants";
 
 const queryClient = new QueryClient();
 
@@ -32,27 +32,29 @@ function ProtectedRoutes() {
   const { isAuthenticated, user, loading } = useAuth();
   const params = useParams();
   const location = useLocation();
-  const urlTenant = params.tenantSlug ?? "default";
+  const pathSlug = params.tenantSlug;
+  // Si el path no trae slug, resolver desde el hostname (p.ej. procurement.<slug>.inovahr-app.com)
+  const urlTenant = pathSlug ?? resolveTenant(location.pathname, window.location.hostname).slug;
+  // Home del usuario: default → "/", cualquier otro tenant → "/t/<slug>"
+  const homeFor = (slug: string) => (slug === "default" ? "/" : `/t/${slug}`);
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Cargando…</div>;
   }
 
   if (!isAuthenticated || !user) {
-    const loginPath = urlTenant === "default" ? "/login" : `/t/${urlTenant}/login`;
+    const loginPath = pathSlug ? `/t/${urlTenant}/login` : "/login";
     return <Navigate to={loginPath} replace state={{ from: location.pathname }} />;
   }
 
   // Tenant del URL no existe en la configuración
-  if (urlTenant !== "default" && !TENANTS[urlTenant]) {
-    const home = user.tenantSlug === "default" ? "/" : `/t/${user.tenantSlug}`;
-    return <Navigate to={home} replace />;
+  if (pathSlug && !TENANTS[pathSlug]) {
+    return <Navigate to={homeFor(user.tenantSlug)} replace />;
   }
 
   // Tenant del URL no coincide con el del usuario → bloqueo
   if (urlTenant !== user.tenantSlug) {
-    const home = user.tenantSlug === "default" ? "/" : `/t/${user.tenantSlug}`;
-    return <Navigate to={home} replace />;
+    return <Navigate to={homeFor(user.tenantSlug)} replace />;
   }
 
   return <AppLayout />;
@@ -61,19 +63,23 @@ function ProtectedRoutes() {
 function LoginRoute() {
   const { isAuthenticated, user } = useAuth();
   const params = useParams();
-  const urlTenant = params.tenantSlug ?? "default";
+  const location = useLocation();
+  const pathSlug = params.tenantSlug;
+  // Si el path no trae slug, resolver desde el hostname (p.ej. procurement.<slug>.inovahr-app.com)
+  const urlTenant = pathSlug ?? resolveTenant(location.pathname, window.location.hostname).slug;
+  // Home del usuario: default → "/", cualquier otro tenant → "/t/<slug>"
+  const homeFor = (slug: string) => (slug === "default" ? "/" : `/t/${slug}`);
 
   const nextParam = new URLSearchParams(window.location.search).get("next");
   const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
 
   if (isAuthenticated && user) {
     if (safeNext) return <Navigate to={safeNext} replace />;
-    const home = user.tenantSlug === "default" ? "/" : `/t/${user.tenantSlug}`;
-    return <Navigate to={home} replace />;
+    return <Navigate to={homeFor(user.tenantSlug)} replace />;
   }
 
-  // Si el slug del URL no existe, mandar al login default
-  if (urlTenant !== "default" && !TENANTS[urlTenant]) {
+  // Si el slug del path no existe, mandar al login default
+  if (pathSlug && !TENANTS[pathSlug]) {
     return <Navigate to="/login" replace />;
   }
 
