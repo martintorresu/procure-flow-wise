@@ -13,10 +13,7 @@ export const DEFAULT_TENANT: TenantConfig = {
 
 export const TENANTS: Record<string, TenantConfig> = {
   default: DEFAULT_TENANT,
-  acme: { slug: "acme", name: "Pro.Curem Flow · Acme" },
-  codelco: { slug: "codelco", name: "Pro.Curem Flow · Codelco" },
-  bhp: { slug: "bhp", name: "Pro.Curem Flow · BHP" },
-  antofagasta: { slug: "antofagasta", name: "Pro.Curem Flow · Antofagasta" },
+  "espacio-luz": { slug: "espacio-luz", name: "Pro.Curem Flow · Espacio Luz" },
 };
 
 /**

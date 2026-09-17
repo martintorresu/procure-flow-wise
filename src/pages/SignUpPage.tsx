@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 
 import { AlertCircle, CheckCircle2, Link2 } from "lucide-react";
 import { z } from "zod";
@@ -19,6 +19,8 @@ const AREAS = ["Ingeniería", "Operaciones", "Mantención", "Proyectos", "Compra
 export default function SignUpPage() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
+  const { tenantSlug } = useParams();
+  const loginPath = tenantSlug ? `/t/${tenantSlug}/login` : "/login";
   const [searchParams] = useSearchParams();
   const invitedEmail = searchParams.get("invited_email") ?? "";
   const [fullName, setFullName] = useState("");
@@ -43,7 +45,7 @@ export default function SignUpPage() {
     setSubmitting(false);
     if (result.ok) {
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 2200);
+      setTimeout(() => navigate(loginPath), 2200);
     } else {
       setError(result.message ?? "No se pudo crear la cuenta");
     }
@@ -142,7 +144,7 @@ export default function SignUpPage() {
               </button>
 
               <div className="text-center pt-1">
-                <Link to="/login" className="text-sm font-medium text-[#7AD9CF] hover:text-white">
+                <Link to={loginPath} className="text-sm font-medium text-[#7AD9CF] hover:text-white">
                   ¿Ya tienes cuenta? Inicia sesión
                 </Link>
               </div>
