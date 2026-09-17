@@ -102,6 +102,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/t/:tenantSlug/login" element={<LoginRoute />} />
+            <Route path="/t/:tenantSlug/signup" element={<SignUpPage />} />
 
             {/* Consentimiento OAuth (MCP) */}
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />

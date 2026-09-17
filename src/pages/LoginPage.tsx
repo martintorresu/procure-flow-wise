@@ -144,7 +144,7 @@ export default function LoginPage() {
               <Link to="/forgot-password" className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
                 ¿Olvidaste tu contraseña?
               </Link>
-              <Link to="/signup" className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
+              <Link to={tenant.slug === "default" ? "/signup" : `/t/${tenant.slug}/signup`} className="text-sm font-medium text-[#7AD9CF] hover:text-white transition-colors">
                 ¿No tienes cuenta? Regístrate
               </Link>
             </div>
