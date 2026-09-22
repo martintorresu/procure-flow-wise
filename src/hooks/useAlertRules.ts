@@ -29,6 +29,7 @@ export const TRIGGER_DESCRIPTIONS: Record<AlertTriggerType, string> = {
   commitment_overdue: "Compromiso con fecha de entrega vencida hace N días y aún no completado.",
   permit_expiring: "Permiso próximo a vencer dentro de N días.",
   stage_stalled: "Etapa en curso sin cambios durante N días.",
+  stage_overdue: "Etapa con término planificado vencido hace N días y aún no completada.",
   contingency_open: "Contingencia activa sin cerrar hace N días.",
 };
 
