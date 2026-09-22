@@ -29,7 +29,11 @@ export default function LoginPage() {
       const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
       navigate(safeNext ?? (tenant.slug === "default" ? "/" : `/t/${tenant.slug}`));
     } else {
-      setError(result.message ?? "Credenciales inválidas.");
+      setError(
+        result.reason === "wrong_tenant"
+          ? `Tu cuenta no pertenece a ${tenant.name}. Ingresa desde la dirección de tu organización.`
+          : result.message ?? "Credenciales inválidas.",
+      );
     }
   };
 
