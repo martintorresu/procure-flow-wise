@@ -6,7 +6,7 @@ export type AlertSeverity = "low" | "medium" | "high" | "critical";
 export type AlertTriggerType =
   | "et_incomplete" | "rfq_overdue" | "po_unaccepted"
   | "fat_unscheduled" | "shipping_delayed" | "arrival_overdue" | "damage_reported"
-  | "commitment_overdue" | "permit_expiring" | "stage_stalled" | "contingency_open";
+  | "commitment_overdue" | "permit_expiring" | "stage_stalled" | "stage_overdue" | "contingency_open";
 
 export interface AlertRule {
   id: string;
