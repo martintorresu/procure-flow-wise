@@ -380,6 +380,7 @@ export function ProcessStages({ processId }: { processId: string }) {
         {!isLoading && stages.length === 0 && (
           <p className="text-sm text-muted-foreground">Este proceso aún no tiene etapas definidas.</p>
         )}
+        {!isLoading && stages.length > 0 && <StageTimeline stages={stages} />}
         {!isLoading && stages.length > 0 && (
           <Accordion type="multiple" className="space-y-2">
             {stages.map((s) => (
