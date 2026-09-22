@@ -16,12 +16,19 @@ export const TENANTS: Record<string, TenantConfig> = {
   espacioluz: { slug: "espacioluz", name: "Pro.Curem Flow · Espacio Luz" },
 };
 
+// Dominios custom ya activos que no siguen el esquema procurement.<slug>.inovahr-app.com.
+// Se resuelven directo al tenant indicado, sin tocar la lógica genérica de subdominios.
+const LEGACY_HOST_OVERRIDES: Record<string, string> = {
+  "procurement.demo.inovahr-app.com": "espacioluz",
+};
+
 /**
  * Resuelve el tenant activo desde:
  *   1. Ruta: /t/<slug>/login  o  /<slug>/login
- *   2. Subdominio por cliente: procurement.<slug>.inovahr-app.com
- *   3. Subdominio genérico: <slug>.app.com (fallback)
- *   4. Fallback: DEFAULT_TENANT
+ *   2. Dominio legacy exacto (LEGACY_HOST_OVERRIDES)
+ *   3. Subdominio por cliente: procurement.<slug>.inovahr-app.com
+ *   4. Subdominio genérico: <slug>.app.com (fallback)
+ *   5. Fallback: DEFAULT_TENANT
  */
 export function resolveTenant(pathname: string, hostname: string): TenantConfig {
   // 1. Path-based: /t/acme/... o /t/acme/login
@@ -33,6 +40,11 @@ export function resolveTenant(pathname: string, hostname: string): TenantConfig 
 
   // 2. Subdomain-based
   const host = hostname.split(":")[0].toLowerCase();
+
+  // 2.1 Dominio legacy: resolución directa, ignorando el esquema genérico
+  const legacySlug = LEGACY_HOST_OVERRIDES[host];
+  if (legacySlug && TENANTS[legacySlug]) return TENANTS[legacySlug];
+
   const parts = host.split(".");
   if (parts.length >= 3) {
     // Esquema por cliente: procurement.<slug>.inovahr-app.com → slug = parts[1]
