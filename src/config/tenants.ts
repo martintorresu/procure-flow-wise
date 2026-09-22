@@ -1,9 +1,13 @@
 // Configuración de tenants — solo varía el nombre que aparece como título.
 // Todo lo demás (fondo, layout, colores, footer InHR) permanece idéntico.
 
+import espacioluzLogo from "@/assets/espacioluz-logo.png.asset.json";
+
 export interface TenantConfig {
   slug: string;
   name: string; // Aparece como título principal del login
+  logo?: string; // Logotipo del cliente (opcional)
+  logoAlt?: string;
 }
 
 export const DEFAULT_TENANT: TenantConfig = {
@@ -13,7 +17,12 @@ export const DEFAULT_TENANT: TenantConfig = {
 
 export const TENANTS: Record<string, TenantConfig> = {
   default: DEFAULT_TENANT,
-  espacioluz: { slug: "espacioluz", name: "Pro.Curem Flow · Espacio Luz" },
+  espacioluz: {
+    slug: "espacioluz",
+    name: "Pro.Curem Flow · Espacio Luz",
+    logo: espacioluzLogo.url,
+    logoAlt: "Espacio Luz Inmobiliaria",
+  },
 };
 
 // Dominios custom ya activos que no siguen el esquema procurement.<slug>.inovahr-app.com.
