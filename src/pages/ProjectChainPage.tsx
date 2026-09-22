@@ -12,6 +12,8 @@ import { useProject, useProjectProcesses } from "@/hooks/useProjects";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import type { Process } from "@/types/process";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ProjectRequirements from "@/components/ProjectRequirements";
+import { useAuth } from "@/contexts/AuthContext";
 
 /** Ordena los procesos siguiendo predecessor → continuación; los huérfanos al final. */
 function buildChains(processes: Process[]): Process[][] {
@@ -47,6 +49,8 @@ export default function ProjectChainPage() {
   const { data: project } = useProject(id);
   const { data: processes = [], isLoading } = useProjectProcesses(id);
   const { data: summaries = {} } = useProcessStageSummaries();
+  const { user } = useAuth();
+  const canManage = user?.role === "admin" || user?.role === "gestor";
 
   const chains = useMemo(() => buildChains(processes), [processes]);
 
@@ -74,7 +78,14 @@ export default function ProjectChainPage() {
       <Tabs defaultValue="processes">
         <TabsList>
           <TabsTrigger value="processes">Procesos</TabsTrigger>
+          {canManage && <TabsTrigger value="requirements">Permisos DOM</TabsTrigger>}
         </TabsList>
+
+        {canManage && (
+          <TabsContent value="requirements" className="mt-4">
+            <ProjectRequirements processes={processes} />
+          </TabsContent>
+        )}
 
         <TabsContent value="processes" className="space-y-6 mt-4">
           {isLoading && <Skeleton className="h-40 w-full" />}
