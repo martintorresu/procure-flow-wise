@@ -18,7 +18,17 @@ export interface ProcessStage {
   activities: StageActivities;
   sort_order: number;
   status: StageStatus;
+  /** Línea base planificada y ejecución real (todas opcionales). */
+  planned_start: string | null;
+  planned_end: string | null;
+  actual_start: string | null;
+  actual_end: string | null;
+  responsible_name: string | null;
+  external_entity: string | null;
 }
+
+const STAGE_COLUMNS =
+  "id, process_id, name, description, activities, sort_order, status, planned_start, planned_end, actual_start, actual_end, responsible_name, external_entity";
 
 const EMPTY: StageActivities = { milestones: [], checkpoints: [], tasks: [] };
 
