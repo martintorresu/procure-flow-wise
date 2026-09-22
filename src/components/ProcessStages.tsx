@@ -96,14 +96,24 @@ function StageCommitmentsBlock({ commitments }: { commitments: StageCommitment[]
 
 const STAGE_STATUSES: StageStatus[] = ["not_started", "in_progress", "blocked", "completed"];
 
-function StageStatusSelect({ stage, processId }: { stage: ProcessStage; processId: string }) {
+function StageStatusSelect({
+  stage,
+  processId,
+  onStatusChange,
+}: {
+  stage: ProcessStage;
+  processId: string;
+  onStatusChange?: (status: StageStatus) => void;
+}) {
   const update = useUpdateStageStatus(processId);
   return (
     <Select
       value={stage.status}
       disabled={update.isPending}
       onValueChange={(v) => {
-        if (v !== stage.status) update.mutate({ stageId: stage.id, status: v as StageStatus });
+        if (v === stage.status) return;
+        update.mutate({ stageId: stage.id, status: v as StageStatus });
+        onStatusChange?.(v as StageStatus);
       }}
     >
       <SelectTrigger className="h-8 w-[170px]" aria-label={`Estado de la etapa ${stage.name}`}>
