@@ -133,8 +133,129 @@ function StageStatusSelect({
   );
 }
 
+const today = () => new Date().toISOString().slice(0, 10);
+
+type PlanForm = {
+  planned_start: string;
+  planned_end: string;
+  actual_start: string;
+  actual_end: string;
+  responsible_name: string;
+  external_entity: string;
+};
+
+const toForm = (s: ProcessStage): PlanForm => ({
+  planned_start: s.planned_start ?? "",
+  planned_end: s.planned_end ?? "",
+  actual_start: s.actual_start ?? "",
+  actual_end: s.actual_end ?? "",
+  responsible_name: s.responsible_name ?? "",
+  external_entity: s.external_entity ?? "",
+});
+
+function StagePlanFields({
+  stage,
+  processId,
+  form,
+  setForm,
+}: {
+  stage: ProcessStage;
+  processId: string;
+  form: PlanForm;
+  setForm: React.Dispatch<React.SetStateAction<PlanForm>>;
+}) {
+  const save = useUpdateStagePlan(processId);
+  const dirty = JSON.stringify(form) !== JSON.stringify(toForm(stage));
+  const set = (k: keyof PlanForm, v: string) => setForm((p) => ({ ...p, [k]: v }));
+
+  return (
+    <div className="rounded-lg border border-border p-3">
+      <p className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Línea base y ejecución</p>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-1">
+          <Label className="text-xs">Inicio planificado</Label>
+          <Input type="date" value={form.planned_start} onChange={(e) => set("planned_start", e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Término planificado</Label>
+          <Input type="date" value={form.planned_end} onChange={(e) => set("planned_end", e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Inicio real</Label>
+          <Input type="date" value={form.actual_start} onChange={(e) => set("actual_start", e.target.value)} />
+        </div>
+        <div className="space-y-1">
+          <Label className="text-xs">Término real</Label>
+          <Input type="date" value={form.actual_end} onChange={(e) => set("actual_end", e.target.value)} />
+        </div>
+        <div className="space-y-1 sm:col-span-2">
+          <Label className="text-xs">Responsable</Label>
+          <Input
+            value={form.responsible_name}
+            placeholder="Nombre del responsable"
+            onChange={(e) => set("responsible_name", e.target.value)}
+          />
+        </div>
+        <div className="space-y-1 sm:col-span-2">
+          <Label className="text-xs">Organismo externo</Label>
+          <Input
+            value={form.external_entity}
+            placeholder="Ej: DOM, SERVIU, ITO"
+            onChange={(e) => set("external_entity", e.target.value)}
+          />
+        </div>
+      </div>
+      <div className="mt-3 flex items-center gap-2">
+        <Button
+          size="sm"
+          disabled={!dirty || save.isPending}
+          onClick={() =>
+            save.mutate({
+              stageId: stage.id,
+              patch: {
+                planned_start: form.planned_start || null,
+                planned_end: form.planned_end || null,
+                actual_start: form.actual_start || null,
+                actual_end: form.actual_end || null,
+                responsible_name: form.responsible_name.trim() || null,
+                external_entity: form.external_entity.trim() || null,
+              },
+            })
+          }
+        >
+          {save.isPending ? "Guardando…" : "Guardar"}
+        </Button>
+        {dirty && (
+          <Button size="sm" variant="ghost" onClick={() => setForm(toForm(stage))}>
+            Descartar
+          </Button>
+        )}
+        {dirty && <span className="text-xs text-muted-foreground">Cambios sin guardar</span>}
+      </div>
+    </div>
+  );
+}
+
 function StageItem({ stage, processId, commitments }: { stage: ProcessStage; processId: string; commitments: StageCommitment[] }) {
   const meta = STAGE_STATUS_META[stage.status];
+  const [form, setForm] = useState<PlanForm>(() => toForm(stage));
+  const [syncKey, setSyncKey] = useState("");
+  const serverKey = JSON.stringify(toForm(stage));
+  if (syncKey !== serverKey) {
+    setSyncKey(serverKey);
+    setForm(toForm(stage));
+  }
+
+  const proposeDates = (status: StageStatus) => {
+    if (status === "in_progress" && !form.actual_start) {
+      setForm((p) => ({ ...p, actual_start: today() }));
+      toast.info("Propusimos hoy como inicio real. Revísalo y presiona Guardar.");
+    }
+    if (status === "completed" && !form.actual_end) {
+      setForm((p) => ({ ...p, actual_end: today() }));
+      toast.info("Propusimos hoy como término real. Revísalo y presiona Guardar.");
+    }
+  };
   return (
     <AccordionItem value={stage.id} className="rounded-lg border border-border px-3">
       <AccordionTrigger className="hover:no-underline">
