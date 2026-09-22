@@ -75,8 +75,14 @@ export default function AppSidebar() {
     ? [...baseBottomItems, { to: "/admin", icon: Shield, label: "Administración" }]
     : baseBottomItems;
 
+  // Prefijo del tenant: los usuarios de un tenant distinto de "default" navegan bajo /t/<slug>
+  const tenantPrefix = user && user.tenantSlug !== "default" ? `/t/${user.tenantSlug}` : "";
+  const hrefFor = (to: string) => (to === "/" ? tenantPrefix || "/" : `${tenantPrefix}${to}`);
+  const homeHref = tenantPrefix || "/";
+
   const renderItem = (item: NavItem) => {
-    const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+    const to = hrefFor(item.to);
+    const isActive = location.pathname === to || (item.to !== "/" && location.pathname.startsWith(to));
     const isAlerts = item.to === "/alerts";
     const badgeCount = isAlerts ? totalAlerts : 0;
     const badgeIsCritical = isAlerts && criticalCount > 0;
