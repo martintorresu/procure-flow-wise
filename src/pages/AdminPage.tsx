@@ -22,6 +22,7 @@ import { ContingenciesSection } from "@/components/admin/ContingenciesSection";
 import { MinutaConfigSection } from "@/components/admin/MinutaConfigSection";
 import { PositionsSection } from "@/components/admin/PositionsSection";
 import { EscalationRulesSection } from "@/components/admin/EscalationRulesSection";
+import { DomainHealthSection } from "@/components/admin/DomainHealthSection";
 
 import { isValidE164 } from "@/hooks/useTenantUsers";
 import type { UserRole } from "@/types/process";
@@ -229,6 +230,7 @@ export default function AdminPage() {
       <TenantUsersContactSection />
       <ApiKeysSection />
       <ContingenciesSection />
+      <DomainHealthSection />
 
     </div>
   );
