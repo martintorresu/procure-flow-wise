@@ -157,3 +157,28 @@ export function useUpdateStageStatus(processId: string | undefined) {
     onError: (e: Error) => toast.error(`No se pudo actualizar la etapa: ${e.message}`),
   });
 }
+
+export interface StagePlanPatch {
+  planned_start?: string | null;
+  planned_end?: string | null;
+  actual_start?: string | null;
+  actual_end?: string | null;
+  responsible_name?: string | null;
+  external_entity?: string | null;
+}
+
+/** Guarda la línea base (fechas plan/real) y el responsable u organismo externo de una etapa. */
+export function useUpdateStagePlan(processId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ stageId, patch }: { stageId: string; patch: StagePlanPatch }) => {
+      const { error } = await supabase.from("process_stages").update(patch).eq("id", stageId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["process-stages", processId ?? ""] });
+      toast.success("Datos de la etapa guardados");
+    },
+    onError: (e: Error) => toast.error(`No se pudo guardar la etapa: ${e.message}`),
+  });
+}
