@@ -11,6 +11,7 @@ import { useAlerts } from "@/hooks/useAlerts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProcuremMark, ProcuremLockup } from "@/components/ProcuremMark";
 import { NotificationBell } from "@/components/NotificationBell";
+import { TENANTS } from "@/config/tenants";
 
 
 interface NavItem {
@@ -87,6 +88,8 @@ export default function AppSidebar() {
   const tenantPrefix = user && user.tenantSlug !== "default" ? `/t/${user.tenantSlug}` : "";
   const hrefFor = (to: string) => (to === "/" ? tenantPrefix || "/" : `${tenantPrefix}${to}`);
   const homeHref = tenantPrefix || "/";
+  const tenantConfig = user ? TENANTS[user.tenantSlug] : undefined;
+  const tenantLogo = tenantConfig?.logo;
 
   const renderItem = (item: NavItem) => {
     const to = hrefFor(item.to);
@@ -156,6 +159,20 @@ export default function AppSidebar() {
         )}
         <NotificationBell collapsed={collapsed} />
       </div>
+
+      {/* Logotipo del tenant */}
+      {tenantLogo && (
+        <div className={`relative shrink-0 border-b border-sidebar-border/60 flex items-center justify-center ${collapsed ? "px-1.5 py-2" : "px-3 py-3"}`}>
+          <div className={`rounded-lg bg-white/95 flex items-center justify-center ${collapsed ? "px-1.5 py-1.5" : "px-3 py-2"}`}>
+            <img
+              src={tenantLogo}
+              alt={tenantConfig?.logoAlt ?? "Logotipo del cliente"}
+              className={`w-auto object-contain ${collapsed ? "h-4" : "h-7"}`}
+            />
+          </div>
+        </div>
+      )}
+
 
 
       {/* Nav */}
