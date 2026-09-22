@@ -76,11 +76,17 @@ export default function LoginPage() {
         >
           {/* Logo */}
           <div className="flex flex-col items-center text-center mb-5 sm:mb-7">
-            <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#2255E8] via-[#4ABFB5] to-[#E8934A] p-[1.5px] mb-3 sm:mb-4 shadow-[0_8px_24px_rgba(34,85,232,0.4)]">
-              <div className="w-full h-full rounded-[14px] bg-[#0A1628]/80 backdrop-blur-md flex items-center justify-center">
-                <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.2} />
+            {tenant.logo ? (
+              <div className="mb-3 sm:mb-4 rounded-2xl bg-white/95 px-4 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.35)] border border-white/40">
+                <img src={tenant.logo} alt={tenant.logoAlt ?? tenant.name} className="h-8 sm:h-10 w-auto object-contain" />
               </div>
-            </div>
+            ) : (
+              <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-[#2255E8] via-[#4ABFB5] to-[#E8934A] p-[1.5px] mb-3 sm:mb-4 shadow-[0_8px_24px_rgba(34,85,232,0.4)]">
+                <div className="w-full h-full rounded-[14px] bg-[#0A1628]/80 backdrop-blur-md flex items-center justify-center">
+                  <Link2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" strokeWidth={2.2} />
+                </div>
+              </div>
+            )}
             <h1 className="text-[22px] sm:text-[28px] md:text-[32px] font-bold text-white tracking-tight leading-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
               {tenant.name}
             </h1>
