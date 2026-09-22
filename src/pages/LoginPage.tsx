@@ -21,7 +21,8 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setSubmitting(true);
-    const result = await login(email, password, tenant.slug);
+    // Sólo se exige un tenant específico cuando el acceso es por su URL dedicada.
+    const result = await login(email, password, tenant.slug === "default" ? undefined : tenant.slug);
     setSubmitting(false);
     if (result.ok) {
       const nextParam = new URLSearchParams(window.location.search).get("next");
