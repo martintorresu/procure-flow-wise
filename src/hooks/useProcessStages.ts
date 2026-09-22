@@ -18,7 +18,17 @@ export interface ProcessStage {
   activities: StageActivities;
   sort_order: number;
   status: StageStatus;
+  /** Línea base planificada y ejecución real (todas opcionales). */
+  planned_start: string | null;
+  planned_end: string | null;
+  actual_start: string | null;
+  actual_end: string | null;
+  responsible_name: string | null;
+  external_entity: string | null;
 }
+
+const STAGE_COLUMNS =
+  "id, process_id, name, description, activities, sort_order, status, planned_start, planned_end, actual_start, actual_end, responsible_name, external_entity";
 
 const EMPTY: StageActivities = { milestones: [], checkpoints: [], tasks: [] };
 
@@ -32,6 +42,25 @@ function toActivities(raw: unknown): StageActivities {
   };
 }
 
+function toStage(r: Record<string, unknown>): ProcessStage {
+  const s = (v: unknown) => (typeof v === "string" && v ? v : null);
+  return {
+    id: r.id as string,
+    process_id: r.process_id as string,
+    name: r.name as string,
+    description: s(r.description),
+    sort_order: r.sort_order as number,
+    status: ((r.status as StageStatus) ?? "not_started") as StageStatus,
+    activities: r.activities ? toActivities(r.activities) : EMPTY,
+    planned_start: s(r.planned_start),
+    planned_end: s(r.planned_end),
+    actual_start: s(r.actual_start),
+    actual_end: s(r.actual_end),
+    responsible_name: s(r.responsible_name),
+    external_entity: s(r.external_entity),
+  };
+}
+
 /** Etapas de un proceso ordenadas por sort_order. RLS filtra por tenant. */
 export function useProcessStages(processId: string | undefined) {
   return useQuery({
@@ -40,19 +69,11 @@ export function useProcessStages(processId: string | undefined) {
     queryFn: async (): Promise<ProcessStage[]> => {
       const { data, error } = await supabase
         .from("process_stages")
-        .select("id, process_id, name, description, activities, sort_order, status")
+        .select(STAGE_COLUMNS)
         .eq("process_id", processId!)
         .order("sort_order", { ascending: true });
       if (error) throw new Error(error.message);
-      return (data ?? []).map((r) => ({
-        id: r.id,
-        process_id: r.process_id,
-        name: r.name,
-        description: r.description,
-        sort_order: r.sort_order,
-        status: (r.status as StageStatus) ?? "not_started",
-        activities: r.activities ? toActivities(r.activities) : EMPTY,
-      }));
+      return (data ?? []).map((r) => toStage(r as unknown as Record<string, unknown>));
     },
   });
 }
@@ -69,20 +90,12 @@ export function useProcessStagesByProcess(processIds: (string | null | undefined
     queryFn: async (): Promise<Map<string, ProcessStage[]>> => {
       const { data, error } = await supabase
         .from("process_stages")
-        .select("id, process_id, name, description, activities, sort_order, status")
+        .select(STAGE_COLUMNS)
         .in("process_id", ids);
       if (error) throw new Error(error.message);
       const map = new Map<string, ProcessStage[]>();
       for (const r of data ?? []) {
-        const stage: ProcessStage = {
-          id: r.id,
-          process_id: r.process_id,
-          name: r.name,
-          description: r.description,
-          sort_order: r.sort_order,
-          status: (r.status as StageStatus) ?? "not_started",
-          activities: r.activities ? toActivities(r.activities) : EMPTY,
-        };
+        const stage = toStage(r as unknown as Record<string, unknown>);
         const list = map.get(stage.process_id);
         if (list) list.push(stage);
         else map.set(stage.process_id, [stage]);
@@ -142,5 +155,30 @@ export function useUpdateStageStatus(processId: string | undefined) {
       toast.success("Estado de la etapa actualizado");
     },
     onError: (e: Error) => toast.error(`No se pudo actualizar la etapa: ${e.message}`),
+  });
+}
+
+export interface StagePlanPatch {
+  planned_start?: string | null;
+  planned_end?: string | null;
+  actual_start?: string | null;
+  actual_end?: string | null;
+  responsible_name?: string | null;
+  external_entity?: string | null;
+}
+
+/** Guarda la línea base (fechas plan/real) y el responsable u organismo externo de una etapa. */
+export function useUpdateStagePlan(processId: string | undefined) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ stageId, patch }: { stageId: string; patch: StagePlanPatch }) => {
+      const { error } = await supabase.from("process_stages").update(patch).eq("id", stageId);
+      if (error) throw new Error(error.message);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["process-stages", processId ?? ""] });
+      toast.success("Datos de la etapa guardados");
+    },
+    onError: (e: Error) => toast.error(`No se pudo guardar la etapa: ${e.message}`),
   });
 }

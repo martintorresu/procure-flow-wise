@@ -895,11 +895,17 @@ export type Database = {
       process_stages: {
         Row: {
           activities: Json
+          actual_end: string | null
+          actual_start: string | null
           created_at: string
           description: string | null
+          external_entity: string | null
           id: string
           name: string
+          planned_end: string | null
+          planned_start: string | null
           process_id: string
+          responsible_name: string | null
           sort_order: number
           status: string
           tenant_id: string
@@ -907,11 +913,17 @@ export type Database = {
         }
         Insert: {
           activities?: Json
+          actual_end?: string | null
+          actual_start?: string | null
           created_at?: string
           description?: string | null
+          external_entity?: string | null
           id?: string
           name: string
+          planned_end?: string | null
+          planned_start?: string | null
           process_id: string
+          responsible_name?: string | null
           sort_order: number
           status?: string
           tenant_id: string
@@ -919,11 +931,17 @@ export type Database = {
         }
         Update: {
           activities?: Json
+          actual_end?: string | null
+          actual_start?: string | null
           created_at?: string
           description?: string | null
+          external_entity?: string | null
           id?: string
           name?: string
+          planned_end?: string | null
+          planned_start?: string | null
           process_id?: string
+          responsible_name?: string | null
           sort_order?: number
           status?: string
           tenant_id?: string

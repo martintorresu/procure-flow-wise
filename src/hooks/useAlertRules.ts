@@ -6,7 +6,7 @@ export type AlertSeverity = "low" | "medium" | "high" | "critical";
 export type AlertTriggerType =
   | "et_incomplete" | "rfq_overdue" | "po_unaccepted"
   | "fat_unscheduled" | "shipping_delayed" | "arrival_overdue" | "damage_reported"
-  | "commitment_overdue" | "permit_expiring" | "stage_stalled" | "contingency_open";
+  | "commitment_overdue" | "permit_expiring" | "stage_stalled" | "stage_overdue" | "contingency_open";
 
 export interface AlertRule {
   id: string;
@@ -29,6 +29,7 @@ export const TRIGGER_DESCRIPTIONS: Record<AlertTriggerType, string> = {
   commitment_overdue: "Compromiso con fecha de entrega vencida hace N días y aún no completado.",
   permit_expiring: "Permiso próximo a vencer dentro de N días.",
   stage_stalled: "Etapa en curso sin cambios durante N días.",
+  stage_overdue: "Etapa con término planificado vencido hace N días y aún no completada.",
   contingency_open: "Contingencia activa sin cerrar hace N días.",
 };
 

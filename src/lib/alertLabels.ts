@@ -3,6 +3,7 @@ export const ALERT_TYPE_LABELS: Record<string, string> = {
   commitment_overdue: "Compromiso vencido",
   commitment_due_soon: "Compromiso por vencer",
   stage_stalled: "Etapa estancada",
+  stage_overdue: "Etapa atrasada",
   stage_blocked: "Etapa bloqueada",
   contingency_open: "Contingencia abierta",
   minuta_quality_low: "Minuta bajo estándar",
