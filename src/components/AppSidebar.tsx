@@ -11,6 +11,7 @@ import { useAlerts } from "@/hooks/useAlerts";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { ProcuremMark, ProcuremLockup } from "@/components/ProcuremMark";
 import { NotificationBell } from "@/components/NotificationBell";
+import { TENANTS } from "@/config/tenants";
 
 
 interface NavItem {
