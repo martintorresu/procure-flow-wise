@@ -161,7 +161,7 @@ export default function AppSidebar() {
       {/* Nav */}
       <nav className="relative flex-1 min-h-0 overflow-y-auto py-4 px-2 flex flex-col">
         <div className="space-y-4 flex-1">
-          {navSections.map((section) => (
+          {sections.map((section) => (
             <div key={section.label}>
               {!collapsed && section.label && (
                 <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/40 px-3 mb-1">
