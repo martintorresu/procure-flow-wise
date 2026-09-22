@@ -90,20 +90,12 @@ export function useProcessStagesByProcess(processIds: (string | null | undefined
     queryFn: async (): Promise<Map<string, ProcessStage[]>> => {
       const { data, error } = await supabase
         .from("process_stages")
-        .select("id, process_id, name, description, activities, sort_order, status")
+        .select(STAGE_COLUMNS)
         .in("process_id", ids);
       if (error) throw new Error(error.message);
       const map = new Map<string, ProcessStage[]>();
       for (const r of data ?? []) {
-        const stage: ProcessStage = {
-          id: r.id,
-          process_id: r.process_id,
-          name: r.name,
-          description: r.description,
-          sort_order: r.sort_order,
-          status: (r.status as StageStatus) ?? "not_started",
-          activities: r.activities ? toActivities(r.activities) : EMPTY,
-        };
+        const stage = toStage(r as unknown as Record<string, unknown>);
         const list = map.get(stage.process_id);
         if (list) list.push(stage);
         else map.set(stage.process_id, [stage]);
