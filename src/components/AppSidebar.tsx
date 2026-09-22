@@ -138,11 +138,11 @@ export default function AppSidebar() {
       {/* Header */}
       <div className={`relative flex items-center px-3 h-16 border-b border-sidebar-border/60 shrink-0 backdrop-blur-sm ${collapsed ? "flex-col justify-center gap-0.5" : "justify-between gap-2"}`}>
         {collapsed ? (
-          <Link to="/" aria-label="Ir al panel de control" className="flex items-center justify-center">
+          <Link to={homeHref} aria-label="Ir al panel de control" className="flex items-center justify-center">
             <ProcuremMark className="h-[24px] w-[24px]" />
           </Link>
         ) : (
-          <Link to="/" aria-label="Ir al panel de control" className="block">
+          <Link to={homeHref} aria-label="Ir al panel de control" className="block">
             <ProcuremLockup className="text-[20px]" />
           </Link>
         )}
