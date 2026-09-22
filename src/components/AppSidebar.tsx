@@ -87,6 +87,8 @@ export default function AppSidebar() {
   const tenantPrefix = user && user.tenantSlug !== "default" ? `/t/${user.tenantSlug}` : "";
   const hrefFor = (to: string) => (to === "/" ? tenantPrefix || "/" : `${tenantPrefix}${to}`);
   const homeHref = tenantPrefix || "/";
+  const tenantConfig = user ? TENANTS[user.tenantSlug] : undefined;
+  const tenantLogo = tenantConfig?.logo;
 
   const renderItem = (item: NavItem) => {
     const to = hrefFor(item.to);
