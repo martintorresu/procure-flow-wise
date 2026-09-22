@@ -125,6 +125,34 @@ Deno.serve(async (req) => {
         }
       }
 
+      // C2) Etapas con término planificado vencido
+      const so = ruleFor("stage_overdue", { threshold: 0, severity: "high" });
+      if (so) {
+        const limit = new Date(now.getTime() - so.threshold * DAY).toISOString().slice(0, 10);
+        const { data } = await supabase
+          .from("process_stages")
+          .select("id, name, process_id, planned_end, responsible_name, processes(process_number)")
+          .eq("tenant_id", tenantId)
+          .not("planned_end", "is", null)
+          .lt("planned_end", limit)
+          .neq("status", "completed");
+        for (const s of data ?? []) {
+          const num = (s.processes as { process_number?: string } | null)?.process_number ?? "";
+          const n = daysBetween(now, new Date(`${s.planned_end as string}T00:00:00Z`));
+          push({
+            tenant_id: tenantId,
+            process_id: s.process_id as string,
+            type: "stage_overdue",
+            severity: so.severity,
+            message: `Etapa ${s.name} atrasada ${n} días respecto del plan (término planificado: ${s.planned_end}) en proceso ${num}${
+              s.responsible_name ? `, responsable: ${s.responsible_name}` : ""
+            }`,
+            due_date: (s.planned_end as string) ?? null,
+            source_ref: { stage_id: s.id as string, kind: "stage_overdue" },
+          });
+        }
+      }
+
       // D) Contingencias abiertas prolongadas
       const cg = ruleFor("contingency_open", { threshold: 7, severity: "high" });
       if (cg) {
