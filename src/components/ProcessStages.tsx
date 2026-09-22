@@ -1,12 +1,24 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CalendarDays, Flag, ListChecks, ExternalLink, Layers } from "lucide-react";
-import { useProcessStages, useUpdateStageStatus, STAGE_STATUS_META, type ProcessStage, type StageStatus } from "@/hooks/useProcessStages";
+import { StageTimeline } from "@/components/StageTimeline";
+import {
+  useProcessStages,
+  useUpdateStageStatus,
+  useUpdateStagePlan,
+  STAGE_STATUS_META,
+  type ProcessStage,
+  type StageStatus,
+} from "@/hooks/useProcessStages";
 import { useStageCommitments, type StageCommitment } from "@/hooks/useStageCommitments";
 import { dueMeta, statusMeta } from "@/lib/commitments";
 import { formatDate } from "@/lib/stageLabels";
