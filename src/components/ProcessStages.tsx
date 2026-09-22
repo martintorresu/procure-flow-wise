@@ -272,9 +272,10 @@ function StageItem({ stage, processId, commitments }: { stage: ProcessStage; pro
       <AccordionContent className="space-y-4 pb-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-semibold uppercase text-muted-foreground">Estado</span>
-          <StageStatusSelect stage={stage} processId={processId} />
+          <StageStatusSelect stage={stage} processId={processId} onStatusChange={proposeDates} />
         </div>
         {stage.description && <p className="text-sm text-muted-foreground">{stage.description}</p>}
+        <StagePlanFields stage={stage} processId={processId} form={form} setForm={setForm} />
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <p className="mb-1 flex items-center gap-1 text-xs font-semibold uppercase text-muted-foreground">
