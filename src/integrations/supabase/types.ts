@@ -171,6 +171,44 @@ export type Database = {
           },
         ]
       }
+      business_rules: {
+        Row: {
+          accion_sistema: string
+          code: string
+          condicion: string
+          created_at: string
+          id: string
+          sort_order: number
+          tenant_id: string
+        }
+        Insert: {
+          accion_sistema: string
+          code: string
+          condicion: string
+          created_at?: string
+          id?: string
+          sort_order: number
+          tenant_id: string
+        }
+        Update: {
+          accion_sistema?: string
+          code?: string
+          condicion?: string
+          created_at?: string
+          id?: string
+          sort_order?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_rules_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       email_log: {
         Row: {
           alert_id: string | null
@@ -1124,6 +1162,76 @@ export type Database = {
           },
         ]
       }
+      project_requirements: {
+        Row: {
+          applicability: string
+          created_at: string
+          criterio_cierre: string | null
+          evidencia_url: string | null
+          fecha_objetivo: string | null
+          fundamento: string | null
+          id: string
+          process_id: string
+          requirement_catalog_id: string
+          responsible_name: string | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          applicability?: string
+          created_at?: string
+          criterio_cierre?: string | null
+          evidencia_url?: string | null
+          fecha_objetivo?: string | null
+          fundamento?: string | null
+          id?: string
+          process_id: string
+          requirement_catalog_id: string
+          responsible_name?: string | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          applicability?: string
+          created_at?: string
+          criterio_cierre?: string | null
+          evidencia_url?: string | null
+          fecha_objetivo?: string | null
+          fundamento?: string | null
+          id?: string
+          process_id?: string
+          requirement_catalog_id?: string
+          responsible_name?: string | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_requirements_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_requirements_requirement_catalog_id_fkey"
+            columns: ["requirement_catalog_id"]
+            isOneToOne: false
+            referencedRelation: "requirement_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_requirements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           created_at: string
@@ -1146,6 +1254,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "projects_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requirement_catalog: {
+        Row: {
+          activity: string
+          code: string
+          created_at: string
+          evidence: string | null
+          gate_code: string | null
+          gate_question: string | null
+          gate_route_no: string | null
+          gate_route_si: string | null
+          id: string
+          responsible_role: string | null
+          sort_order: number
+          stage_name: string
+          stage_number: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity: string
+          code: string
+          created_at?: string
+          evidence?: string | null
+          gate_code?: string | null
+          gate_question?: string | null
+          gate_route_no?: string | null
+          gate_route_si?: string | null
+          id?: string
+          responsible_role?: string | null
+          sort_order: number
+          stage_name: string
+          stage_number: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity?: string
+          code?: string
+          created_at?: string
+          evidence?: string | null
+          gate_code?: string | null
+          gate_question?: string | null
+          gate_route_no?: string | null
+          gate_route_si?: string | null
+          id?: string
+          responsible_role?: string | null
+          sort_order?: number
+          stage_name?: string
+          stage_number?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirement_catalog_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
