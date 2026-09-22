@@ -157,6 +157,20 @@ export default function AppSidebar() {
         <NotificationBell collapsed={collapsed} />
       </div>
 
+      {/* Logotipo del tenant */}
+      {tenantLogo && (
+        <div className={`relative shrink-0 border-b border-sidebar-border/60 flex items-center justify-center ${collapsed ? "px-1.5 py-2" : "px-3 py-3"}`}>
+          <div className={`rounded-lg bg-white/95 flex items-center justify-center ${collapsed ? "px-1.5 py-1.5" : "px-3 py-2"}`}>
+            <img
+              src={tenantLogo}
+              alt={tenantConfig?.logoAlt ?? "Logotipo del cliente"}
+              className={`w-auto object-contain ${collapsed ? "h-4" : "h-7"}`}
+            />
+          </div>
+        </div>
+      )}
+
+
 
       {/* Nav */}
       <nav className="relative flex-1 min-h-0 overflow-y-auto py-4 px-2 flex flex-col">
