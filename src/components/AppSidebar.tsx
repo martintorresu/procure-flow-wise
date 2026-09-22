@@ -75,15 +75,21 @@ export default function AppSidebar() {
     ? [...baseBottomItems, { to: "/admin", icon: Shield, label: "Administración" }]
     : baseBottomItems;
 
+  // Prefijo del tenant: los usuarios de un tenant distinto de "default" navegan bajo /t/<slug>
+  const tenantPrefix = user && user.tenantSlug !== "default" ? `/t/${user.tenantSlug}` : "";
+  const hrefFor = (to: string) => (to === "/" ? tenantPrefix || "/" : `${tenantPrefix}${to}`);
+  const homeHref = tenantPrefix || "/";
+
   const renderItem = (item: NavItem) => {
-    const isActive = location.pathname === item.to || (item.to !== "/" && location.pathname.startsWith(item.to));
+    const to = hrefFor(item.to);
+    const isActive = location.pathname === to || (item.to !== "/" && location.pathname.startsWith(to));
     const isAlerts = item.to === "/alerts";
     const badgeCount = isAlerts ? totalAlerts : 0;
     const badgeIsCritical = isAlerts && criticalCount > 0;
     return (
       <Link
         key={item.to}
-        to={item.to}
+        to={to}
         className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
           isActive
             ? "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/40 text-sidebar-foreground font-semibold shadow-md shadow-sidebar-primary/20"
@@ -132,11 +138,11 @@ export default function AppSidebar() {
       {/* Header */}
       <div className={`relative flex items-center px-3 h-16 border-b border-sidebar-border/60 shrink-0 backdrop-blur-sm ${collapsed ? "flex-col justify-center gap-0.5" : "justify-between gap-2"}`}>
         {collapsed ? (
-          <Link to="/" aria-label="Ir al panel de control" className="flex items-center justify-center">
+          <Link to={homeHref} aria-label="Ir al panel de control" className="flex items-center justify-center">
             <ProcuremMark className="h-[24px] w-[24px]" />
           </Link>
         ) : (
-          <Link to="/" aria-label="Ir al panel de control" className="block">
+          <Link to={homeHref} aria-label="Ir al panel de control" className="block">
             <ProcuremLockup className="text-[20px]" />
           </Link>
         )}

@@ -21,14 +21,19 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setSubmitting(true);
-    const result = await login(email, password, tenant.slug);
+    // Sólo se exige un tenant específico cuando el acceso es por su URL dedicada.
+    const result = await login(email, password, tenant.slug === "default" ? undefined : tenant.slug);
     setSubmitting(false);
     if (result.ok) {
       const nextParam = new URLSearchParams(window.location.search).get("next");
       const safeNext = nextParam && /^\/(?!\/)/.test(nextParam) ? nextParam : null;
       navigate(safeNext ?? (tenant.slug === "default" ? "/" : `/t/${tenant.slug}`));
     } else {
-      setError(result.message ?? "Credenciales inválidas.");
+      setError(
+        result.reason === "wrong_tenant"
+          ? `Tu cuenta no pertenece a ${tenant.name}. Ingresa desde la dirección de tu organización.`
+          : result.message ?? "Credenciales inválidas.",
+      );
     }
   };
 
