@@ -88,12 +88,16 @@ Deno.serve(async (req) => {
     const processLabel = proc ? `${proc.process_number ?? ""} ${proc.name ?? ""}`.trim() : "Sin proceso";
     const typeLabel = TYPE_LABELS[alert.type as string] ?? (alert.type as string);
 
+    // SECURITY: el destinatario debe pertenecer al mismo tenant que la alerta.
+    // Si no, se omite el despacho completo (email y WhatsApp) en vez de filtrar
+    // sólo un canal: evitaría fugas entre tenants y el 404 de send-whatsapp-alert.
     const { data: profile } = await admin
       .from("profiles")
       .select("id, email, full_name, tenant_id")
       .eq("id", userId)
+      .eq("tenant_id", tenantId)
       .maybeSingle();
-    if (!profile?.email) return json({ ok: true, skipped: "sin_perfil_o_email" });
+    if (!profile?.email) return json({ ok: true, skipped: "sin_perfil_del_tenant_o_email" });
 
     // Dedup cross-canal: si ya la leyó in-app, no molestar por otros canales.
     if (alert.read_at) return json({ ok: true, skipped: "ya_leida_inapp" });
