@@ -89,7 +89,7 @@ export default function AppSidebar() {
     return (
       <Link
         key={item.to}
-        to={item.to}
+        to={to}
         className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-200 ${
           isActive
             ? "bg-gradient-to-r from-sidebar-accent to-sidebar-accent/40 text-sidebar-foreground font-semibold shadow-md shadow-sidebar-primary/20"
