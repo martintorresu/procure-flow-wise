@@ -52,8 +52,10 @@ function ProtectedRoutes() {
     return <Navigate to={homeFor(user.tenantSlug)} replace />;
   }
 
-  // Tenant del URL no coincide con el del usuario → bloqueo
-  if (urlTenant !== user.tenantSlug) {
+  // Tenant del path no coincide con el del usuario → bloqueo.
+  // Sólo se aplica cuando el slug viene del path: si viniera del hostname, redirigir
+  // a la misma ruta provocaría un bucle infinito de navegación.
+  if (pathSlug && urlTenant !== user.tenantSlug) {
     return <Navigate to={homeFor(user.tenantSlug)} replace />;
   }
 
