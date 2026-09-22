@@ -42,6 +42,25 @@ function toActivities(raw: unknown): StageActivities {
   };
 }
 
+function toStage(r: Record<string, unknown>): ProcessStage {
+  const s = (v: unknown) => (typeof v === "string" && v ? v : null);
+  return {
+    id: r.id as string,
+    process_id: r.process_id as string,
+    name: r.name as string,
+    description: s(r.description),
+    sort_order: r.sort_order as number,
+    status: ((r.status as StageStatus) ?? "not_started") as StageStatus,
+    activities: r.activities ? toActivities(r.activities) : EMPTY,
+    planned_start: s(r.planned_start),
+    planned_end: s(r.planned_end),
+    actual_start: s(r.actual_start),
+    actual_end: s(r.actual_end),
+    responsible_name: s(r.responsible_name),
+    external_entity: s(r.external_entity),
+  };
+}
+
 /** Etapas de un proceso ordenadas por sort_order. RLS filtra por tenant. */
 export function useProcessStages(processId: string | undefined) {
   return useQuery({
@@ -50,19 +69,11 @@ export function useProcessStages(processId: string | undefined) {
     queryFn: async (): Promise<ProcessStage[]> => {
       const { data, error } = await supabase
         .from("process_stages")
-        .select("id, process_id, name, description, activities, sort_order, status")
+        .select(STAGE_COLUMNS)
         .eq("process_id", processId!)
         .order("sort_order", { ascending: true });
       if (error) throw new Error(error.message);
-      return (data ?? []).map((r) => ({
-        id: r.id,
-        process_id: r.process_id,
-        name: r.name,
-        description: r.description,
-        sort_order: r.sort_order,
-        status: (r.status as StageStatus) ?? "not_started",
-        activities: r.activities ? toActivities(r.activities) : EMPTY,
-      }));
+      return (data ?? []).map((r) => toStage(r as unknown as Record<string, unknown>));
     },
   });
 }
