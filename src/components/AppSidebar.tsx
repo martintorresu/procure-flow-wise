@@ -2,7 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
-  Shield, FolderKanban, UserCog, MessagesSquare, Mic
+  Shield, FolderKanban, UserCog, MessagesSquare, Mic, ClipboardList
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -70,6 +70,14 @@ export default function AppSidebar() {
   const unresolvedAlerts = alerts.filter((a) => !a.resolved);
   const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical" || a.severity === "high").length;
   const totalAlerts = unresolvedAlerts.length;
+
+  // "Plantilla Permisos DOM" es material de referencia para gestores y administradores
+  const canManage = user?.role === "admin" || user?.role === "gestor";
+  const sections: NavSection[] = navSections.map((s) =>
+    s.label === "MÓDULOS" && canManage
+      ? { ...s, items: [...s.items, { to: "/plantilla-dom", icon: ClipboardList, label: "Plantilla Permisos DOM" }] }
+      : s,
+  ).filter((s) => s.items.length > 0);
 
   const bottomItems: NavItem[] = user?.role === "admin"
     ? [...baseBottomItems, { to: "/admin", icon: Shield, label: "Administración" }]
@@ -153,7 +161,7 @@ export default function AppSidebar() {
       {/* Nav */}
       <nav className="relative flex-1 min-h-0 overflow-y-auto py-4 px-2 flex flex-col">
         <div className="space-y-4 flex-1">
-          {navSections.map((section) => (
+          {sections.map((section) => (
             <div key={section.label}>
               {!collapsed && section.label && (
                 <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-sidebar-foreground/40 px-3 mb-1">
