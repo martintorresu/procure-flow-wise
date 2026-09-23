@@ -1026,7 +1026,7 @@ export type Database = {
           name: string
           paused_by_contingency?: string | null
           predecessor_process_id?: string | null
-          process_number?: string
+          process_number: string
           process_type?: string
           project_id?: string | null
           responsible_name?: string | null
