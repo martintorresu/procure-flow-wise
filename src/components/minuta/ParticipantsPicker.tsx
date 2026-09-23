@@ -176,7 +176,7 @@ export function ParticipantsPicker({ value, onChange }: Props) {
               onClick={() => addUser(u)}
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
             >
-              <span className="font-medium">{u.full_name ?? u.email}</span>
+              <span className="font-medium">{upperEs(u.full_name ?? u.email)}</span>
               {(positionName(u.default_position_id) ?? u.area) && (
                 <span className="text-muted-foreground"> — {positionName(u.default_position_id) ?? u.area}</span>
               )}
