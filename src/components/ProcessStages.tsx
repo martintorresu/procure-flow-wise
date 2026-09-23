@@ -206,11 +206,27 @@ function StagePlanFields({
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Inicio real</Label>
-          <Input type="date" value={form.actual_start} onChange={(e) => set("actual_start", e.target.value)} />
+          <Input
+            type="date"
+            value={form.actual_start}
+            disabled={notStarted}
+            onChange={(e) => set("actual_start", e.target.value)}
+          />
+          {notStarted && (
+            <p className="text-[11px] text-muted-foreground">Cambia el estado para registrar fechas reales.</p>
+          )}
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Término real</Label>
-          <Input type="date" value={form.actual_end} onChange={(e) => set("actual_end", e.target.value)} />
+          <Input
+            type="date"
+            value={form.actual_end}
+            disabled={notStarted}
+            onChange={(e) => set("actual_end", e.target.value)}
+          />
+          {notStarted && (
+            <p className="text-[11px] text-muted-foreground">Cambia el estado para registrar fechas reales.</p>
+          )}
         </div>
         <div className="space-y-1 sm:col-span-2">
           <Label className="text-xs">Responsable</Label>
