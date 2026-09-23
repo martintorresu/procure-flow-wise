@@ -59,7 +59,7 @@ export default function ProcessDetailPage() {
 
   const processType = (process.process_type ?? "personalizado") as ProcessType;
   const showChainButton = canChain();
-  const alerts = allAlerts.filter((a) => a.process_id === process.id);
+  const activeAlerts = allAlerts.filter((a) => a.process_id === process.id && !a.resolved);
 
   return (
     <div className="space-y-6">
