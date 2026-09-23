@@ -81,6 +81,12 @@ export default function ProcessDetailPage() {
             </div>
             <p className="text-lg font-medium">{process.title}</p>
             <p className="text-sm text-muted-foreground">{process.project_name}</p>
+            {process.description && (
+              <p className="text-sm text-muted-foreground mt-1 max-w-2xl">{process.description}</p>
+            )}
+            <p className="text-xs text-muted-foreground mt-1">
+              Creado {formatDate(process.created_at)} · Actualizado {formatDate(process.updated_at)}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
