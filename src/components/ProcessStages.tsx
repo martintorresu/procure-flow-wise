@@ -191,6 +191,7 @@ function StagePlanFields({
   const save = useUpdateStagePlan(processId);
   const dirty = JSON.stringify(form) !== JSON.stringify(toForm(stage));
   const set = (k: keyof PlanForm, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  const notStarted = stage.status === "not_started";
 
   return (
     <div className="rounded-lg border border-border p-3">
