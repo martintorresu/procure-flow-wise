@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CalendarDays, Flag, ListChecks, ExternalLink, Layers } from "lucide-react";
-import { StageTimeline } from "@/components/StageTimeline";
 import {
   useProcessStages,
   useUpdateStageStatus,
