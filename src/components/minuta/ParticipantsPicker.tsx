@@ -144,7 +144,7 @@ export function ParticipantsPicker({ value, onChange }: Props) {
                   : "bg-muted text-foreground"
               }`}
             >
-              <span className="font-medium">{p.name}</span>
+              <span className="font-medium">{upperEs(p.name)}</span>
               {p.role && <span className="text-muted-foreground">— {p.role}</span>}
               {!p.locked && (
                 <button
