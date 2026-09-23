@@ -767,11 +767,15 @@ export default function MinutaActivaPage() {
                 Completa título (mín. 3 caracteres), fecha, proceso, etapa principal y al menos un participante.
               </p>
             )}
-            <Button variant="ghost" size="sm" className="w-full" onClick={() => setPhase("dashboard")}>
-              Volver al panel
-            </Button>
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setPhase("dashboard")}>
+                Volver al panel
+              </Button>
+              {discardButton}
+            </div>
           </CardContent>
         </Card>
+        {discardDialog}
       </div>
     );
   }
