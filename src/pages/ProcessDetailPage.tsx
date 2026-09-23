@@ -209,11 +209,24 @@ export default function ProcessDetailPage() {
         </>
       )}
 
+      {/* Alertas activas del proceso */}
+      {!isExternal && activeAlerts.length > 0 && (
+        <div className="space-y-2">
+          {activeAlerts.map((a) => (
+            <div
+              key={a.id}
+              className={`border-l-4 ${a.severity === "critical" || a.severity === "high" ? "border-l-danger" : "border-l-warning"} bg-muted/30 rounded-r p-3`}
+            >
+              <p className="text-sm">{humanizeTechnicalText(a.message)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Tabs */}
       {!isExternal && (
-      <Tabs defaultValue="summary">
-        <TabsList className="grid grid-cols-3 lg:grid-cols-5 w-full h-auto">
-          <TabsTrigger value="summary">Resumen</TabsTrigger>
+      <Tabs defaultValue="stages">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full h-auto">
           <TabsTrigger value="stages">Etapas</TabsTrigger>
           <TabsTrigger value="documents">Documentos</TabsTrigger>
           <TabsTrigger value="commitments">Compromisos</TabsTrigger>
@@ -234,34 +247,6 @@ export default function ProcessDetailPage() {
 
         <TabsContent value="commitments">
           <ProcessCommitments processId={process.id} />
-        </TabsContent>
-
-        {/* Summary */}
-        <TabsContent value="summary">
-          <Card>
-            <CardContent className="p-6 space-y-4">
-              <div>
-                <h3 className="font-medium mb-1">Descripción</h3>
-                <p className="text-sm text-muted-foreground">{process.description || "Sin descripción."}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div><span className="text-muted-foreground">Tipo:</span> {PROCESS_TYPE_LABELS[processType]}</div>
-                <div><span className="text-muted-foreground">Proyecto:</span> {process.project_name}</div>
-                <div><span className="text-muted-foreground">Creado:</span> {formatDate(process.created_at)}</div>
-                <div><span className="text-muted-foreground">Actualizado:</span> {formatDate(process.updated_at)}</div>
-              </div>
-              {alerts.length > 0 && (
-                <div>
-                  <h3 className="font-medium mb-2">Alertas activas</h3>
-                  {alerts.filter((a) => !a.resolved).map((a) => (
-                    <div key={a.id} className={`border-l-4 ${a.severity === "critical" || a.severity === "high" ? "border-l-danger" : "border-l-warning"} bg-muted/30 rounded-r p-3 mb-2`}>
-                      <p className="text-sm">{humanizeTechnicalText(a.message)}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
       )}
