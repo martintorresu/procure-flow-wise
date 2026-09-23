@@ -903,6 +903,7 @@ export default function MinutaActivaPage() {
             </div>
           </SheetContent>
         </Sheet>
+        {discardDialog}
       </div>
     );
   }
