@@ -21,7 +21,7 @@ import {
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { toast } from "sonner";
-import { Mic, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff, Brain, Cpu } from "lucide-react";
+import { Mic, MicOff, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff, Brain, Cpu } from "lucide-react";
 import { analyzeTranscriptWithLLM, type LLMAnalysis } from "@/lib/analyzeTranscript";
 import { SEO } from "@/components/SEO";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
