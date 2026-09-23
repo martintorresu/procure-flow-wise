@@ -153,7 +153,7 @@ export function useUpdateStageStatus(processId: string | undefined) {
       actual_start?: string | null;
       actual_end?: string | null;
     }) => {
-      const patch: Record<string, unknown> = { status };
+      const patch: { status: StageStatus; actual_start?: string | null; actual_end?: string | null } = { status };
       if (actual_start !== undefined) patch.actual_start = actual_start;
       if (actual_end !== undefined) patch.actual_end = actual_end;
       const { error } = await supabase
