@@ -840,25 +840,37 @@ export default function MinutaActivaPage() {
               <FileText className="w-4 h-4 mr-1" /> Texto
             </Button>
 
-            {voice.isSupported && (
-              <button
-                onClick={() => (voice.isListening ? voice.pause() : voice.isPaused ? voice.resume() : void voice.start())}
-                aria-label={voice.isListening ? "Pausar grabación" : "Iniciar grabación"}
-                className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-colors ${
-                  voice.isListening ? "bg-danger text-white" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {voice.isListening && (
-                  <span className="absolute inset-0 rounded-full bg-danger/40 animate-ping" />
-                )}
-                {voice.isListening ? <Pause className="w-7 h-7 relative" /> : <Mic className="w-7 h-7 relative" />}
-              </button>
-            )}
+            <button
+              disabled={!voice.isSupported}
+              onClick={() => (voice.isListening ? voice.pause() : voice.isPaused ? voice.resume() : void voice.start())}
+              aria-label={voice.isListening ? "Pausar grabación" : "Iniciar grabación"}
+              className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+                voice.isListening ? "bg-danger text-white" : "bg-muted text-muted-foreground"
+              } ${!voice.isSupported ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {voice.isListening && (
+                <span className="absolute inset-0 rounded-full bg-danger/40 animate-ping" />
+              )}
+              {!voice.isSupported ? (
+                <MicOff className="w-7 h-7 relative" />
+              ) : voice.isListening ? (
+                <Pause className="w-7 h-7 relative" />
+              ) : (
+                <Mic className="w-7 h-7 relative" />
+              )}
+            </button>
 
             <Button variant="default" size="sm" onClick={closeCapture}>
               <CheckCircle2 className="w-4 h-4 mr-1" /> Cerrar Captura
             </Button>
           </div>
+          {!voice.isSupported && (
+            <p className="mt-2 text-xs text-center text-warning bg-warning/10 border border-warning/30 rounded-md p-2">
+              El dictado por voz funciona en Chrome o Edge. En este navegador puedes escribir la
+              minuta manualmente.
+            </p>
+          )}
+          <div className="mt-2 flex justify-center">{discardButton}</div>
         </div>
 
         {/* Sheet de nota manual */}
