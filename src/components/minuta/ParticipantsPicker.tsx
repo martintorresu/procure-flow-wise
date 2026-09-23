@@ -199,7 +199,7 @@ export function ParticipantsPicker({ value, onChange }: Props) {
                 className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-2"
               >
                 <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                <span className="font-medium">{c.full_name}</span>
+                <span className="font-medium">{upperEs(c.full_name)}</span>
                 <span className="text-muted-foreground truncate">
                   — {c.company ? `${c.company} · ` : ""}{c.email}
                 </span>
