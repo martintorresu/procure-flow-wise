@@ -525,6 +525,35 @@ export default function MinutaActivaPage() {
     setParticipants((prev) => prev.filter((p) => p.locked));
   };
 
+  /** Descarta la minuta en curso: estado local, borrador en cola y borrador en base de datos. */
+  const discardMinuta = async () => {
+    setDiscardOpen(false);
+    if (minutaSent) return;
+
+    // Borrador en la cola offline de esta reunión
+    const title = meetingTitle.trim();
+    if (title) {
+      const rest = getOfflineQueue().filter((b) => (b.meetingTitle ?? "") !== title);
+      setOfflineQueue(rest);
+    }
+
+    // Borrador en base de datos (nunca una sesión ya enviada)
+    if (draftSessionId) {
+      try {
+        await discardDraft.mutateAsync(draftSessionId);
+      } catch (e) {
+        console.warn("[minuta] no se pudo eliminar el borrador:", e);
+      }
+      setDraftSessionId(null);
+    }
+
+    startNewCapture();
+    setMeetingDate(todayISO);
+    setPhase("setup");
+    toast.success("Minuta descartada");
+  };
+
+
 
   const handleDownloadPdf = () => {
     downloadMinutaPdf({
