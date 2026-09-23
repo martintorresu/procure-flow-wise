@@ -89,6 +89,10 @@ export default function MinutaActivaPage() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [resendConfirmOpen, setResendConfirmOpen] = useState(false);
   const [offlineSend, setOfflineSend] = useState(false);
+  // Descartar la minuta en curso
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [draftSessionId, setDraftSessionId] = useState<string | null>(null);
+  const discardDraft = useDiscardMinutaDraft();
 
 
   // Fase 1
