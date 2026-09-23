@@ -957,7 +957,9 @@ export default function MinutaActivaPage() {
             )}
           </Button>
           </div>
+          <div className="mt-2 flex justify-center">{discardButton}</div>
         </div>
+        {discardDialog}
       </div>
     );
   }
