@@ -29,7 +29,7 @@ import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/h
 import { useTenantUsers, useMyProfile } from "@/hooks/useTenantUsers";
 import { useOnlineStatus } from "@/hooks/useOfflineSync";
 import { useMinutaConfig } from "@/hooks/useMinutaConfig";
-import { useCreateMinutaSession } from "@/hooks/useMinutaSession";
+import { useCreateMinutaSession, useDiscardMinutaDraft } from "@/hooks/useMinutaSession";
 import { useProcessStages, useProcessStagesByProcess, sortStagesForPicker } from "@/hooks/useProcessStages";
 import { useAuth } from "@/contexts/AuthContext";
 import { QualityGauge } from "@/components/minuta/QualityGauge";
