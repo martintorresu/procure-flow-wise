@@ -18,7 +18,6 @@ import { ProcessComments } from "@/components/ProcessComments";
 import { ProcessCommitments } from "@/components/ProcessCommitments";
 import { ProcessStages } from "@/components/ProcessStages";
 import { ProcessDocuments } from "@/components/ProcessDocuments";
-import { ProcessProgressCard } from "@/components/StageProgress";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ContingencyDialog } from "@/components/ContingencyDialog";
 import { ProcessContingencies } from "@/components/ProcessContingencies";
