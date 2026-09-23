@@ -180,8 +180,6 @@ export default function ProcessDetailPage() {
         ))}
       </div>
 
-      {/* Avance real desde process_stages */}
-      <ProcessProgressCard processId={process.id} />
 
       {/* Vista reducida para participantes externos */}
       {isExternal && (
