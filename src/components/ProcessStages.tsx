@@ -124,8 +124,20 @@ function StageStatusSelect({
       disabled={update.isPending}
       onValueChange={(v) => {
         if (v === stage.status) return;
-        update.mutate({ stageId: stage.id, status: v as StageStatus });
-        onStatusChange?.(v as StageStatus);
+        const next = v as StageStatus;
+        const vars: { stageId: string; status: StageStatus; actual_start?: string | null; actual_end?: string | null } = {
+          stageId: stage.id,
+          status: next,
+        };
+        if (next === "not_started") {
+          vars.actual_start = null;
+          vars.actual_end = null;
+        } else if (stage.status === "completed" && (next === "in_progress" || next === "blocked")) {
+          vars.actual_end = null;
+        }
+        update.mutate(vars);
+        if (next === "not_started") toast.info("Se limpiaron las fechas reales de la etapa.");
+        onStatusChange?.(next);
       }}
     >
       <SelectTrigger className="h-8 w-[170px]" aria-label={`Estado de la etapa ${stage.name}`}>
