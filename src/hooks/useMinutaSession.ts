@@ -83,3 +83,24 @@ export function useUpdateMinutaQualityScore() {
     },
   });
 }
+
+/** Elimina un borrador de minuta (nunca una sesión ya enviada) con sus participantes y compromisos. */
+export function useDiscardMinutaDraft() {
+  return useMutation({
+    mutationFn: async (sessionId: string) => {
+      const { data: session } = await supabase
+        .from("minuta_sessions")
+        .select("id, status")
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (!session) return;
+      if ((session as { status?: string }).status === "submitted") {
+        throw new Error("La minuta ya fue enviada y no puede eliminarse.");
+      }
+      await supabase.from("process_commitments").delete().eq("meeting_session_id", sessionId);
+      await supabase.from("minuta_participants").delete().eq("meeting_session_id", sessionId);
+      const { error } = await supabase.from("minuta_sessions").delete().eq("id", sessionId);
+      if (error) throw new Error(error.message);
+    },
+  });
+}
