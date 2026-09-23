@@ -1237,6 +1237,7 @@ export default function MinutaActivaPage() {
               >
                 {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
               </Button>
+              {discardButton}
             </div>
           )}
         </div>
