@@ -26,7 +26,7 @@ function buildHtml(data: MinutaPdfData): string {
     ? data.participants
         .map(
           (p) => `<tr>
-            <td>${esc(p.name)}${p.isGuest ? " <em>(invitado)</em>" : ""}</td>
+            <td>${esc(p.name.toLocaleUpperCase("es-CL"))}${p.isGuest ? " <em>(invitado)</em>" : ""}</td>
             <td>${esc(p.role || p.company || "—")}</td>
             <td>${esc(p.email || "—")}</td>
           </tr>`,

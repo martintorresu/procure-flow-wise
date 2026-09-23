@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { CalendarDays, Flag, ListChecks, ExternalLink, Layers } from "lucide-react";
-import { StageTimeline } from "@/components/StageTimeline";
 import {
   useProcessStages,
   useUpdateStageStatus,
@@ -191,6 +190,7 @@ function StagePlanFields({
   const save = useUpdateStagePlan(processId);
   const dirty = JSON.stringify(form) !== JSON.stringify(toForm(stage));
   const set = (k: keyof PlanForm, v: string) => setForm((p) => ({ ...p, [k]: v }));
+  const notStarted = stage.status === "not_started";
 
   return (
     <div className="rounded-lg border border-border p-3">
@@ -206,11 +206,27 @@ function StagePlanFields({
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Inicio real</Label>
-          <Input type="date" value={form.actual_start} onChange={(e) => set("actual_start", e.target.value)} />
+          <Input
+            type="date"
+            value={form.actual_start}
+            disabled={notStarted}
+            onChange={(e) => set("actual_start", e.target.value)}
+          />
+          {notStarted && (
+            <p className="text-[11px] text-muted-foreground">Cambia el estado para registrar fechas reales.</p>
+          )}
         </div>
         <div className="space-y-1">
           <Label className="text-xs">Término real</Label>
-          <Input type="date" value={form.actual_end} onChange={(e) => set("actual_end", e.target.value)} />
+          <Input
+            type="date"
+            value={form.actual_end}
+            disabled={notStarted}
+            onChange={(e) => set("actual_end", e.target.value)}
+          />
+          {notStarted && (
+            <p className="text-[11px] text-muted-foreground">Cambia el estado para registrar fechas reales.</p>
+          )}
         </div>
         <div className="space-y-1 sm:col-span-2">
           <Label className="text-xs">Responsable</Label>
@@ -392,7 +408,6 @@ export function ProcessStages({ processId }: { processId: string }) {
         {!isLoading && stages.length === 0 && (
           <p className="text-sm text-muted-foreground">Este proceso aún no tiene etapas definidas.</p>
         )}
-        {!isLoading && stages.length > 0 && <StageTimeline stages={stages} />}
         {!isLoading && stages.length > 0 && (
           <Accordion type="multiple" className="space-y-2">
             {stages.map((s) => (

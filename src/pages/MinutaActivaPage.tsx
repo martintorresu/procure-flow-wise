@@ -21,7 +21,7 @@ import {
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import { toast } from "sonner";
-import { Mic, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff, Brain, Cpu } from "lucide-react";
+import { Mic, MicOff, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff, Brain, Cpu } from "lucide-react";
 import { analyzeTranscriptWithLLM, type LLMAnalysis } from "@/lib/analyzeTranscript";
 import { SEO } from "@/components/SEO";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
@@ -29,14 +29,14 @@ import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/h
 import { useTenantUsers, useMyProfile } from "@/hooks/useTenantUsers";
 import { useOnlineStatus } from "@/hooks/useOfflineSync";
 import { useMinutaConfig } from "@/hooks/useMinutaConfig";
-import { useCreateMinutaSession } from "@/hooks/useMinutaSession";
+import { useCreateMinutaSession, useDiscardMinutaDraft } from "@/hooks/useMinutaSession";
 import { useProcessStages, useProcessStagesByProcess, sortStagesForPicker } from "@/hooks/useProcessStages";
 import { useAuth } from "@/contexts/AuthContext";
 import { QualityGauge } from "@/components/minuta/QualityGauge";
 import { QualityChecklist } from "@/components/minuta/QualityChecklist";
 import { ParticipantsPicker, type MinutaParticipant } from "@/components/minuta/ParticipantsPicker";
 import { calculateQualityScore, isWithinMaxDelivery } from "@/lib/minutaQuality";
-import { enqueueCommitments } from "@/lib/offlineQueue";
+import { enqueueCommitments, getOfflineQueue, setOfflineQueue } from "@/lib/offlineQueue";
 import { downloadMinutaPdf } from "@/lib/minutaPdf";
 import {
   matchProcess,
@@ -89,6 +89,10 @@ export default function MinutaActivaPage() {
   const [successOpen, setSuccessOpen] = useState(false);
   const [resendConfirmOpen, setResendConfirmOpen] = useState(false);
   const [offlineSend, setOfflineSend] = useState(false);
+  // Descartar la minuta en curso
+  const [discardOpen, setDiscardOpen] = useState(false);
+  const [draftSessionId, setDraftSessionId] = useState<string | null>(null);
+  const discardDraft = useDiscardMinutaDraft();
 
 
   // Fase 1
@@ -521,6 +525,35 @@ export default function MinutaActivaPage() {
     setParticipants((prev) => prev.filter((p) => p.locked));
   };
 
+  /** Descarta la minuta en curso: estado local, borrador en cola y borrador en base de datos. */
+  const discardMinuta = async () => {
+    setDiscardOpen(false);
+    if (minutaSent) return;
+
+    // Borrador en la cola offline de esta reunión
+    const title = meetingTitle.trim();
+    if (title) {
+      const rest = getOfflineQueue().filter((b) => (b.meetingTitle ?? "") !== title);
+      setOfflineQueue(rest);
+    }
+
+    // Borrador en base de datos (nunca una sesión ya enviada)
+    if (draftSessionId) {
+      try {
+        await discardDraft.mutateAsync(draftSessionId);
+      } catch (e) {
+        console.warn("[minuta] no se pudo eliminar el borrador:", e);
+      }
+      setDraftSessionId(null);
+    }
+
+    startNewCapture();
+    setMeetingDate(todayISO);
+    setPhase("setup");
+    toast.success("Minuta descartada");
+  };
+
+
 
   const handleDownloadPdf = () => {
     downloadMinutaPdf({
@@ -549,6 +582,31 @@ export default function MinutaActivaPage() {
       llmAnalysis: llmAnalysis ?? undefined,
     });
   };
+
+  const discardButton = !minutaSent ? (
+    <Button variant="outline" size="sm" className="text-danger hover:text-danger" onClick={() => setDiscardOpen(true)}>
+      <Trash2 className="w-4 h-4 mr-1" /> Borrar minuta
+    </Button>
+  ) : null;
+
+  const discardDialog = (
+    <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Descartar esta minuta?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Se perderán la transcripción, los compromisos y los participantes cargados. Esta acción
+            no se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={discardMinuta}>Sí, borrar</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
 
   /* --------------------- ÉXITO (PWA dedicada) --------------------- */
   if (importDone) {
@@ -697,7 +755,8 @@ export default function MinutaActivaPage() {
 
             {!voice.isSupported && (
               <p className="text-xs text-warning bg-warning/10 border border-warning/30 rounded-md p-2">
-                Tu navegador no soporta reconocimiento de voz. Se habilitará la entrada manual de texto.
+                El dictado por voz funciona en Chrome o Edge. En este navegador puedes escribir la
+                minuta manualmente.
               </p>
             )}
             <Button size="lg" className="w-full" onClick={startCapture} disabled={!setupValid}>
@@ -708,11 +767,15 @@ export default function MinutaActivaPage() {
                 Completa título (mín. 3 caracteres), fecha, proceso, etapa principal y al menos un participante.
               </p>
             )}
-            <Button variant="ghost" size="sm" className="w-full" onClick={() => setPhase("dashboard")}>
-              Volver al panel
-            </Button>
+            <div className="flex items-center justify-between gap-2">
+              <Button variant="ghost" size="sm" onClick={() => setPhase("dashboard")}>
+                Volver al panel
+              </Button>
+              {discardButton}
+            </div>
           </CardContent>
         </Card>
+        {discardDialog}
       </div>
     );
   }
@@ -756,7 +819,10 @@ export default function MinutaActivaPage() {
             </>
           ) : (
             <div className="h-full flex flex-col">
-              <p className="text-sm text-muted-foreground mb-2">Tu navegador no soporta reconocimiento de voz. Usa la entrada manual.</p>
+              <p className="text-sm text-warning bg-warning/10 border border-warning/30 rounded-md p-2 mb-2">
+                El dictado por voz funciona en Chrome o Edge. En este navegador puedes escribir la
+                minuta manualmente.
+              </p>
               <Textarea
                 className="flex-1 min-h-[40vh] text-sm"
                 placeholder="Escribe o pega la transcripción de la reunión aquí…"
@@ -777,25 +843,37 @@ export default function MinutaActivaPage() {
               <FileText className="w-4 h-4 mr-1" /> Texto
             </Button>
 
-            {voice.isSupported && (
-              <button
-                onClick={() => (voice.isListening ? voice.pause() : voice.isPaused ? voice.resume() : void voice.start())}
-                aria-label={voice.isListening ? "Pausar grabación" : "Iniciar grabación"}
-                className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-colors ${
-                  voice.isListening ? "bg-danger text-white" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                {voice.isListening && (
-                  <span className="absolute inset-0 rounded-full bg-danger/40 animate-ping" />
-                )}
-                {voice.isListening ? <Pause className="w-7 h-7 relative" /> : <Mic className="w-7 h-7 relative" />}
-              </button>
-            )}
+            <button
+              disabled={!voice.isSupported}
+              onClick={() => (voice.isListening ? voice.pause() : voice.isPaused ? voice.resume() : void voice.start())}
+              aria-label={voice.isListening ? "Pausar grabación" : "Iniciar grabación"}
+              className={`relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg transition-colors ${
+                voice.isListening ? "bg-danger text-white" : "bg-muted text-muted-foreground"
+              } ${!voice.isSupported ? "opacity-50 cursor-not-allowed" : ""}`}
+            >
+              {voice.isListening && (
+                <span className="absolute inset-0 rounded-full bg-danger/40 animate-ping" />
+              )}
+              {!voice.isSupported ? (
+                <MicOff className="w-7 h-7 relative" />
+              ) : voice.isListening ? (
+                <Pause className="w-7 h-7 relative" />
+              ) : (
+                <Mic className="w-7 h-7 relative" />
+              )}
+            </button>
 
             <Button variant="default" size="sm" onClick={closeCapture}>
               <CheckCircle2 className="w-4 h-4 mr-1" /> Cerrar Captura
             </Button>
           </div>
+          {!voice.isSupported && (
+            <p className="mt-2 text-xs text-center text-warning bg-warning/10 border border-warning/30 rounded-md p-2">
+              El dictado por voz funciona en Chrome o Edge. En este navegador puedes escribir la
+              minuta manualmente.
+            </p>
+          )}
+          <div className="mt-2 flex justify-center">{discardButton}</div>
         </div>
 
         {/* Sheet de nota manual */}
@@ -825,6 +903,7 @@ export default function MinutaActivaPage() {
             </div>
           </SheetContent>
         </Sheet>
+        {discardDialog}
       </div>
     );
   }
@@ -878,7 +957,9 @@ export default function MinutaActivaPage() {
             )}
           </Button>
           </div>
+          <div className="mt-2 flex justify-center">{discardButton}</div>
         </div>
+        {discardDialog}
       </div>
     );
   }
@@ -1156,6 +1237,7 @@ export default function MinutaActivaPage() {
               >
                 {importMutation.isPending ? "Importando…" : `📥 Importar ${selectedCount} compromiso${selectedCount === 1 ? "" : "s"}`}
               </Button>
+              {discardButton}
             </div>
           )}
         </div>
@@ -1216,6 +1298,7 @@ export default function MinutaActivaPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {discardDialog}
     </div>
   );
 }

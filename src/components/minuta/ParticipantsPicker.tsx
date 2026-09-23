@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
 import { usePositions } from "@/hooks/usePositions";
 import { useExternalContacts, useSaveExternalContact, type ExternalContact } from "@/hooks/useExternalContacts";
+import { upperEs } from "@/lib/utils";
 
 export interface MinutaParticipant {
   key: string;
@@ -143,7 +144,7 @@ export function ParticipantsPicker({ value, onChange }: Props) {
                   : "bg-muted text-foreground"
               }`}
             >
-              <span className="font-medium">{p.name}</span>
+              <span className="font-medium">{upperEs(p.name)}</span>
               {p.role && <span className="text-muted-foreground">— {p.role}</span>}
               {!p.locked && (
                 <button
@@ -175,7 +176,7 @@ export function ParticipantsPicker({ value, onChange }: Props) {
               onClick={() => addUser(u)}
               className="w-full text-left px-3 py-2 text-sm hover:bg-muted"
             >
-              <span className="font-medium">{u.full_name ?? u.email}</span>
+              <span className="font-medium">{upperEs(u.full_name ?? u.email)}</span>
               {(positionName(u.default_position_id) ?? u.area) && (
                 <span className="text-muted-foreground"> — {positionName(u.default_position_id) ?? u.area}</span>
               )}
@@ -198,7 +199,7 @@ export function ParticipantsPicker({ value, onChange }: Props) {
                 className="w-full text-left px-3 py-2 text-sm hover:bg-muted flex items-center gap-2"
               >
                 <Building2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                <span className="font-medium">{c.full_name}</span>
+                <span className="font-medium">{upperEs(c.full_name)}</span>
                 <span className="text-muted-foreground truncate">
                   — {c.company ? `${c.company} · ` : ""}{c.email}
                 </span>
