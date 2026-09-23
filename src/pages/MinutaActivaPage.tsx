@@ -819,7 +819,10 @@ export default function MinutaActivaPage() {
             </>
           ) : (
             <div className="h-full flex flex-col">
-              <p className="text-sm text-muted-foreground mb-2">Tu navegador no soporta reconocimiento de voz. Usa la entrada manual.</p>
+              <p className="text-sm text-warning bg-warning/10 border border-warning/30 rounded-md p-2 mb-2">
+                El dictado por voz funciona en Chrome o Edge. En este navegador puedes escribir la
+                minuta manualmente.
+              </p>
               <Textarea
                 className="flex-1 min-h-[40vh] text-sm"
                 placeholder="Escribe o pega la transcripción de la reunión aquí…"
