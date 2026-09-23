@@ -142,10 +142,23 @@ export function sortStagesForPicker(stages: ProcessStage[]): ProcessStage[] {
 export function useUpdateStageStatus(processId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ stageId, status }: { stageId: string; status: StageStatus }) => {
+    mutationFn: async ({
+      stageId,
+      status,
+      actual_start,
+      actual_end,
+    }: {
+      stageId: string;
+      status: StageStatus;
+      actual_start?: string | null;
+      actual_end?: string | null;
+    }) => {
+      const patch: Record<string, unknown> = { status };
+      if (actual_start !== undefined) patch.actual_start = actual_start;
+      if (actual_end !== undefined) patch.actual_end = actual_end;
       const { error } = await supabase
         .from("process_stages")
-        .update({ status })
+        .update(patch)
         .eq("id", stageId);
       if (error) throw new Error(error.message);
       return { stageId, status };
