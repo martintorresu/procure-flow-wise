@@ -1298,6 +1298,7 @@ export default function MinutaActivaPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {discardDialog}
     </div>
   );
 }
