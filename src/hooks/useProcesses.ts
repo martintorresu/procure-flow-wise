@@ -92,6 +92,7 @@ export function useCreateProcess() {
       const { data, error } = await supabase
         .from("processes")
         .insert({
+          process_number: "", // asignado por el trigger según tenant y tipo
           name: input.name,
           project_id: input.project_id,
           process_type: input.process_type ?? "personalizado",
