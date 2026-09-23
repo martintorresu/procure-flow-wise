@@ -755,7 +755,8 @@ export default function MinutaActivaPage() {
 
             {!voice.isSupported && (
               <p className="text-xs text-warning bg-warning/10 border border-warning/30 rounded-md p-2">
-                Tu navegador no soporta reconocimiento de voz. Se habilitará la entrada manual de texto.
+                El dictado por voz funciona en Chrome o Edge. En este navegador puedes escribir la
+                minuta manualmente.
               </p>
             )}
             <Button size="lg" className="w-full" onClick={startCapture} disabled={!setupValid}>
