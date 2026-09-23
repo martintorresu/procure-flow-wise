@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useTenantUsers } from "@/hooks/useTenantUsers";
 import { usePositions } from "@/hooks/usePositions";
 import { useExternalContacts, useSaveExternalContact, type ExternalContact } from "@/hooks/useExternalContacts";
+import { upperEs } from "@/lib/utils";
 
 export interface MinutaParticipant {
   key: string;
