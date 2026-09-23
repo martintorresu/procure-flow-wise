@@ -583,6 +583,31 @@ export default function MinutaActivaPage() {
     });
   };
 
+  const discardButton = !minutaSent ? (
+    <Button variant="outline" size="sm" className="text-danger hover:text-danger" onClick={() => setDiscardOpen(true)}>
+      <Trash2 className="w-4 h-4 mr-1" /> Borrar minuta
+    </Button>
+  ) : null;
+
+  const discardDialog = (
+    <AlertDialog open={discardOpen} onOpenChange={setDiscardOpen}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Descartar esta minuta?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Se perderán la transcripción, los compromisos y los participantes cargados. Esta acción
+            no se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction onClick={discardMinuta}>Sí, borrar</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
+
   /* --------------------- ÉXITO (PWA dedicada) --------------------- */
   if (importDone) {
     return (
