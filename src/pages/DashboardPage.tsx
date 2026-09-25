@@ -5,8 +5,9 @@ import { useProcesses } from "@/hooks/useProcesses";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
-import { FileText, Layers, CheckCircle2, ArrowRight, Bell, Link2, TrendingUp } from "lucide-react";
+import { FileText, Layers, CheckCircle2, ArrowRight, Bell, Link2, TrendingUp, GitBranch } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAllContingencies } from "@/hooks/useProcessContingencies";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PROCESS_TYPES, PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
@@ -18,7 +19,6 @@ import { formatAlertType, relativeTime } from "@/lib/alertLabels";
 import { queryKeys } from "@/lib/queryKeys";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
-import { DashboardContingenciesWidget } from "@/components/DashboardContingenciesWidget";
 import { DashboardMinutaWidget } from "@/components/DashboardMinutaWidget";
 import { Badge } from "@/components/ui/badge";
 import { useTenantSubscription } from "@/hooks/useTenantSubscription";
@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const { data: processes = [], isLoading: processesLoading } = useProcesses();
   const { data: summaries = {} } = useProcessStageSummaries();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
+  const { data: contingencies = [] } = useAllContingencies();
   const subscription = useTenantSubscription();
 
   useEffect(() => {
@@ -62,10 +63,22 @@ export default function DashboardPage() {
     (p) => typeFilter === "all" || (p.process_type ?? "personalizado") === typeFilter,
   );
 
-  const stats = [
+  const contingencyActive = contingencies.filter((c) => c.status === "active");
+  const contingencyPaused = contingencyActive.filter((c) => c.execution_mode === "pause_and_attend");
+  const contingencyCompleted = contingencies.filter((c) => c.status === "completed");
+
+  const stats: { label: string; value: number; icon: typeof FileText; color: string; to: string; hint?: string }[] = [
     { label: "Procesos", value: processes.length, icon: FileText, color: "text-accent", to: "/procesos" },
     { label: "Etapas en curso", value: stagesInProgress, icon: Layers, color: "text-primary", to: "/procesos" },
     { label: "Procesos completados", value: finishedProcesses, icon: CheckCircle2, color: "text-success", to: "/procesos" },
+    {
+      label: "Contingencias",
+      value: contingencyActive.length,
+      icon: GitBranch,
+      color: "text-warning",
+      to: "/procesos",
+      hint: `${contingencyPaused.length} pausadas · ${contingencyCompleted.length} completadas`,
+    },
     { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-warning", to: "/alerts" },
   ];
 
@@ -101,7 +114,7 @@ export default function DashboardPage() {
 
       {/* KPIs compactos */}
       <Card>
-        <CardContent className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x p-0">
+        <CardContent className="grid grid-cols-2 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x p-0">
           {stats.map((s) => (
             <Link
               key={s.label}
@@ -112,6 +125,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{s.label}</p>
                 <p className="text-2xl font-bold mt-0.5">{s.value}</p>
+                {s.hint && <p className="text-[11px] text-muted-foreground mt-0.5">{s.hint}</p>}
               </div>
               <s.icon className={`w-8 h-8 ${s.color} opacity-20`} />
             </Link>
@@ -123,7 +137,6 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DashboardMinutaWidget />
         <DashboardCommitmentsWidget />
-        <DashboardContingenciesWidget />
       </div>
 
       {/* Procesos */}
