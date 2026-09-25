@@ -165,6 +165,7 @@ export function useUpdateStageStatus(processId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["process-stages", processId ?? ""] });
+      queryClient.invalidateQueries({ queryKey: ["process-stage-summaries"] });
       toast.success("Estado de la etapa actualizado");
     },
     onError: (e: Error) => toast.error(`No se pudo actualizar la etapa: ${e.message}`),
@@ -190,6 +191,7 @@ export function useUpdateStagePlan(processId: string | undefined) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["process-stages", processId ?? ""] });
+      queryClient.invalidateQueries({ queryKey: ["process-stage-summaries"] });
       toast.success("Datos de la etapa guardados");
     },
     onError: (e: Error) => toast.error(`No se pudo guardar la etapa: ${e.message}`),
