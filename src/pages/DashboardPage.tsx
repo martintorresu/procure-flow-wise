@@ -9,14 +9,16 @@ import { FileText, Layers, CheckCircle2, ArrowRight, Bell, Link2, TrendingUp, Gi
 import { Button } from "@/components/ui/button";
 import { useAllContingencies } from "@/hooks/useProcessContingencies";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PROCESS_TYPES, PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
+import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { SEO } from "@/components/SEO";
 import { humanizeTechnicalText } from "@/lib/stageLabels";
 import { formatAlertType, relativeTime } from "@/lib/alertLabels";
 
 import { queryKeys } from "@/lib/queryKeys";
+import { useProcessFilters } from "@/hooks/useProcessFilters";
+import { ProcessFiltersBar } from "@/components/processes/ProcessFiltersBar";
+import { ProcessDueBadges } from "@/components/processes/ProcessDueBadges";
 import { DashboardFlowHero } from "@/components/DashboardFlowHero";
 import { DashboardCommitmentsWidget } from "@/components/DashboardCommitmentsWidget";
 import { DashboardMinutaWidget } from "@/components/DashboardMinutaWidget";
@@ -25,7 +27,7 @@ import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, usageLabel } from "@/lib/plans";
 import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
 import { InProgressStagesText, StageProgressBadge } from "@/components/StageProgress";
-import { processNumberSuffix, SortDirButton, sortByProcessNumber, useProcessSortDir } from "@/lib/processSort";
+import { processNumberSuffix, sortByProcessNumber, useProcessSortDir } from "@/lib/processSort";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -50,13 +52,9 @@ export default function DashboardPage() {
     return s && s.total > 0 && s.completed === s.total;
   }).length;
 
-  const [typeFilter, setTypeFilter] = useState<ProcessType | "all">("all");
-
   const { dir: sortDir, toggle: toggleSort } = useProcessSortDir();
-  const filteredProcesses = sortByProcessNumber(
-    processes.filter((p) => typeFilter === "all" || (p.process_type ?? "personalizado") === typeFilter),
-    sortDir,
-  );
+  const filters = useProcessFilters(processes, summaries);
+  const filteredProcesses = sortByProcessNumber(filters.filteredUnsorted, sortDir);
 
   const contingencyActive = contingencies.filter((c) => c.status === "active");
   const contingencyPaused = contingencyActive.filter((c) => c.execution_mode === "pause_and_attend");
@@ -149,20 +147,8 @@ export default function DashboardPage() {
         </CardHeader>
         <CardContent>
           {/* Filtro */}
-          <div className="flex flex-wrap items-center gap-4 pb-3 border-b border-border/60">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground font-medium">Tipo</span>
-              <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as ProcessType | "all")}>
-                <SelectTrigger className="h-7 text-xs font-normal w-[200px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos</SelectItem>
-                  {PROCESS_TYPES.map((t) => (
-                    <SelectItem key={t} value={t}>{PROCESS_TYPE_LABELS[t]}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <SortDirButton dir={sortDir} onToggle={toggleSort} size="sm" />
+          <div className="pb-3 border-b border-border/60">
+            <ProcessFiltersBar filters={filters} sortDir={sortDir} onToggleSort={toggleSort} compact />
           </div>
 
           {/* List */}
@@ -218,10 +204,13 @@ export default function DashboardPage() {
                         </TooltipProvider>
                       )}
                     </div>
-                    <div className="text-xs text-muted-foreground truncate">{process.project_name}</div>
+                    <div className="text-xs text-muted-foreground truncate">
+                      {process.project_name} · {process.current_owner}
+                    </div>
                     <div className="flex items-center gap-2 flex-wrap">
                       <StageProgressBadge summary={summary} />
                       <InProgressStagesText summary={summary} />
+                      <ProcessDueBadges summary={summary} today={filters.today} />
                     </div>
                   </div>
                 </div>
