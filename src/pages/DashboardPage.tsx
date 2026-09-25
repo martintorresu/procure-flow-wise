@@ -41,6 +41,7 @@ export default function DashboardPage() {
   const { data: processes = [], isLoading: processesLoading } = useProcesses();
   const { data: summaries = {} } = useProcessStageSummaries();
   const { data: alerts = [], isLoading: alertsLoading } = useAlerts();
+  const { data: contingencies = [] } = useAllContingencies();
   const subscription = useTenantSubscription();
 
   useEffect(() => {
@@ -62,10 +63,22 @@ export default function DashboardPage() {
     (p) => typeFilter === "all" || (p.process_type ?? "personalizado") === typeFilter,
   );
 
-  const stats = [
+  const contingencyActive = contingencies.filter((c) => c.status === "active");
+  const contingencyPaused = contingencyActive.filter((c) => c.execution_mode === "pause_and_attend");
+  const contingencyCompleted = contingencies.filter((c) => c.status === "completed");
+
+  const stats: { label: string; value: number; icon: typeof FileText; color: string; to: string; hint?: string }[] = [
     { label: "Procesos", value: processes.length, icon: FileText, color: "text-accent", to: "/procesos" },
     { label: "Etapas en curso", value: stagesInProgress, icon: Layers, color: "text-primary", to: "/procesos" },
     { label: "Procesos completados", value: finishedProcesses, icon: CheckCircle2, color: "text-success", to: "/procesos" },
+    {
+      label: "Contingencias",
+      value: contingencyActive.length,
+      icon: GitBranch,
+      color: "text-warning",
+      to: "/procesos",
+      hint: `${contingencyPaused.length} pausadas · ${contingencyCompleted.length} completadas`,
+    },
     { label: "Alertas Pendientes", value: unresolvedAlerts.length, icon: TrendingUp, color: "text-warning", to: "/alerts" },
   ];
 
