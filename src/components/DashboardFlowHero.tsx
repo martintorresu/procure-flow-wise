@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { Link2 } from "lucide-react";
-import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Process } from "@/types/process";
 import type { StageSummaryMap } from "@/hooks/useProcessStageSummaries";
 
@@ -10,7 +10,15 @@ interface Props {
   summaries: StageSummaryMap;
 }
 
-/** Distribución de procesos activos por tipo, con su avance de etapas. */
+const NO_PROJECT = "__none__";
+
+function tooltipLabel(p: Process) {
+  const m = (p.process_number ?? "").match(/(\d+)$/);
+  const num = m ? m[1].padStart(2, "0") : p.process_number;
+  return `Proceso ${num} – ${p.title}`;
+}
+
+/** Distribución de procesos activos por proyecto, con su avance de etapas. */
 export function DashboardFlowHero({ processes, summaries }: Props) {
   const chainedIds = useMemo(() => {
     const set = new Set<string>();
@@ -23,13 +31,16 @@ export function DashboardFlowHero({ processes, summaries }: Props) {
     return set;
   }, [processes]);
 
-  const byType = useMemo(() => {
-    const map = new Map<ProcessType, Process[]>();
+  const byProject = useMemo(() => {
+    const map = new Map<string, { name: string; list: Process[] }>();
     for (const p of processes) {
-      const t = (p.process_type ?? "personalizado") as ProcessType;
-      map.set(t, [...(map.get(t) ?? []), p]);
+      const key = p.project_id ?? NO_PROJECT;
+      const name = p.project_id && p.project_name && p.project_name !== "—" ? p.project_name : "Sin proyecto";
+      const entry = map.get(key) ?? { name, list: [] };
+      entry.list.push(p);
+      map.set(key, entry);
     }
-    return Array.from(map.entries()).sort((a, b) => b[1].length - a[1].length);
+    return Array.from(map.entries()).sort((a, b) => b[1].list.length - a[1].list.length);
   }, [processes]);
 
   const avgPercent = (list: Process[]) => {
@@ -51,34 +62,37 @@ export function DashboardFlowHero({ processes, summaries }: Props) {
       </div>
 
       <header className="relative mb-6">
-        <h2 className="text-base font-semibold">Procesos activos por tipo</h2>
+        <h2 className="text-base font-semibold">Procesos activos por proyecto</h2>
         <p className="text-xs text-white/70">{processes.length} procesos en curso</p>
       </header>
 
-      {byType.length === 0 ? (
-        <p className="relative text-sm text-white/80">Aún no hay procesos activos.</p>
-      ) : byType.length === 1 ? (
-        <TypeCard type={byType[0][0]} list={byType[0][1]} summaries={summaries} chainedIds={chainedIds} avgPercent={avgPercent} />
-      ) : (
-        <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {byType.map(([type, list]) => (
-            <TypeCard key={type} type={type} list={list} summaries={summaries} chainedIds={chainedIds} avgPercent={avgPercent} />
-          ))}
-        </div>
-      )}
+      <TooltipProvider>
+        {byProject.length === 0 ? (
+          <p className="relative text-sm text-white/80">Aún no hay procesos activos.</p>
+        ) : byProject.length === 1 ? (
+          <div className="relative">
+            <GroupCard name={byProject[0][1].name} list={byProject[0][1].list} chainedIds={chainedIds} avgPercent={avgPercent} />
+          </div>
+        ) : (
+          <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {byProject.map(([key, g]) => (
+              <GroupCard key={key} name={g.name} list={g.list} chainedIds={chainedIds} avgPercent={avgPercent} />
+            ))}
+          </div>
+        )}
+      </TooltipProvider>
     </section>
   );
 }
 
-interface TypeCardProps {
-  type: ProcessType;
+interface GroupCardProps {
+  name: string;
   list: Process[];
-  summaries: StageSummaryMap;
   chainedIds: Set<string>;
   avgPercent: (list: Process[]) => number;
 }
 
-function TypeCard({ type, list, summaries, chainedIds, avgPercent }: TypeCardProps) {
+function GroupCard({ name, list, chainedIds, avgPercent }: GroupCardProps) {
   const percent = avgPercent(list);
   const sorted = [...list].sort((a, b) =>
     (a.process_number ?? "").localeCompare(b.process_number ?? "", "es", { numeric: true }),
@@ -87,7 +101,7 @@ function TypeCard({ type, list, summaries, chainedIds, avgPercent }: TypeCardPro
   return (
     <div className="rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-sm">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-lg font-semibold">{PROCESS_TYPE_LABELS[type]}</span>
+        <span className="text-lg font-semibold">{name}</span>
         <span className="text-4xl font-bold leading-none">{list.length}</span>
       </div>
       <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-white/20">
@@ -96,15 +110,19 @@ function TypeCard({ type, list, summaries, chainedIds, avgPercent }: TypeCardPro
       <p className="mt-2 text-xs text-white/80">Avance medio de etapas: {percent}%</p>
       <div className="mt-4 flex flex-wrap gap-2">
         {sorted.slice(0, 8).map((p) => (
-          <Link
-            key={p.id}
-            to={`/procesos/${p.id}`}
-            title={`${p.process_number} — ${p.title}`}
-            className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 font-mono text-xs transition-colors hover:bg-white/30"
-          >
-            {p.process_number}
-            {chainedIds.has(p.id) && <Link2 className="h-3 w-3" aria-hidden />}
-          </Link>
+          <Tooltip key={p.id}>
+            <TooltipTrigger asChild>
+              <Link
+                to={`/procesos/${p.id}`}
+                aria-label={tooltipLabel(p)}
+                className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 font-mono text-xs transition-colors hover:bg-white/30"
+              >
+                {p.process_number}
+                {chainedIds.has(p.id) && <Link2 className="h-3 w-3" aria-hidden />}
+              </Link>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">{tooltipLabel(p)}</TooltipContent>
+          </Tooltip>
         ))}
         {list.length > 8 && (
           <span className="text-xs text-white/70 self-center">+{list.length - 8} más</span>
