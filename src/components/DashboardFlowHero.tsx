@@ -57,41 +57,59 @@ export function DashboardFlowHero({ processes, summaries }: Props) {
 
       {byType.length === 0 ? (
         <p className="relative text-sm text-white/80">Aún no hay procesos activos.</p>
+      ) : byType.length === 1 ? (
+        <TypeCard type={byType[0][0]} list={byType[0][1]} summaries={summaries} chainedIds={chainedIds} avgPercent={avgPercent} />
       ) : (
-        <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {byType.map(([type, list]) => {
-            const percent = avgPercent(list);
-            return (
-              <div key={type} className="rounded-lg border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
-                <div className="flex items-baseline justify-between gap-2">
-                  <span className="text-sm font-medium">{PROCESS_TYPE_LABELS[type]}</span>
-                  <span className="text-2xl font-bold">{list.length}</span>
-                </div>
-                <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/20">
-                  <div className="h-full rounded-full bg-white/90" style={{ width: `${percent}%` }} />
-                </div>
-                <p className="mt-1.5 text-[11px] text-white/70">Avance medio de etapas: {percent}%</p>
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {list.slice(0, 8).map((p) => (
-                    <Link
-                      key={p.id}
-                      to={`/procesos/${p.id}`}
-                      title={`${p.process_number} — ${p.title}`}
-                      className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 font-mono text-[10px] transition-colors hover:bg-white/30"
-                    >
-                      {p.process_number}
-                      {chainedIds.has(p.id) && <Link2 className="h-2.5 w-2.5" aria-hidden />}
-                    </Link>
-                  ))}
-                  {list.length > 8 && (
-                    <span className="text-[10px] text-white/70">+{list.length - 8} más</span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
+        <div className="relative grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {byType.map(([type, list]) => (
+            <TypeCard key={type} type={type} list={list} summaries={summaries} chainedIds={chainedIds} avgPercent={avgPercent} />
+          ))}
         </div>
       )}
     </section>
+  );
+}
+
+interface TypeCardProps {
+  type: ProcessType;
+  list: Process[];
+  summaries: StageSummaryMap;
+  chainedIds: Set<string>;
+  avgPercent: (list: Process[]) => number;
+}
+
+function TypeCard({ type, list, summaries, chainedIds, avgPercent }: TypeCardProps) {
+  const percent = avgPercent(list);
+  const sorted = [...list].sort((a, b) =>
+    (a.process_number ?? "").localeCompare(b.process_number ?? "", "es", { numeric: true }),
+  );
+
+  return (
+    <div className="rounded-lg border border-white/20 bg-white/10 p-5 backdrop-blur-sm">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-lg font-semibold">{PROCESS_TYPE_LABELS[type]}</span>
+        <span className="text-4xl font-bold leading-none">{list.length}</span>
+      </div>
+      <div className="mt-4 h-2.5 w-full overflow-hidden rounded-full bg-white/20">
+        <div className="h-full rounded-full bg-white/90" style={{ width: `${percent}%` }} />
+      </div>
+      <p className="mt-2 text-xs text-white/80">Avance medio de etapas: {percent}%</p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {sorted.slice(0, 8).map((p) => (
+          <Link
+            key={p.id}
+            to={`/procesos/${p.id}`}
+            title={`${p.process_number} — ${p.title}`}
+            className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 font-mono text-xs transition-colors hover:bg-white/30"
+          >
+            {p.process_number}
+            {chainedIds.has(p.id) && <Link2 className="h-3 w-3" aria-hidden />}
+          </Link>
+        ))}
+        {list.length > 8 && (
+          <span className="text-xs text-white/70 self-center">+{list.length - 8} más</span>
+        )}
+      </div>
+    </div>
   );
 }
