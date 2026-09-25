@@ -255,8 +255,10 @@ function StagePlanFields({
               patch: {
                 planned_start: form.planned_start || null,
                 planned_end: form.planned_end || null,
-                actual_start: form.actual_start || null,
-                actual_end: form.actual_end || null,
+                // En "No iniciada" las fechas reales deben ser NULL (CHECK en BD);
+                // el formulario puede conservar una fecha propuesta localmente.
+                actual_start: notStarted ? null : form.actual_start || null,
+                actual_end: notStarted ? null : form.actual_end || null,
                 responsible_name: form.responsible_name.trim() || null,
                 external_entity: form.external_entity.trim() || null,
               },
