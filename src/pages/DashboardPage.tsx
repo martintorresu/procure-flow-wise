@@ -56,6 +56,16 @@ export default function DashboardPage() {
   const filters = useProcessFilters(processes, summaries);
   const filteredProcesses = sortByProcessNumber(filters.filteredUnsorted, sortDir);
 
+  // "Ver todos" conserva los filtros activos del Panel en /procesos
+  const tenantPrefix = user && user.tenantSlug !== "default" ? `/t/${user.tenantSlug}` : "";
+  const filterParams = new URLSearchParams();
+  if (filters.search) filterParams.set("q", filters.search);
+  (["type", "progress", "due", "entity", "project"] as const).forEach((key) => {
+    const value = filters[`${key}Filter` as const];
+    if (value && value !== "all") filterParams.set(key, value);
+  });
+  const processesHref = `${tenantPrefix}/procesos${filterParams.toString() ? `?${filterParams.toString()}` : ""}`;
+
   const contingencyActive = contingencies.filter((c) => c.status === "active");
   const contingencyPaused = contingencyActive.filter((c) => c.execution_mode === "pause_and_attend");
   const contingencyCompleted = contingencies.filter((c) => c.status === "completed");
