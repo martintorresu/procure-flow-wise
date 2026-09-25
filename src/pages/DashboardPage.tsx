@@ -139,7 +139,7 @@ export default function DashboardPage() {
           <CardTitle className="text-base flex items-center gap-2">
             <FileText className="w-4 h-4" /> Procesos
           </CardTitle>
-          <Link to="/procesos">
+          <Link to={processesHref}>
             <Button variant="ghost" size="sm" className="text-accent">
               Ver todos <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
