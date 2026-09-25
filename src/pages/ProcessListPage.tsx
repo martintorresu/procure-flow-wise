@@ -16,15 +16,7 @@ import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
 import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
 import { InProgressStagesText, StageProgressBadge } from "@/components/StageProgress";
-import { SortDirButton, sortByProcessNumber, useProcessSortDir } from "@/lib/processSort";
-
-const TYPE_INITIALS: Record<ProcessType, string> = {
-  licitacion: "Lt",
-  contrato: "Ct",
-  obra: "Ob",
-  compra_industrial: "Ci",
-  personalizado: "Ps",
-};
+import { SortDirButton, sortByProcessNumber, useProcessSortDir, processNumberSuffix } from "@/lib/processSort";
 
 export default function ProcessListPage() {
   const navigate = useNavigate();
@@ -149,12 +141,14 @@ export default function ProcessListPage() {
                       <TooltipTrigger asChild>
                         <div
                           className="w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold shrink-0 bg-accent/15 text-accent"
-                          aria-label={`Tipo ${typeLabel}`}
+                          aria-label={`Proceso ${processNumberSuffix(process.process_number)} – ${process.title} · ${typeLabel}`}
                         >
-                          {TYPE_INITIALS[type]}
+                          {processNumberSuffix(process.process_number)}
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs">{typeLabel}</TooltipContent>
+                      <TooltipContent side="top" className="text-xs">
+                        {`Proceso ${processNumberSuffix(process.process_number)} – ${process.title} · ${typeLabel}`}
+                      </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
 

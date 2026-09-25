@@ -4,6 +4,7 @@ import { Link2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { Process } from "@/types/process";
 import type { StageSummaryMap } from "@/hooks/useProcessStageSummaries";
+import { processNumberSuffix } from "@/lib/processSort";
 
 interface Props {
   processes: Process[];
@@ -13,9 +14,7 @@ interface Props {
 const NO_PROJECT = "__none__";
 
 function tooltipLabel(p: Process) {
-  const m = (p.process_number ?? "").match(/(\d+)$/);
-  const num = m ? m[1].padStart(2, "0") : p.process_number;
-  return `Proceso ${num} – ${p.title}`;
+  return `Proceso ${processNumberSuffix(p.process_number)} – ${p.title}`;
 }
 
 /** Distribución de procesos activos por proyecto, con su avance de etapas. */
