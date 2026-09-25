@@ -114,7 +114,7 @@ export default function DashboardPage() {
 
       {/* KPIs compactos */}
       <Card>
-        <CardContent className="grid grid-cols-2 lg:grid-cols-4 divide-y lg:divide-y-0 lg:divide-x p-0">
+        <CardContent className="grid grid-cols-2 lg:grid-cols-5 divide-y lg:divide-y-0 lg:divide-x p-0">
           {stats.map((s) => (
             <Link
               key={s.label}
@@ -125,6 +125,7 @@ export default function DashboardPage() {
               <div>
                 <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">{s.label}</p>
                 <p className="text-2xl font-bold mt-0.5">{s.value}</p>
+                {s.hint && <p className="text-[11px] text-muted-foreground mt-0.5">{s.hint}</p>}
               </div>
               <s.icon className={`w-8 h-8 ${s.color} opacity-20`} />
             </Link>
@@ -136,7 +137,6 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <DashboardMinutaWidget />
         <DashboardCommitmentsWidget />
-        <DashboardContingenciesWidget />
       </div>
 
       {/* Procesos */}
