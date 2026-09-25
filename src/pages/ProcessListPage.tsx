@@ -16,6 +16,7 @@ import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, PROCESS_LIMIT_MESSAGE, usageLabel } from "@/lib/plans";
 import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
 import { InProgressStagesText, StageProgressBadge } from "@/components/StageProgress";
+import { SortDirButton, sortByProcessNumber, useProcessSortDir } from "@/lib/processSort";
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   licitacion: "Lt",
@@ -40,7 +41,8 @@ export default function ProcessListPage() {
       .map((c) => c.parent_process_id),
   );
 
-  const filtered = processes.filter((process) => {
+  const { dir: sortDir, toggle: toggleSort } = useProcessSortDir();
+  const filtered = sortByProcessNumber(processes.filter((process) => {
     if (typeFilter !== "all" && (process.process_type ?? "personalizado") !== typeFilter) return false;
     if (
       search &&
@@ -49,7 +51,7 @@ export default function ProcessListPage() {
     )
       return false;
     return true;
-  });
+  }), sortDir);
 
   return (
     <div className="space-y-6">
@@ -103,6 +105,7 @@ export default function ProcessListPage() {
                 ))}
               </SelectContent>
             </Select>
+            <SortDirButton dir={sortDir} onToggle={toggleSort} />
           </div>
         </CardContent>
       </Card>

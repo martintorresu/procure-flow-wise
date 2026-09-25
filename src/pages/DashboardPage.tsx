@@ -25,6 +25,7 @@ import { useTenantSubscription } from "@/hooks/useTenantSubscription";
 import { PLAN_LABELS, usageLabel } from "@/lib/plans";
 import { useProcessStageSummaries } from "@/hooks/useProcessStageSummaries";
 import { InProgressStagesText, StageProgressBadge } from "@/components/StageProgress";
+import { SortDirButton, sortByProcessNumber, useProcessSortDir } from "@/lib/processSort";
 
 const TYPE_INITIALS: Record<ProcessType, string> = {
   licitacion: "Lt",
@@ -59,8 +60,10 @@ export default function DashboardPage() {
 
   const [typeFilter, setTypeFilter] = useState<ProcessType | "all">("all");
 
-  const filteredProcesses = processes.filter(
-    (p) => typeFilter === "all" || (p.process_type ?? "personalizado") === typeFilter,
+  const { dir: sortDir, toggle: toggleSort } = useProcessSortDir();
+  const filteredProcesses = sortByProcessNumber(
+    processes.filter((p) => typeFilter === "all" || (p.process_type ?? "personalizado") === typeFilter),
+    sortDir,
   );
 
   const contingencyActive = contingencies.filter((c) => c.status === "active");
@@ -167,6 +170,7 @@ export default function DashboardPage() {
                 </SelectContent>
               </Select>
             </div>
+            <SortDirButton dir={sortDir} onToggle={toggleSort} size="sm" />
           </div>
 
           {/* List */}
