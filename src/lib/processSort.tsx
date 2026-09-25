@@ -12,6 +12,12 @@ function parse(num: string): [string, number, string] {
   return [m[1], parseInt(m[2], 10), num];
 }
 
+/** Extrae el sufijo numérico de un process_number ("PROC-12" → "12"), con relleno mínimo de 2 dígitos. */
+export function processNumberSuffix(processNumber: string | null | undefined): string {
+  const m = (processNumber ?? "").match(/(\d+)$/);
+  return m ? m[1].padStart(2, "0") : (processNumber ?? "");
+}
+
 /** Orden natural por número de proceso: agrupa por prefijo y ordena numéricamente dentro. */
 export function sortByProcessNumber<T extends { process_number: string }>(list: T[], dir: SortDir): T[] {
   const sign = dir === "asc" ? 1 : -1;
