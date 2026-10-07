@@ -9,6 +9,10 @@ const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://procurement.demo.i
 const TEMPLATE_NAME = "procurem_alerta";
 const TEMPLATE_LANG = "es_CL";
 
+// PAUSA GLOBAL: mientras esté en true, no se envía ningún WhatsApp.
+// Para reanudar los envíos, volver a false y redesplegar.
+const NOTIFICATIONS_PAUSED = true;
+
 const ACTION_LABELS: Record<string, string> = {
   approval_required: "Aprobación requerida",
   et_pending: "Completar Especificación Técnica",
@@ -28,6 +32,8 @@ Deno.serve(async (req) => {
       status,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+
+  if (NOTIFICATIONS_PAUSED) return json({ ok: true, skipped: "notificaciones_pausadas" });
 
   try {
     const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization") ?? "";
