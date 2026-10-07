@@ -33,6 +33,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
 
+  if (NOTIFICATIONS_PAUSED) return json({ ok: true, skipped: "notificaciones_pausadas" });
+
   try {
     const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization") ?? "";
     if (!authHeader.startsWith("Bearer ")) return json({ error: "No autorizado" }, 401);
