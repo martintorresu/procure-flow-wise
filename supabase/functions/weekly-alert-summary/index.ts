@@ -14,8 +14,18 @@ function row(label: string, value: number, danger = false) {
   </tr>`;
 }
 
+// PAUSA GLOBAL: mientras esté en true, no se envía el resumen semanal por correo.
+// Para reanudar los envíos, volver a false y redesplegar.
+const NOTIFICATIONS_PAUSED = true;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  if (NOTIFICATIONS_PAUSED) {
+    return new Response(JSON.stringify({ ok: true, skipped: "notificaciones_pausadas" }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
