@@ -7,6 +7,10 @@ import { sendEmail, layout, button, escapeHtml } from "../_shared/resend.ts";
 
 const APP_BASE_URL = Deno.env.get("APP_BASE_URL") || "https://procurement.demo.inovahr-app.com";
 
+// PAUSA GLOBAL: mientras esté en true, no se despacha ningún correo ni WhatsApp.
+// Para reanudar los envíos, volver a false y redesplegar.
+const NOTIFICATIONS_PAUSED = true;
+
 const SEVERITY_ORDER: Record<string, number> = { low: 0, medium: 1, high: 2, critical: 3 };
 
 const TYPE_LABELS: Record<string, string> = {
