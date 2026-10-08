@@ -411,6 +411,7 @@ export type Database = {
           meeting_date: string
           process_id: string | null
           process_stage_id: string | null
+          project_id: string | null
           quality_score: number
           status: string
           tenant_id: string
@@ -425,6 +426,7 @@ export type Database = {
           meeting_date: string
           process_id?: string | null
           process_stage_id?: string | null
+          project_id?: string | null
           quality_score?: number
           status?: string
           tenant_id: string
@@ -439,6 +441,7 @@ export type Database = {
           meeting_date?: string
           process_id?: string | null
           process_stage_id?: string | null
+          project_id?: string | null
           quality_score?: number
           status?: string
           tenant_id?: string
@@ -466,6 +469,13 @@ export type Database = {
             columns: ["process_stage_id"]
             isOneToOne: false
             referencedRelation: "process_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "minuta_sessions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
@@ -1329,6 +1339,7 @@ export type Database = {
           id: string
           minuta_max_delivery_days: number
           minuta_quality_threshold: number
+          minuta_start_scope: string
           tenant_id: string
           updated_at: string
         }
@@ -1337,6 +1348,7 @@ export type Database = {
           id?: string
           minuta_max_delivery_days?: number
           minuta_quality_threshold?: number
+          minuta_start_scope?: string
           tenant_id: string
           updated_at?: string
         }
@@ -1345,6 +1357,7 @@ export type Database = {
           id?: string
           minuta_max_delivery_days?: number
           minuta_quality_threshold?: number
+          minuta_start_scope?: string
           tenant_id?: string
           updated_at?: string
         }

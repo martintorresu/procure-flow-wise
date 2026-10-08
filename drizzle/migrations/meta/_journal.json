@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791489769104,
+      "tag": "0000_minuta_start_scope_and_session_project",
+      "breakpoints": true
+    }
+  ]
+}
