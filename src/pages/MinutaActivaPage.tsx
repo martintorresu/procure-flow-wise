@@ -29,6 +29,7 @@ import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/h
 import { useTenantUsers, useMyProfile } from "@/hooks/useTenantUsers";
 import { useOnlineStatus } from "@/hooks/useOfflineSync";
 import { useMinutaConfig } from "@/hooks/useMinutaConfig";
+import { useProjects } from "@/hooks/useProjects";
 import { useCreateMinutaSession, useDiscardMinutaDraft } from "@/hooks/useMinutaSession";
 import { useProcessStages, useProcessStagesByProcess, sortStagesForPicker } from "@/hooks/useProcessStages";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,6 +59,16 @@ interface DraftRow extends ParsedCommitment {
   included: boolean;
 }
 
+/** Número de semana ISO de una fecha yyyy-mm-dd. */
+function isoWeek(iso: string): number {
+  const d = new Date(`${iso}T00:00:00`);
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const day = t.getUTCDay() || 7;
+  t.setUTCDate(t.getUTCDate() + 4 - day);
+  const y = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t.getTime() - y.getTime()) / 86_400_000 + 1) / 7);
+}
+
 function formatTimer(seconds: number): string {
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
@@ -74,7 +85,9 @@ export default function MinutaActivaPage() {
   const voice = useVoiceCapture();
   const { user } = useAuth();
   const { data: myProfile } = useMyProfile(user?.id);
-  const { qualityThreshold, maxDeliveryDays } = useMinutaConfig();
+  const { qualityThreshold, maxDeliveryDays, startScope } = useMinutaConfig();
+  const isProjectScope = startScope === "proyecto";
+  const { data: projects = [] } = useProjects();
 
   // PWA dedicada (minuta.html): sin sidebar ni navegación a /commitments
   const isStandaloneApp =
@@ -99,7 +112,26 @@ export default function MinutaActivaPage() {
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const [meetingTitle, setMeetingTitle] = useState("");
   const [meetingDate, setMeetingDate] = useState(todayISO);
+  const [projectId, setProjectId] = useState<string | null>(null);
   const [presetProcessId, setPresetProcessId] = useState<string | null>(null);
+
+  // Proyecto único: preseleccionado
+  useEffect(() => {
+    if (!projectId && projects.length === 1) setProjectId(projects[0].id);
+  }, [projects, projectId]);
+
+  const selectedProject = projects.find((p) => p.id === projectId) ?? null;
+  const projectProcesses = useMemo(
+    () => (projectId ? processes.filter((p) => p.project_id === projectId) : []),
+    [processes, projectId],
+  );
+
+  // Al cambiar el proyecto se limpia el proceso si no pertenece
+  useEffect(() => {
+    if (presetProcessId && !projectProcesses.some((p) => p.id === presetProcessId)) {
+      setPresetProcessId(null);
+    }
+  }, [projectProcesses, presetProcessId]);
   const [presetStageId, setPresetStageId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<MinutaParticipant[]>([]);
 
@@ -190,13 +222,17 @@ export default function MinutaActivaPage() {
   const setupValid =
     meetingTitle.trim().length >= 3 &&
     !!meetingDate &&
-    !!presetProcessId &&
-    !!presetStageId &&
+    !!projectId &&
+    (isProjectScope || (!!presetProcessId && !!presetStageId)) &&
     participants.length > 0;
 
   const startCapture = async () => {
     if (!setupValid) {
-      toast.error("Completa título, fecha, proceso, etapa y al menos un participante");
+      toast.error(
+        isProjectScope
+          ? "Completa título, fecha, proyecto y al menos un participante"
+          : "Completa título, fecha, proyecto, proceso, etapa y al menos un participante",
+      );
       return;
     }
     setPhase("capture");
@@ -218,7 +254,7 @@ export default function MinutaActivaPage() {
     }
     return parsed.map((p): DraftRow => {
       const u = p.responsible ? matchUser(p.responsible, users) : null;
-      const proc = p.processReference ? matchProcess(p.processReference, processes) : null;
+      const proc = p.processReference ? matchProcess(p.processReference, projectProcesses) : null;
       return {
         ...p,
         userId: u?.id ?? null,
@@ -259,7 +295,9 @@ export default function MinutaActivaPage() {
           meetingTitle: meetingTitle.trim(),
           meetingDate: meetingDate || todayISO,
           participants: participants.map(p => p.name),
-          projectPrefix: processes.find(p => p.id === presetProcessId)?.process_number?.split('-')[0] || "GEN",
+          projectPrefix:
+            processes.find((p) => p.id === presetProcessId)?.process_number?.split("-")[0] ||
+            (isProjectScope && selectedProject ? selectedProject.name : "GEN"),
         });
 
         setLlmAnalysis(analysis);
@@ -368,8 +406,10 @@ export default function MinutaActivaPage() {
     () =>
       calculateQualityScore(
         {
-          hasProject: !!presetProcessId || includedDrafts.some((d) => !!d.processId),
-          hasStage: !!presetStageId,
+          hasProject: !!projectId,
+          hasStage: isProjectScope
+            ? includedDrafts.length > 0 && includedDrafts.every((d) => !!d.stageId)
+            : !!presetStageId,
           hasMeetingDate: !!meetingDate,
           participantCount: participants.length,
           commitments: includedDrafts.map((d) => ({
@@ -380,7 +420,7 @@ export default function MinutaActivaPage() {
         },
         maxDeliveryDays,
       ),
-    [includedDrafts, presetProcessId, presetStageId, meetingDate, participants.length, maxDeliveryDays],
+    [includedDrafts, projectId, isProjectScope, presetStageId, meetingDate, participants.length, maxDeliveryDays],
   );
 
   const qualityOk = quality.score >= qualityThreshold;
@@ -405,8 +445,8 @@ export default function MinutaActivaPage() {
       toast.error(`La calidad mínima requerida es ${qualityThreshold}%.`);
       return;
     }
-    if (selected.some((d) => !d.stageId)) {
-      toast.error("Cada compromiso debe tener una etapa asignada.");
+    if (selected.some((d) => !d.processId || !d.stageId)) {
+      toast.error("Cada compromiso debe tener proceso y etapa asignados.");
       return;
     }
     const mismatch = selected.findIndex(
@@ -451,6 +491,7 @@ export default function MinutaActivaPage() {
           title: meetingTitle.trim(),
           meetingDate: meetingDate || todayISO,
           processId: presetProcessId,
+          projectId,
           processStageId: presetStageId,
           qualityScore: quality.score,
           participants: participants.map((p) => ({
@@ -699,7 +740,11 @@ export default function MinutaActivaPage() {
                 id="minuta-title"
                 value={meetingTitle}
                 onChange={(e) => setMeetingTitle(e.target.value)}
-                placeholder="Ej: Reunión de obra semana 34"
+                placeholder={
+                  isProjectScope
+                    ? `Ej: Reunión de obra ${selectedProject?.name ?? "Piedra Roja"}, semana ${isoWeek(meetingDate || todayISO)}`
+                    : "Ej: Reunión de coordinación con el mandante"
+                }
               />
             </div>
             <div className="space-y-2">
@@ -710,15 +755,39 @@ export default function MinutaActivaPage() {
             </div>
             <div className="space-y-2">
               <Label>
-                Proceso vinculado <span className="text-danger">*</span>
+                Proyecto <span className="text-danger">*</span>
               </Label>
-              <Select value={presetProcessId ?? "none"} onValueChange={(v) => setPresetProcessId(v === "none" ? null : v)}>
-                <SelectTrigger className={!presetProcessId ? "border-danger/50" : undefined}>
-                  <SelectValue placeholder="Vincular todos los compromisos a un proceso" />
+              <Select value={projectId ?? "none"} onValueChange={(v) => setProjectId(v === "none" ? null : v)}>
+                <SelectTrigger className={!projectId ? "border-danger/50" : undefined}>
+                  <SelectValue placeholder="Selecciona un proyecto" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Selecciona un proceso</SelectItem>
-                  {processes.map((p) => (
+                  <SelectItem value="none">Selecciona un proyecto</SelectItem>
+                  {projects.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>
+                {isProjectScope ? (
+                  "Proceso principal (opcional)"
+                ) : (
+                  <>Proceso vinculado <span className="text-danger">*</span></>
+                )}
+              </Label>
+              <Select
+                value={presetProcessId ?? "none"}
+                onValueChange={(v) => setPresetProcessId(v === "none" ? null : v)}
+                disabled={!projectId}
+              >
+                <SelectTrigger className={!presetProcessId && !isProjectScope ? "border-danger/50" : undefined}>
+                  <SelectValue placeholder={projectId ? "Selecciona un proceso" : "Selecciona primero un proyecto"} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">{isProjectScope ? "Sin proceso principal" : "Selecciona un proceso"}</SelectItem>
+                  {projectProcesses.map((p) => (
                     <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -727,14 +796,18 @@ export default function MinutaActivaPage() {
 
             <div className="space-y-2">
               <Label>
-                Etapa principal de la reunión <span className="text-danger">*</span>
+                {isProjectScope ? (
+                  "Etapa principal (opcional)"
+                ) : (
+                  <>Etapa principal de la reunión <span className="text-danger">*</span></>
+                )}
               </Label>
               <Select
                 value={presetStageId ?? "none"}
                 onValueChange={(v) => setPresetStageId(v === "none" ? null : v)}
                 disabled={!presetProcessId}
               >
-                <SelectTrigger className={!presetStageId ? "border-danger/50" : undefined}>
+                <SelectTrigger className={!presetStageId && !isProjectScope ? "border-danger/50" : undefined}>
                   <SelectValue placeholder={presetProcessId ? "Selecciona una etapa" : "Selecciona primero un proceso"} />
                 </SelectTrigger>
                 <SelectContent>
@@ -748,6 +821,11 @@ export default function MinutaActivaPage() {
               </Select>
               {presetProcessId && sortedStages.length === 0 && (
                 <p className="text-xs text-muted-foreground">Este proceso aún no tiene etapas definidas.</p>
+              )}
+              {isProjectScope && (
+                <p className="text-xs text-muted-foreground">
+                  Una reunión de proyecto puede generar compromisos de varios procesos; asígnalos en la revisión.
+                </p>
               )}
             </div>
 
@@ -764,7 +842,9 @@ export default function MinutaActivaPage() {
             </Button>
             {!setupValid && (
               <p className="text-xs text-muted-foreground text-center">
-                Completa título (mín. 3 caracteres), fecha, proceso, etapa principal y al menos un participante.
+                {isProjectScope
+                  ? "Completa título (mín. 3 caracteres), fecha, proyecto y al menos un participante."
+                  : "Completa título (mín. 3 caracteres), fecha, proyecto, proceso, etapa principal y al menos un participante."}
               </p>
             )}
             <div className="flex items-center justify-between gap-2">
@@ -1126,7 +1206,7 @@ export default function MinutaActivaPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Sin proceso</SelectItem>
-                    {processes.map((p) => (
+                    {projectProcesses.map((p) => (
                       <SelectItem key={p.id} value={p.id}>{p.process_number} · {p.name}</SelectItem>
                     ))}
                   </SelectContent>

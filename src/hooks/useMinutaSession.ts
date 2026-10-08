@@ -13,6 +13,7 @@ export interface CreateSessionInput {
   title: string;
   meetingDate: string;
   processId: string | null;
+  projectId?: string | null;
   processStageId?: string | null;
   qualityScore: number;
   participants: MinutaParticipantInput[];
@@ -41,6 +42,7 @@ export function useCreateMinutaSession() {
           title: input.title,
           meeting_date: input.meetingDate,
           process_id: input.processId,
+          project_id: input.projectId ?? null,
           process_stage_id: input.processStageId ?? null,
           quality_score: input.qualityScore,
           status: "submitted",
