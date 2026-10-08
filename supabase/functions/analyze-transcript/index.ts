@@ -108,7 +108,27 @@ Deno.serve(async (req) => {
       participants,
       projectPrefix = "GEN",
       knownPeople = [],
+      catalog = null,
     } = body;
+
+    type CatStage = { id: string; sort_order?: number; name: string; status?: string; activities?: string[] };
+    type CatProc = { id: string; process_number: string; name: string; process_type?: string; stages?: CatStage[] };
+    const catProcs: CatProc[] = Array.isArray(catalog?.processes)
+      ? (catalog.processes as CatProc[]).filter((p) => p && typeof p.id === "string").slice(0, 40)
+      : [];
+    const hasCatalog = catProcs.length > 0;
+    const catalogContext = hasCatalog
+      ? `\n\nCATÁLOGO DE PROCESOS Y ETAPAS${catalog?.projectName ? ` del proyecto "${String(catalog.projectName).slice(0, 120)}"` : ""}:
+${catProcs.map((p) => `- processId=${p.id} | ${p.process_number} · ${p.name}${p.process_type ? ` (${p.process_type})` : ""}
+${(p.stages ?? []).map((st) => `    · stageId=${st.id} | ${st.sort_order ?? ""}. ${st.name} [${st.status ?? "not_started"}]${st.activities?.length ? ` — ${st.activities.slice(0, 12).join("; ")}` : ""}`).join("\n")}`).join("\n")}
+
+ASIGNACIÓN A PROCESO Y ETAPA:
+- Para cada compromiso propone processId (uno del catálogo o null) y stageId (una etapa DE ESE proceso o null).
+- Usa pistas del texto: organismos (DOM, SERVIU, Aguas Andinas, Enel, Metrogas, etc.), especialidades, documentos y actividades.
+- Si el compromiso no indica etapa específica, prefiere etapas en curso [in_progress].
+- confidence: "alta" | "media" | "baja". reason: razón breve en español, máximo 12 palabras.
+- Si no hay pistas suficientes, usa null y confidence "baja". Nunca inventes ids.`
+      : "";
 
     if (!transcript || transcript.trim().length < 20) {
       throw new Error("Transcript is too short or missing");
@@ -129,7 +149,7 @@ Información de la reunión:
 - Título: ${meetingTitle || "Reunión"}
 - Fecha: ${meetingDate || "No especificada"}
 - ${participantList}
-- Prefijo para IDs de compromisos: ${projectPrefix}${knownPeopleContext}
+- Prefijo para IDs de compromisos: ${projectPrefix}${knownPeopleContext}${catalogContext}
 
 TRANSCRIPCIÓN:
 ${transcript}
@@ -138,7 +158,7 @@ Responde con un JSON que contenga exactamente estas claves:
 {
   "resumenEjecutivo": "string (1-3 párrafos)",
   "decisiones": ["string array, cada una comienza con verbo"],
-  "compromisos": [{"id":"${projectPrefix}-001","tipo":"string","tarea":"string (verbo infinitivo)","responsable":"string","fechaCompromiso":"dd-mmm-aaaa","estado":"string","origen":"string","observaciones":"string"}],
+  "compromisos": [{"id":"${projectPrefix}-001","tipo":"string","tarea":"string (verbo infinitivo)","responsable":"string","fechaCompromiso":"dd-mmm-aaaa","estado":"string","origen":"string","observaciones":"string"${hasCatalog ? ',"processId":"string|null","stageId":"string|null","confidence":"alta|media|baja","reason":"string"' : ""}}],
   "riesgos": ["string array"],
   "alertas": {"criticas":["string array"],"pendientes":["string array"]},
   "proximaReunion": {"fecha":"string","hora":"string","objetivo":"string"} or null,
@@ -209,6 +229,19 @@ Responde con un JSON que contenga exactamente estas claves:
     // Add the analysis mode marker
     parsed.analysisMode = "llm";
 
+    function validateSuggestion(c: Record<string, string>) {
+      const proc = catProcs.find((p) => p.id === c.processId) ?? null;
+      const stage = proc?.stages?.find((st) => st.id === c.stageId) ?? null;
+      const conf = ["alta", "media", "baja"].includes(c.confidence) ? c.confidence : "baja";
+      const reason = typeof c.reason === "string" ? c.reason.split(/\s+/).slice(0, 12).join(" ") : "";
+      return {
+        processId: proc?.id ?? null,
+        stageId: stage?.id ?? null,
+        confidence: proc ? conf : "baja",
+        reason,
+      };
+    }
+
     // Validate and sanitize the response
     const result = {
       resumenEjecutivo: parsed.resumenEjecutivo || "",
@@ -223,6 +256,7 @@ Responde con un JSON que contenga exactamente estas claves:
             estado: c.estado || "Pendiente",
             origen: c.origen || "Acuerdo de reunión",
             observaciones: c.observaciones || "",
+            ...(hasCatalog ? validateSuggestion(c) : {}),
           }))
         : [],
       riesgos: Array.isArray(parsed.riesgos) ? parsed.riesgos : [],
