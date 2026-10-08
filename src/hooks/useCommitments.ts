@@ -168,7 +168,7 @@ export function useDeleteCommitment() {
   });
 }
 
-export interface ProcessOption { id: string; process_number: string; name: string; project_id?: string | null }
+export interface ProcessOption { id: string; process_number: string; name: string; project_id?: string | null; process_type?: string | null }
 
 /** Lista liviana de procesos del tenant para vincular compromisos. */
 export function useProcessOptions() {
@@ -177,7 +177,7 @@ export function useProcessOptions() {
     queryFn: async (): Promise<ProcessOption[]> => {
       const { data, error } = await supabase
         .from("processes")
-        .select("id, process_number, name, project_id")
+        .select("id, process_number, name, project_id, process_type")
         .order("process_number", { ascending: false });
       if (error) throw new Error(error.message);
       return (data ?? []) as ProcessOption[];

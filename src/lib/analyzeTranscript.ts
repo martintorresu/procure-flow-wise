@@ -12,6 +12,10 @@ export interface LLMAnalysis {
     estado: string;
     origen: string;
     observaciones: string;
+    processId?: string | null;
+    stageId?: string | null;
+    confidence?: "alta" | "media" | "baja";
+    reason?: string;
   }>;
   riesgos: string[];
   alertas: {
@@ -27,7 +31,27 @@ export interface LLMAnalysis {
   analysisMode: "llm" | "regex" | "error";
 }
 
+export interface CatalogStage {
+  id: string;
+  sort_order: number;
+  name: string;
+  status: string;
+  activities: string[];
+}
+export interface CatalogProcess {
+  id: string;
+  process_number: string;
+  name: string;
+  process_type: string | null;
+  stages: CatalogStage[];
+}
+export interface AnalyzeCatalog {
+  projectName: string | null;
+  processes: CatalogProcess[];
+}
+
 interface AnalyzeParams {
+  catalog?: AnalyzeCatalog | null;
   transcript: string;
   meetingTitle: string;
   meetingDate: string;

@@ -22,7 +22,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 
 import { toast } from "sonner";
 import { Mic, MicOff, Pause, Square, FileText, CheckCircle2, Plus, Trash2, RefreshCw, WifiOff, Brain, Cpu } from "lucide-react";
-import { analyzeTranscriptWithLLM, type LLMAnalysis } from "@/lib/analyzeTranscript";
+import { analyzeTranscriptWithLLM, type LLMAnalysis, type AnalyzeCatalog } from "@/lib/analyzeTranscript";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { SEO } from "@/components/SEO";
 import { useVoiceCapture } from "@/hooks/useVoiceCapture";
 import { useImportCommitments, useProcessOptions, type NewCommitment } from "@/hooks/useCommitments";
@@ -57,7 +58,24 @@ interface DraftRow extends ParsedCommitment {
   stageId: string | null;
   activityRef: string | null;
   included: boolean;
+  /** Sugerencia original de la IA (proceso/etapa). */
+  ai?: AiSuggestion;
+  /** applied: aplicada automáticamente · pending: confianza baja sin aplicar · accepted: aceptada a mano · changed: el usuario la cambió */
+  aiState?: "applied" | "pending" | "accepted" | "changed";
 }
+
+interface AiSuggestion {
+  processId: string | null;
+  stageId: string | null;
+  confidence: "alta" | "media" | "baja";
+  reason: string;
+}
+
+const CONFIDENCE_CLASS: Record<AiSuggestion["confidence"], string> = {
+  alta: "bg-success/15 text-success border-success/40",
+  media: "bg-warning/15 text-warning border-warning/40",
+  baja: "bg-muted text-muted-foreground border-border",
+};
 
 /** Número de semana ISO de una fecha yyyy-mm-dd. */
 function isoWeek(iso: string): number {
@@ -194,8 +212,8 @@ export default function MinutaActivaPage() {
 
   // Etapas de todos los procesos involucrados (Setup + reclasificaciones por fila)
   const involvedProcessIds = useMemo(
-    () => [presetProcessId, ...draft.map((d) => d.processId)],
-    [presetProcessId, draft],
+    () => [presetProcessId, ...projectProcesses.map((p) => p.id), ...draft.map((d) => d.processId)],
+    [presetProcessId, projectProcesses, draft],
   );
   const { data: stagesByProcess } = useProcessStagesByProcess(involvedProcessIds);
   const stagesFor = (processId: string | null) =>
@@ -290,7 +308,29 @@ export default function MinutaActivaPage() {
       setIsAnalyzing(true);
       setAnalysisMode('pending');
       try {
+        const catalogProcs = isProjectScope
+          ? projectProcesses
+          : projectProcesses.filter((p) => p.id === presetProcessId);
+        const catalog: AnalyzeCatalog | null = catalogProcs.length
+          ? {
+              projectName: selectedProject?.name ?? null,
+              processes: catalogProcs.map((p) => ({
+                id: p.id,
+                process_number: p.process_number,
+                name: p.name,
+                process_type: p.process_type ?? null,
+                stages: stagesFor(p.id).map((st) => ({
+                  id: st.id,
+                  sort_order: st.sort_order,
+                  name: st.name,
+                  status: st.status,
+                  activities: [...(st.activities.milestones ?? []), ...(st.activities.tasks ?? [])],
+                })),
+              })),
+            }
+          : null;
         const analysis = await analyzeTranscriptWithLLM({
+          catalog,
           transcript: text,
           meetingTitle: meetingTitle.trim(),
           meetingDate: meetingDate || todayISO,
@@ -306,6 +346,16 @@ export default function MinutaActivaPage() {
         // Convert LLM compromisos to DraftRows
         const rows: DraftRow[] = analysis.compromisos.map((c) => {
           const u = c.responsable ? matchUser(c.responsable, users) : null;
+          const ai: AiSuggestion | undefined = c.processId
+            ? {
+                processId: c.processId,
+                stageId: c.stageId ?? null,
+                confidence: c.confidence ?? "baja",
+                reason: c.reason ?? "",
+              }
+            : undefined;
+          const apply = !!ai && ai.confidence !== "baja";
+          const sugStage = ai?.stageId ?? (ai?.processId === presetProcessId ? presetStageId : null);
           return {
             text: c.tarea,
             responsible: c.responsable,
@@ -313,10 +363,12 @@ export default function MinutaActivaPage() {
             priority: null,
             processReference: "",
             userId: u?.id ?? null,
-            processId: presetProcessId,
-            stageId: presetStageId,
+            processId: apply ? ai!.processId : presetProcessId,
+            stageId: apply ? sugStage : presetStageId,
             activityRef: null,
             included: true,
+            ai,
+            aiState: ai ? (apply ? "applied" : "pending") : undefined,
           };
         });
 
@@ -396,6 +448,43 @@ export default function MinutaActivaPage() {
       },
     ]);
 
+  /** Etiqueta "Sugerido por IA" mientras el valor coincide con la sugerencia. */
+  const aiBadge = (d: DraftRow, field: "process" | "stage") => {
+    if (!d.ai || (d.aiState !== "applied" && d.aiState !== "accepted")) return null;
+    if (field === "process" && d.processId !== d.ai.processId) return null;
+    if (field === "stage" && (!d.ai.stageId || d.stageId !== d.ai.stageId)) return null;
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className={`text-[10px] px-1.5 py-0.5 rounded border cursor-help ${CONFIDENCE_CLASS[d.ai.confidence]}`}>
+            Sugerido por IA
+          </span>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs">
+          {d.ai.reason || "Sin razón indicada"} · confianza {d.ai.confidence}
+        </TooltipContent>
+      </Tooltip>
+    );
+  };
+
+  /** Filas agrupadas por proceso (orden del proyecto), "Sin proceso asignado" al final. */
+  const reviewGroups = useMemo(() => {
+    const map = new Map<string, { d: DraftRow; i: number }[]>();
+    draft.forEach((d, i) => {
+      const k = d.processId ?? "__none";
+      const list = map.get(k);
+      if (list) list.push({ d, i });
+      else map.set(k, [{ d, i }]);
+    });
+    const keys = [...map.keys()].filter((k) => k !== "__none");
+    const out = keys.map((k) => {
+      const p = processes.find((x) => x.id === k);
+      return { key: k, label: p ? `${p.process_number} · ${p.name}` : "Proceso", items: map.get(k)! };
+    });
+    if (map.has("__none")) out.push({ key: "__none", label: "Sin proceso asignado", items: map.get("__none")! });
+    return out;
+  }, [draft, processes]);
+
   /* ------------------- Estándar de Minuta: calidad ------------------- */
   const includedDrafts = useMemo(
     () => draft.filter((d) => d.included && d.text.trim()),
@@ -470,7 +559,20 @@ export default function MinutaActivaPage() {
       priority: d.priority,
       meeting_title: meetingTitle.trim(),
       meeting_date: meetingDate || null,
-      raw_json: { source: "minuta_activa", parsed: d, quality_score: quality.score },
+      raw_json: {
+        source: "minuta_activa",
+        parsed: { ...d, ai: undefined, aiState: undefined },
+        quality_score: quality.score,
+        ai_suggestion: d.ai
+          ? {
+              ...d.ai,
+              outcome:
+                d.processId === d.ai.processId && d.stageId === d.ai.stageId
+                  ? d.aiState === "accepted" ? "accepted_manual" : "accepted"
+                  : d.aiState === "pending" ? "not_applied" : "changed",
+            }
+          : null,
+      },
     }));
 
     if (!isOnline) {
@@ -1149,7 +1251,10 @@ export default function MinutaActivaPage() {
         </Card>
       )}
 
-      {draft.map((d, i) => (
+      {reviewGroups.map((g) => (
+        <div key={g.key} className="space-y-3">
+          <h3 className="text-sm font-semibold text-muted-foreground pt-2">{g.label}</h3>
+      {g.items.map(({ d, i }) => (
         <Card key={i} className={d.included ? undefined : "opacity-50"}>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-start gap-2">
@@ -1198,9 +1303,38 @@ export default function MinutaActivaPage() {
                 )}
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Proceso{d.processReference && !d.processId ? ` (detectado: ${d.processReference})` : ""}</Label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Label className="text-xs">Proceso{d.processReference && !d.processId ? ` (detectado: ${d.processReference})` : ""}</Label>
+                  {aiBadge(d, "process")}
+                </div>
+                {d.ai && d.aiState === "pending" && d.ai.processId && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span>¿Proceso {processes.find((p) => p.id === d.ai!.processId)?.process_number ?? ""}?</span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-6 px-2 text-xs"
+                      title={d.ai.reason}
+                      onClick={() =>
+                        updateDraft(i, {
+                          processId: d.ai!.processId,
+                          stageId: d.ai!.stageId,
+                          activityRef: null,
+                          aiState: "accepted",
+                        })
+                      }
+                    >
+                      Aceptar
+                    </Button>
+                  </div>
+                )}
                 <Select value={d.processId ?? "none"} onValueChange={(v) =>
-                    updateDraft(i, { processId: v === "none" ? null : v, stageId: null, activityRef: null })
+                    updateDraft(i, {
+                      processId: v === "none" ? null : v,
+                      stageId: null,
+                      activityRef: null,
+                      ...(d.ai ? { aiState: "changed" as const } : {}),
+                    })
                   }>
                   <SelectTrigger>
                     <SelectValue placeholder="Sin proceso" />
@@ -1214,10 +1348,19 @@ export default function MinutaActivaPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Etapa <span className="text-danger">*</span></Label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Label className="text-xs">Etapa <span className="text-danger">*</span></Label>
+                  {aiBadge(d, "stage")}
+                </div>
                 <Select
                   value={d.stageId ?? "none"}
-                  onValueChange={(v) => updateDraft(i, { stageId: v === "none" ? null : v, activityRef: null })}
+                  onValueChange={(v) =>
+                    updateDraft(i, {
+                      stageId: v === "none" ? null : v,
+                      activityRef: null,
+                      ...(d.ai && d.aiState !== "pending" ? { aiState: "changed" as const } : {}),
+                    })
+                  }
                   disabled={!d.processId}
                 >
                   <SelectTrigger className={!d.stageId ? "border-danger/50 bg-danger/5" : undefined}>
@@ -1277,6 +1420,8 @@ export default function MinutaActivaPage() {
             </div>
           </CardContent>
         </Card>
+      ))}
+        </div>
       ))}
 
       {/* Barra inferior sticky */}
