@@ -27,9 +27,8 @@ export const TENANTS: Record<string, TenantConfig> = {
 
 // Dominios custom ya activos que no siguen el esquema procurement.<slug>.inovahr-app.com.
 // Se resuelven directo al tenant indicado, sin tocar la lógica genérica de subdominios.
-const LEGACY_HOST_OVERRIDES: Record<string, string> = {
-  "procurement.demo.inovahr-app.com": "espacioluz",
-};
+// procurement.demo.inovahr-app.com ahora resuelve al tenant default (demo).
+const LEGACY_HOST_OVERRIDES: Record<string, string> = {};
 
 /**
  * Resuelve el tenant activo desde:

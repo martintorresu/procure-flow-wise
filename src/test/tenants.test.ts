@@ -14,8 +14,8 @@ describe("resolveTenant", () => {
     expect(resolveTenant("/", "procurement.otro.inovahr-app.com").slug).toBe("default");
   });
 
-  it("resuelve espacioluz desde el dominio legacy procurement.demo.inovahr-app.com", () => {
-    expect(resolveTenant("/", "procurement.demo.inovahr-app.com").slug).toBe("espacioluz");
+  it("resuelve default (demo) desde procurement.demo.inovahr-app.com", () => {
+    expect(resolveTenant("/", "procurement.demo.inovahr-app.com").slug).toBe("default");
   });
 
   it("usa parts[0] como fallback en subdominios genéricos", () => {
