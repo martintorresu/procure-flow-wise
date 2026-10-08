@@ -72,10 +72,12 @@ export default function AppSidebar() {
   const criticalCount = unresolvedAlerts.filter((a) => a.severity === "critical" || a.severity === "high").length;
   const totalAlerts = unresolvedAlerts.length;
 
-  // "Plantilla Permisos DOM" es material de referencia para gestores y administradores
+  // "Plantilla Permisos DOM" es material de referencia para gestores y administradores,
+  // visible solo para el tenant Espacio Luz
   const canManage = user?.role === "admin" || user?.role === "gestor";
+  const showDomTemplate = canManage && user?.tenantSlug === "espacioluz";
   const sections: NavSection[] = navSections.map((s) =>
-    s.label === "MÓDULOS" && canManage
+    s.label === "MÓDULOS" && showDomTemplate
       ? { ...s, items: [...s.items, { to: "/plantilla-dom", icon: ClipboardList, label: "Plantilla Permisos DOM" }] }
       : s,
   ).filter((s) => s.items.length > 0);
