@@ -557,6 +557,7 @@ export default function MinutaActivaPage() {
     setManualText("");
     setElapsed(0);
     setStartedAt(null);
+    setProjectId(null);
     setPresetProcessId(null);
     setPresetStageId(null);
     setMinutaSent(false);
