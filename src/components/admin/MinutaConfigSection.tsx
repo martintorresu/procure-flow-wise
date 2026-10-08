@@ -4,30 +4,34 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ClipboardCheck, Info } from "lucide-react";
 import { toast } from "sonner";
-import { useMinutaConfig, useSaveMinutaConfig } from "@/hooks/useMinutaConfig";
+import { useMinutaConfig, useSaveMinutaConfig, type MinutaStartScope } from "@/hooks/useMinutaConfig";
 
 /** Configuración del "Estándar de Minuta" por tenant (solo admin). */
 export function MinutaConfigSection() {
-  const { qualityThreshold, maxDeliveryDays, isLoading } = useMinutaConfig();
+  const { qualityThreshold, maxDeliveryDays, startScope, isLoading } = useMinutaConfig();
   const save = useSaveMinutaConfig();
   const [threshold, setThreshold] = useState(qualityThreshold);
   const [maxDays, setMaxDays] = useState(maxDeliveryDays);
+  const [scope, setScope] = useState<MinutaStartScope>(startScope);
 
   useEffect(() => {
     if (!isLoading) {
       setThreshold(qualityThreshold);
       setMaxDays(maxDeliveryDays);
+      setScope(startScope);
     }
-  }, [isLoading, qualityThreshold, maxDeliveryDays]);
+  }, [isLoading, qualityThreshold, maxDeliveryDays, startScope]);
 
   const onSave = async () => {
     try {
       await save.mutateAsync({
         qualityThreshold: Math.max(0, Math.min(100, threshold)),
         maxDeliveryDays: Math.max(1, maxDays),
+        startScope: scope,
       });
       toast.success("Configuración de Minuta Activa guardada");
     } catch (e) {
@@ -98,6 +102,22 @@ export function MinutaConfigSection() {
             onChange={(e) => setMaxDays(Number(e.target.value))}
             className="w-32"
           />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="minuta-scope">Inicio de la minuta</Label>
+          <Select value={scope} onValueChange={(v) => setScope(v as MinutaStartScope)}>
+            <SelectTrigger id="minuta-scope" className="w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="proyecto">Por proyecto</SelectItem>
+              <SelectItem value="proceso">Por proceso</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Por proyecto: proceso y etapa principal son opcionales al iniciar. Por proceso: son obligatorios.
+          </p>
         </div>
 
         <Button onClick={onSave} disabled={save.isPending}>
