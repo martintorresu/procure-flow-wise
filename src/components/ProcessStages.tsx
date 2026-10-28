@@ -18,6 +18,7 @@ import {
   type ProcessStage,
   type StageStatus,
 } from "@/hooks/useProcessStages";
+import { StageRequirementsBlock } from "@/components/requirements/StageRequirementsBlock";
 import { useStageCommitments, type StageCommitment } from "@/hooks/useStageCommitments";
 import { dueMeta, statusMeta } from "@/lib/commitments";
 import { formatDate } from "@/lib/stageLabels";
@@ -344,6 +345,7 @@ function StageItem({ stage, processId, commitments }: { stage: ProcessStage; pro
           <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">Compromisos vinculados</p>
           <StageCommitmentsBlock commitments={commitments} />
         </div>
+        <StageRequirementsBlock processId={stage.process_id} stageId={stage.id} />
       </AccordionContent>
     </AccordionItem>
   );

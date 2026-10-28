@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,8 @@ import { useProject, useProjectProcesses } from "@/hooks/useProjects";
 import { PROCESS_TYPE_LABELS, type ProcessType } from "@/lib/processTypes";
 import type { Process } from "@/types/process";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProjectRequirements from "@/components/ProjectRequirements";
+import { RequirementsTab } from "@/components/requirements/RequirementsTab";
+import { ProjectProfileForm } from "@/components/requirements/ProjectProfileForm";
 import { useAuth } from "@/contexts/AuthContext";
 
 /** Ordena los procesos siguiendo predecessor → continuación; los huérfanos al final. */
@@ -52,6 +53,8 @@ export default function ProjectChainPage() {
   const { user } = useAuth();
   const canManage = user?.role === "admin" || user?.role === "gestor";
 
+  const [params, setParams] = useSearchParams();
+  const tab = params.get("tab") ?? "processes";
   const chains = useMemo(() => buildChains(processes), [processes]);
 
   return (
@@ -75,17 +78,19 @@ export default function ProjectChainPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="processes">
+      <Tabs value={tab} onValueChange={(v) => { const p = new URLSearchParams(params); p.set("tab", v); p.delete("req"); setParams(p, { replace: true }); }}>
         <TabsList>
           <TabsTrigger value="processes">Procesos</TabsTrigger>
-          {canManage && <TabsTrigger value="requirements">Permisos DOM</TabsTrigger>}
+          <TabsTrigger value="profile">Perfil</TabsTrigger>
+          <TabsTrigger value="requirements">Requisitos</TabsTrigger>
         </TabsList>
 
-        {canManage && (
-          <TabsContent value="requirements" className="mt-4">
-            <ProjectRequirements processes={processes} />
-          </TabsContent>
-        )}
+        <TabsContent value="profile" className="mt-4">
+          {id && <ProjectProfileForm projectId={id} canEdit={canManage} />}
+        </TabsContent>
+        <TabsContent value="requirements" className="mt-4">
+          {id && <RequirementsTab projectId={id} processes={processes} canManage={canManage} userId={user?.id} />}
+        </TabsContent>
 
         <TabsContent value="processes" className="space-y-6 mt-4">
           {isLoading && <Skeleton className="h-40 w-full" />}
