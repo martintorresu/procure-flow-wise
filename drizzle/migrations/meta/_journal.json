@@ -43,6 +43,13 @@
       "when": 1793203908743,
       "tag": "0005_import_jobs_legal_catalog_no_tenant",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793204468506,
+      "tag": "0006_catalogo_lectura_y_versiones_cert_reglas",
+      "breakpoints": true
     }
   ]
 }

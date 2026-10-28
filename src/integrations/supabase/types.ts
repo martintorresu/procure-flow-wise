@@ -175,8 +175,11 @@ export type Database = {
         Row: {
           action: string
           active: boolean
+          catalog_status: string
           condition_json: Json
           created_at: string
+          effective_from: string | null
+          effective_to: string | null
           explanation: string | null
           human_validation_required: boolean
           id: string
@@ -185,12 +188,17 @@ export type Database = {
           rule_group: string | null
           rule_id: string
           updated_at: string
+          version_major: number
+          version_minor: number
         }
         Insert: {
           action?: string
           active?: boolean
+          catalog_status?: string
           condition_json?: Json
           created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
           explanation?: string | null
           human_validation_required?: boolean
           id?: string
@@ -199,12 +207,17 @@ export type Database = {
           rule_group?: string | null
           rule_id: string
           updated_at?: string
+          version_major?: number
+          version_minor?: number
         }
         Update: {
           action?: string
           active?: boolean
+          catalog_status?: string
           condition_json?: Json
           created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
           explanation?: string | null
           human_validation_required?: boolean
           id?: string
@@ -213,6 +226,8 @@ export type Database = {
           rule_group?: string | null
           rule_id?: string
           updated_at?: string
+          version_major?: number
+          version_minor?: number
         }
         Relationships: []
       }
@@ -2598,41 +2613,56 @@ export type Database = {
         Row: {
           antecedente: string | null
           base_normativa: string | null
+          catalog_status: string
           certificate_id: string
           codigo: string | null
           condicion: string | null
           created_at: string
           documento_emitido: string | null
+          effective_from: string | null
+          effective_to: string | null
           emisor: string | null
           especialidad: string | null
           etapa_asociada: string | null
           id: string
+          version_major: number
+          version_minor: number
         }
         Insert: {
           antecedente?: string | null
           base_normativa?: string | null
+          catalog_status?: string
           certificate_id: string
           codigo?: string | null
           condicion?: string | null
           created_at?: string
           documento_emitido?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
           emisor?: string | null
           especialidad?: string | null
           etapa_asociada?: string | null
           id?: string
+          version_major?: number
+          version_minor?: number
         }
         Update: {
           antecedente?: string | null
           base_normativa?: string | null
+          catalog_status?: string
           certificate_id?: string
           codigo?: string | null
           condicion?: string | null
           created_at?: string
           documento_emitido?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
           emisor?: string | null
           especialidad?: string | null
           etapa_asociada?: string | null
           id?: string
+          version_major?: number
+          version_minor?: number
         }
         Relationships: []
       }
@@ -2903,6 +2933,28 @@ export type Database = {
       }
     }
     Views: {
+      applicability_rules_current: {
+        Row: {
+          action: string | null
+          active: boolean | null
+          catalog_status: string | null
+          condition_json: Json | null
+          created_at: string | null
+          effective_from: string | null
+          effective_to: string | null
+          explanation: string | null
+          human_validation_required: boolean | null
+          id: string | null
+          priority: number | null
+          requirement_code: string | null
+          rule_group: string | null
+          rule_id: string | null
+          updated_at: string | null
+          version_major: number | null
+          version_minor: number | null
+        }
+        Relationships: []
+      }
       legal_processes_current: {
         Row: {
           applicability_text: string | null
@@ -2971,6 +3023,27 @@ export type Database = {
           id: string | null
           process_code: string | null
           updated_at: string | null
+          version_major: number | null
+          version_minor: number | null
+        }
+        Relationships: []
+      }
+      sector_certificates_current: {
+        Row: {
+          antecedente: string | null
+          base_normativa: string | null
+          catalog_status: string | null
+          certificate_id: string | null
+          codigo: string | null
+          condicion: string | null
+          created_at: string | null
+          documento_emitido: string | null
+          effective_from: string | null
+          effective_to: string | null
+          emisor: string | null
+          especialidad: string | null
+          etapa_asociada: string | null
+          id: string | null
           version_major: number | null
           version_minor: number | null
         }
