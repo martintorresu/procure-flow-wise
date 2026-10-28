@@ -693,12 +693,63 @@ export type Database = {
           },
         ]
       }
+      legal_catalog_log: {
+        Row: {
+          action: string
+          changed_at: string
+          changed_by: string | null
+          code: string
+          id: string
+          new_effective_to: string | null
+          new_status: string | null
+          old_effective_to: string | null
+          old_status: string | null
+          record_id: string
+          table_name: string
+          version_major: number | null
+          version_minor: number | null
+        }
+        Insert: {
+          action: string
+          changed_at?: string
+          changed_by?: string | null
+          code: string
+          id?: string
+          new_effective_to?: string | null
+          new_status?: string | null
+          old_effective_to?: string | null
+          old_status?: string | null
+          record_id: string
+          table_name: string
+          version_major?: number | null
+          version_minor?: number | null
+        }
+        Update: {
+          action?: string
+          changed_at?: string
+          changed_by?: string | null
+          code?: string
+          id?: string
+          new_effective_to?: string | null
+          new_status?: string | null
+          old_effective_to?: string | null
+          old_status?: string | null
+          record_id?: string
+          table_name?: string
+          version_major?: number | null
+          version_minor?: number | null
+        }
+        Relationships: []
+      }
       legal_processes: {
         Row: {
           applicability_text: string | null
+          catalog_status: string
           catalog_version: string | null
           created_at: string
           default_flow_stage: string | null
+          effective_from: string | null
+          effective_to: string | null
           family: string | null
           id: string
           legal_nature: string | null
@@ -712,9 +763,12 @@ export type Database = {
         }
         Insert: {
           applicability_text?: string | null
+          catalog_status?: string
           catalog_version?: string | null
           created_at?: string
           default_flow_stage?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
           family?: string | null
           id?: string
           legal_nature?: string | null
@@ -728,9 +782,12 @@ export type Database = {
         }
         Update: {
           applicability_text?: string | null
+          catalog_status?: string
           catalog_version?: string | null
           created_at?: string
           default_flow_stage?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
           family?: string | null
           id?: string
           legal_nature?: string | null
@@ -1070,6 +1127,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "municipal_requirements_legal_requirement_id_fkey"
+            columns: ["legal_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "legal_requirements_current"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "municipal_requirements_municipality_id_fkey"
             columns: ["municipality_id"]
             isOneToOne: false
@@ -1239,30 +1303,45 @@ export type Database = {
       process_applicability_rules: {
         Row: {
           applicability: string | null
+          catalog_status: string
           condition_json: Json
           created_at: string
+          effective_from: string | null
+          effective_to: string | null
           explanation: string | null
           id: string
           process_code: string
           updated_at: string
+          version_major: number
+          version_minor: number
         }
         Insert: {
           applicability?: string | null
+          catalog_status?: string
           condition_json?: Json
           created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
           explanation?: string | null
           id?: string
           process_code: string
           updated_at?: string
+          version_major?: number
+          version_minor?: number
         }
         Update: {
           applicability?: string | null
+          catalog_status?: string
           condition_json?: Json
           created_at?: string
+          effective_from?: string | null
+          effective_to?: string | null
           explanation?: string | null
           id?: string
           process_code?: string
           updated_at?: string
+          version_major?: number
+          version_minor?: number
         }
         Relationships: []
       }
@@ -2818,7 +2897,79 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      legal_processes_current: {
+        Row: {
+          applicability_text: string | null
+          catalog_status: string | null
+          catalog_version: string | null
+          created_at: string | null
+          default_flow_stage: string | null
+          effective_from: string | null
+          effective_to: string | null
+          family: string | null
+          id: string | null
+          legal_nature: string | null
+          name: string | null
+          output_document: string | null
+          process_code: string | null
+          recipient: string | null
+          updated_at: string | null
+          version_major: number | null
+          version_minor: number | null
+        }
+        Relationships: []
+      }
+      legal_requirements_current: {
+        Row: {
+          allows_override: boolean | null
+          applicability_text: string | null
+          catalog_status: string | null
+          catalog_version: string | null
+          created_at: string | null
+          default_priority: string | null
+          effective_from: string | null
+          effective_to: string | null
+          evidence_pending: boolean | null
+          evidence_required: string | null
+          family: string | null
+          group_code: string | null
+          group_name: string | null
+          id: string | null
+          is_customizable: boolean | null
+          issuer: string | null
+          legal_nature: string | null
+          legal_reference: string | null
+          output_document: string | null
+          process_code: string | null
+          recipient: string | null
+          requirement_code: string | null
+          requirement_level: string | null
+          requirement_name: string | null
+          source_document: string | null
+          source_version: string | null
+          updated_at: string | null
+          version_major: number | null
+          version_minor: number | null
+        }
+        Relationships: []
+      }
+      process_applicability_rules_current: {
+        Row: {
+          applicability: string | null
+          catalog_status: string | null
+          condition_json: Json | null
+          created_at: string | null
+          effective_from: string | null
+          effective_to: string | null
+          explanation: string | null
+          id: string | null
+          process_code: string | null
+          updated_at: string | null
+          version_major: number | null
+          version_minor: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       claim_process_invitations: { Args: never; Returns: number }
