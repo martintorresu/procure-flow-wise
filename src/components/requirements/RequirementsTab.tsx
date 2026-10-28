@@ -237,7 +237,7 @@ export function RequirementsTab({
             <Button size="sm" variant="outline" onClick={exportCsv}><FileDown className="mr-1 h-4 w-4" />CSV</Button>
             <Button size="sm" variant="ghost" onClick={exportHistory}><History className="mr-1 h-4 w-4" />Historial</Button>
           </div>
-          <div className="grid gap-2 pt-2 sm:grid-cols-4 lg:grid-cols-8">
+          <div className="grid gap-2 pt-2 sm:grid-cols-2 lg:grid-cols-4">
             <Input placeholder="Buscar código o nombre" value={q} onChange={(e) => setQ(e.target.value)} />
             <Select value={groupBy} onValueChange={(v) => setGroupBy(v as GroupBy)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
