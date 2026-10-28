@@ -124,7 +124,7 @@ export function useLegalCatalog() {
     queryFn: async () => {
       const [p, pr, r, rr] = await Promise.all([
         db.from("legal_processes_current").select("process_code, name, default_flow_stage, family, catalog_version").order("process_code"),
-        db.from("process_applicability_rules_current").select("process_code, condition_json, explanation"),
+        db.from("process_applicability_rules_current").select("process_code, condition_json, explanation, applicability"),
         db.from("legal_requirements_current")
           .select("id, requirement_code, process_code, requirement_name, requirement_level, evidence_required, evidence_pending, legal_reference, recipient, issuer, default_priority, catalog_version, group_name")
           .order("requirement_code").limit(5000),
@@ -133,7 +133,7 @@ export function useLegalCatalog() {
       for (const x of [p, pr, r, rr]) if (x.error) throw new Error(x.error.message);
       return {
         processes: p.data as CatalogProcessRow[],
-        processRules: pr.data as { process_code: string; condition_json: unknown; explanation: string | null }[],
+        processRules: pr.data as { process_code: string; condition_json: unknown; explanation: string | null; applicability: string | null }[],
         requirements: r.data as CatalogRequirementRow[],
         rules: rr.data as { rule_id: string; requirement_code: string; condition_json: unknown; action: string; priority: number; explanation: string | null; active: boolean }[],
       };
@@ -143,7 +143,7 @@ export function useLegalCatalog() {
 
 export interface MunicipalRequirementRow {
   id: string; code: string; name: string; description: string | null; requirement_type: string; evidence_required: string | null;
-  issuer: string | null; flow_stage_code: string | null; process_code: string | null; source: string; verified_at: string | null; legal_requirement_id: string | null;
+  issuer: string | null; flow_stage_code: string | null; process_code: string | null; source: string; verified_at: string | null; legal_requirement_id: string | null; mapping_status: string;
 }
 
 export function useMunicipalRequirements(municipalityId: string | null | undefined) {
@@ -152,7 +152,7 @@ export function useMunicipalRequirements(municipalityId: string | null | undefin
     enabled: !!municipalityId,
     queryFn: async () => {
       const { data, error } = await db.from("municipal_requirements")
-        .select("id, code, name, description, requirement_type, evidence_required, issuer, flow_stage_code, process_code, source, verified_at, legal_requirement_id")
+        .select("id, code, name, description, requirement_type, evidence_required, issuer, flow_stage_code, process_code, source, verified_at, legal_requirement_id, mapping_status")
         .eq("municipality_id", municipalityId).eq("status", "active").order("code");
       if (error) throw new Error(error.message);
       return data as MunicipalRequirementRow[];
@@ -399,5 +399,35 @@ export function useStageRequirements(processId: string | undefined) {
       if (error) throw new Error(error.message);
       return data as Pick<RequirementItem, "id" | "project_id" | "code" | "name" | "applicability" | "status" | "stage_id" | "due_date" | "owner_name">[];
     },
+  });
+}
+
+export function useDeleteProcessRequirements(projectId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      for (let i = 0; i < ids.length; i += 200) {
+        const { error } = await db.from("project_requirement_items").delete().in("id", ids.slice(i, i + 200));
+        if (error) throw new Error(error.message);
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: reqKeys.items(projectId) }),
+  });
+}
+
+/** Actualiza varios requisitos con el mismo cambio (lote). */
+export function useBulkUpdateRequirements(projectId: string | undefined) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (updates: { id: string; patch: Partial<RequirementItem> }[]) => {
+      const errors: string[] = [];
+      for (const u of updates) {
+        const { error } = await db.from("project_requirement_items").update(u.patch).eq("id", u.id);
+        if (error) errors.push(error.message);
+      }
+      if (errors.length) throw new Error(`${errors.length} no se actualizaron: ${errors[0]}`);
+      return updates.length;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: reqKeys.items(projectId) }),
   });
 }
