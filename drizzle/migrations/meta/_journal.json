@@ -57,6 +57,13 @@
       "when": 1793204768632,
       "tag": "0007_requisitos_etapa3_estados_documentos_historial",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1793214860743,
+      "tag": "0008_perfil_proyecto_solo_gestor",
+      "breakpoints": true
     }
   ]
 }
