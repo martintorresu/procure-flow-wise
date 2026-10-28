@@ -99,6 +99,8 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
 
 export const ALL_PROFILE_FIELDS = PROFILE_SECTIONS.flatMap((s) => s.fields);
 
+export const fieldLabel = (key: string) => ALL_PROFILE_FIELDS.find((f) => f.key === key)?.label ?? key;
+
 export type ProjectProfile = Record<string, unknown>;
 
 /** Perfil efectivo para evaluar reglas: aplica valores por defecto y respuestas derivadas. */

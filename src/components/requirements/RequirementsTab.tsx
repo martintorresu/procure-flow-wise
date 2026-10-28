@@ -145,7 +145,7 @@ export function RequirementsTab({
   const exportCsv = () => download(`${fileBase}.csv`, toCsv(exportRows() as (string | number)[][]));
   const exportXlsx = async () => {
     const rows = exportRows();
-    await writeXlsxFile(rows.map((r, ri) => r.map((v) => ({ value: v as string | number, fontWeight: ri === 0 ? "bold" as const : undefined }))), { fileName: `${fileBase}.xlsx` });
+    await writeXlsxFile(rows.map((r, ri) => r.map((v) => ({ value: v as string | number, fontWeight: ri === 0 ? "bold" as const : undefined }))), { sheet: "Requisitos" }).toFile(`${fileBase}.xlsx`);
   };
   const exportHistory = async () => {
     try {

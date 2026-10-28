@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { suggestProcesses } from "@/lib/requirementsEngine";
 import { effectiveProfile, type ProjectProfile } from "@/lib/projectProfile";
-import { APPLICABILITY_META, DISCLAIMER } from "@/lib/requirementLabels";
+import { APPLICABILITY_META } from "@/lib/requirementLabels";
 import { useLegalCatalog, useProjectProcessSelection, useSaveProcessSelection } from "@/hooks/useProjectRequirementItems";
 import { ProposeRequirementsDialog } from "./ProposeRequirementsDialog";
 
@@ -55,7 +55,7 @@ export function ProcessWizard({
       <CardHeader className="pb-3">
         <CardTitle className="text-base">Asistente de trámites</CardTitle>
         <CardDescription>
-          Según el perfil, aplican: {suggested.length ? suggested.join(", ") : "ninguno todavía (completa el perfil)"}. {DISCLAIMER}
+          Según el perfil, aplican: {suggested.length ? suggested.join(", ") : "ninguno todavía (completa el perfil)"}. El gestor confirma, agrega o quita trámites.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">

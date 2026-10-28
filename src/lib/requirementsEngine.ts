@@ -5,6 +5,7 @@
  */
 import { evaluateCondition, evaluateRule, type Outcome, type Profile } from "@/lib/conditionEval";
 import type { ReqApplicability, ReqStatus } from "@/lib/requirementLabels";
+import { fieldLabel } from "@/lib/projectProfile";
 
 export interface ProcessRule { process_code: string; condition_json: unknown; explanation?: string | null }
 export interface CatalogProcess { process_code: string; name: string; default_flow_stage: string | null; family?: string | null }
@@ -26,7 +27,7 @@ export function suggestProcesses(processes: CatalogProcess[], rules: ProcessRule
     const base = rule.explanation ?? "";
     const explanation =
       r.result === "review_required" && r.missing.length
-        ? `Faltan datos del perfil: ${[...new Set(r.missing)].join(", ")}.${base ? ` ${base}` : ""}`
+        ? `Faltan datos del perfil: ${[...new Set(r.missing)].map(fieldLabel).join(", ")}.${base ? ` ${base}` : ""}`
         : base || (r.result === "applicable" ? "Cumple la condición del trámite." : "No cumple la condición del trámite.");
     return { process_code: p.process_code, name: p.name, result: r.result, missing: r.missing, explanation };
   });
@@ -72,7 +73,7 @@ export function evaluateRequirements(codes: string[], rules: RequirementRule[], 
     const conflict = results.some((x) => x.e.result !== top.e.result);
     const missing = [...new Set(top.e.missing)];
     let explanation = top.r.explanation ?? "";
-    if (missing.length) explanation = `Faltan datos del perfil: ${missing.join(", ")}. ${explanation}`.trim();
+    if (missing.length) explanation = `Faltan datos del perfil: ${missing.map(fieldLabel).join(", ")}. ${explanation}`.trim();
     if (conflict) explanation = `Reglas en conflicto; gana ${top.r.rule_id}. ${explanation}`.trim();
     out.set(code, {
       requirement_code: code,
