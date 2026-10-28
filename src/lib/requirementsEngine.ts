@@ -49,6 +49,7 @@ export interface RequirementDecision {
   rule_id: string | null;
   explanation: string;
   conflict: boolean;
+  missing: string[];
 }
 
 /**
@@ -65,7 +66,7 @@ export function evaluateRequirements(codes: string[], rules: RequirementRule[], 
   for (const code of codes) {
     const list = (byReq.get(code) ?? []).sort((a, b) => b.priority - a.priority);
     if (!list.length) {
-      out.set(code, { requirement_code: code, applicability: "review_required", rule_id: null, explanation: "Sin regla: requiere revisión.", conflict: false });
+      out.set(code, { requirement_code: code, applicability: "review_required", rule_id: null, explanation: "Sin regla: requiere revisión.", conflict: false, missing: [] });
       continue;
     }
     const results = list.map((r) => ({ r, e: evaluateRule(r, profile) }));
@@ -81,6 +82,7 @@ export function evaluateRequirements(codes: string[], rules: RequirementRule[], 
       rule_id: top.r.rule_id,
       explanation,
       conflict,
+      missing,
     });
   }
   return out;
@@ -154,3 +156,102 @@ export function matchFileToCode(fileName: string, codes: string[]): string | nul
 
 /** "E3 Permiso de edificación" → "E3". */
 export const stageCodeOf = (s: string | null | undefined) => (s ? (/^E\d+/.exec(s.trim())?.[0] ?? null) : null);
+
+/* ------------------------- Generación de requisitos ------------------------- */
+
+export interface GenCatalogReq {
+  id: string; requirement_code: string; process_code: string; requirement_name: string; legal_reference: string | null;
+  catalog_version: string | null; evidence_required: string | null; evidence_pending: boolean; default_priority: string | null;
+}
+export interface GenMunicipalReq {
+  id: string; code: string; name: string; process_code: string | null; flow_stage_code: string | null; source: string;
+  evidence_required: string | null; mapping_status: string;
+}
+export interface GenExisting {
+  id: string; origin_type: string; code: string; applicability: ReqApplicability; status: ReqStatus | null;
+  owner_user_id: string | null; owner_name: string | null; justification: string | null; process_code: string | null;
+}
+export interface GenRow {
+  origin_type: "legal" | "municipal"; origin_id: string; code: string; name: string; process_code: string | null;
+  legal_reference: string | null; origin_version: string | null; evidence_required: string | null; evidence_pending: boolean;
+  activation_mode: "rules"; rule_id: string | null; rule_explanation: string | null; mapping_status: string;
+  applicability: ReqApplicability; justification: string | null; flow_stage_id: string | null; priority: string | null;
+}
+export interface GenChange { id: string; code: string; from: ReqApplicability; to: ReqApplicability; justification: string | null; rule_id: string | null; rule_explanation: string | null; locked: boolean; lockReason: string | null }
+
+export const RULE_JUSTIFICATION_PREFIX = "Excluido por regla ";
+
+/** ¿El requisito ya tiene gestión? (estado ≠ pendiente, responsable, documentos o justificación manual). */
+export function managementLock(e: GenExisting, docCount: number): string | null {
+  if (e.status && e.status !== "pending") return "tiene estado de gestión";
+  if (e.owner_user_id || (e.owner_name ?? "").trim()) return "tiene responsable";
+  if (docCount > 0) return "tiene documentos";
+  if ((e.justification ?? "").trim() && !e.justification!.startsWith(RULE_JUSTIFICATION_PREFIX)) return "tiene justificación manual";
+  return null;
+}
+
+export function planGeneration(args: {
+  processCodes: string[];
+  requirements: GenCatalogReq[];
+  rules: RequirementRule[];
+  municipal: GenMunicipalReq[];
+  processStage: Map<string, string | null>; // process_code → flow_stage_id
+  stageIdByCode: Map<string, string>;
+  profile: Profile;
+  existing: GenExisting[];
+  docCount: Map<string, number>;
+  label?: (field: string) => string;
+}): { inserts: GenRow[]; changes: GenChange[] } {
+  const label = args.label ?? ((f: string) => f);
+  const codes = new Set(args.processCodes);
+  const reqs = args.requirements.filter((r) => codes.has(r.process_code));
+  const decisions = evaluateRequirements(reqs.map((r) => r.requirement_code), args.rules, args.profile);
+  const existing = new Map(args.existing.map((e) => [`${e.origin_type}:${e.code}`, e]));
+  const inserts: GenRow[] = [];
+  const changes: GenChange[] = [];
+
+  for (const r of reqs) {
+    const d = decisions.get(r.requirement_code)!;
+    const ruleText = d.explanation || "";
+    const justification = d.applicability === "not_applicable" ? `${RULE_JUSTIFICATION_PREFIX}${d.rule_id ?? "—"}: ${ruleText || "sin explicación"}` : null;
+    const ruleExpl = d.applicability === "review_required" && d.missing.length
+      ? `Datos faltantes: ${d.missing.join(", ")} (${d.missing.map(label).join(", ")}). ${ruleText}`.trim()
+      : ruleText;
+    const ex = existing.get(`legal:${r.requirement_code}`);
+    if (ex) {
+      if (ex.applicability !== d.applicability) {
+        const lock = managementLock(ex, args.docCount.get(ex.id) ?? 0);
+        changes.push({ id: ex.id, code: ex.code, from: ex.applicability, to: d.applicability, justification, rule_id: d.rule_id, rule_explanation: ruleExpl, locked: !!lock, lockReason: lock });
+      }
+      continue;
+    }
+    inserts.push({
+      origin_type: "legal", origin_id: r.id, code: r.requirement_code, name: r.requirement_name, process_code: r.process_code,
+      legal_reference: r.legal_reference, origin_version: r.catalog_version, evidence_required: r.evidence_pending ? null : r.evidence_required,
+      evidence_pending: r.evidence_pending, activation_mode: "rules", rule_id: d.rule_id, rule_explanation: ruleExpl,
+      mapping_status: "linked", applicability: d.applicability, justification,
+      flow_stage_id: args.processStage.get(r.process_code) ?? null, priority: r.default_priority,
+    });
+  }
+
+  for (const m of args.municipal) {
+    if (m.process_code && !codes.has(m.process_code)) continue;
+    if (existing.has(`municipal:${m.code}`)) continue;
+    const st = stageCodeOf(m.flow_stage_code);
+    inserts.push({
+      origin_type: "municipal", origin_id: m.id, code: m.code, name: m.name, process_code: m.process_code, legal_reference: m.source,
+      origin_version: null, evidence_required: m.evidence_required, evidence_pending: !m.evidence_required, activation_mode: "rules",
+      rule_id: null, rule_explanation: "Exigencia municipal de la comuna del proyecto.", mapping_status: m.mapping_status,
+      applicability: "review_required", justification: null, flow_stage_id: st ? args.stageIdByCode.get(st) ?? null : null, priority: null,
+    });
+  }
+  return { inserts, changes };
+}
+
+/** Un trámite solo se desactiva si ninguno de sus requisitos tiene gestión. */
+export function deactivationBlockers(processCode: string, existing: GenExisting[], docCount: Map<string, number>) {
+  return existing
+    .filter((e) => e.process_code === processCode)
+    .map((e) => ({ code: e.code, reason: managementLock(e, docCount.get(e.id) ?? 0) }))
+    .filter((x): x is { code: string; reason: string } => !!x.reason && x.reason !== "tiene justificación manual");
+}
