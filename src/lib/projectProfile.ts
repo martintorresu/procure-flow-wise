@@ -49,7 +49,7 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
       { key: "permit_route", label: "Vía de tramitación", kind: "select", affects: "Permiso o declaración jurada", options: [{ value: "permit", label: "Permiso" }, { value: "dj", label: "Declaración jurada" }] },
       { key: "area_type", label: "Zona", kind: "select", options: [{ value: "urban", label: "Urbana" }, { value: "rural", label: "Rural" }] },
       { key: "use_class", label: "Destino", kind: "text" },
-      { key: "area_m2", label: "Superficie (m²)", kind: "number", affects: "Umbrales de superficie (ej. ampliaciones > 100 m²)" },
+      { key: "area_m2", label: "Superficie (m²)", kind: "number", affects: "Más de 100 m² o hasta 100 m² (ampliaciones)" },
       { key: "occupancy_load", label: "Carga de ocupación", kind: "number" },
       { key: "reception_type", label: "Tipo de recepción", kind: "select", options: [{ value: "total", label: "Total" }, { value: "partial", label: "Parcial" }] },
     ],
