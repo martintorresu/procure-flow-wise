@@ -50,6 +50,13 @@
       "when": 1793204468506,
       "tag": "0006_catalogo_lectura_y_versiones_cert_reglas",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1793204768632,
+      "tag": "0007_requisitos_etapa3_estados_documentos_historial",
+      "breakpoints": true
     }
   ]
 }
