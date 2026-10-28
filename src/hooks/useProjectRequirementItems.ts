@@ -212,19 +212,15 @@ export function useProjectProcessSelection(projectId: string | undefined) {
   });
 }
 
-export function useSaveProcessSelection(projectId: string | undefined) {
+export function useSaveProcessSelection(projectId: string | undefined, tenantId: string | undefined) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (rows: { process_code: string; suggested: boolean; suggestion_explanation: string; active: boolean }[]) => {
       const { data: auth } = await supabase.auth.getUser();
       const now = new Date().toISOString();
       const payload = rows.map((r) => ({
-        ...r, project_id: projectId, tenant_id: "00000000-0000-0000-0000-000000000000",
-        confirmed_by: auth.user?.id ?? null, confirmed_at: now,
+        ...r, project_id: projectId, tenant_id: tenantId, confirmed_by: auth.user?.id ?? null, confirmed_at: now,
       }));
-      // tenant_id lo fija el trigger; el valor nulo-UUID se reemplaza abajo
-      const { data: proj } = await db.from("projects").select("tenant_id").eq("id", projectId).single();
-      payload.forEach((p) => (p.tenant_id = proj.tenant_id));
       const { error } = await db.from("project_processes").upsert(payload, { onConflict: "project_id,process_code" });
       if (error) throw new Error(error.message);
     },
