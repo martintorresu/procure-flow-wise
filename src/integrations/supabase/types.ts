@@ -591,6 +591,7 @@ export type Database = {
           project_id: string | null
           skipped_count: number
           status: string
+          target_table: string | null
           tenant_id: string | null
           updated_at: string
           updated_by: string | null
@@ -607,6 +608,7 @@ export type Database = {
           project_id?: string | null
           skipped_count?: number
           status?: string
+          target_table?: string | null
           tenant_id?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -623,6 +625,7 @@ export type Database = {
           project_id?: string | null
           skipped_count?: number
           status?: string
+          target_table?: string | null
           tenant_id?: string | null
           updated_at?: string
           updated_by?: string | null
@@ -652,6 +655,7 @@ export type Database = {
           error: string | null
           id: string
           job_id: string
+          record_code: string | null
           result: string | null
           row_number: number
           tenant_id: string | null
@@ -662,6 +666,7 @@ export type Database = {
           error?: string | null
           id?: string
           job_id: string
+          record_code?: string | null
           result?: string | null
           row_number: number
           tenant_id?: string | null
@@ -672,6 +677,7 @@ export type Database = {
           error?: string | null
           id?: string
           job_id?: string
+          record_code?: string | null
           result?: string | null
           row_number?: number
           tenant_id?: string | null

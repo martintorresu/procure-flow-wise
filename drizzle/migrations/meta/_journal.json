@@ -29,6 +29,20 @@
       "when": 1793202849281,
       "tag": "0003_catalogo_legal_inmutable_y_versiones",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793203730400,
+      "tag": "0004_catalog_importer_and_member_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1793203908743,
+      "tag": "0005_import_jobs_legal_catalog_no_tenant",
+      "breakpoints": true
     }
   ]
 }

@@ -2,13 +2,14 @@ import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   LayoutDashboard, FileText, Plus, Bell, LogOut, ChevronLeft, ChevronRight,
-  Shield, FolderKanban, UserCog, MessagesSquare, Mic, ClipboardList
+  Shield, FolderKanban, UserCog, MessagesSquare, Mic, ClipboardList, Upload
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { useAlerts } from "@/hooks/useAlerts";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { usePlatformAdmin } from "@/hooks/usePlatformAdmin";
 import { ProcuremMark, ProcuremLockup } from "@/components/ProcuremMark";
 import { NotificationBell } from "@/components/NotificationBell";
 import { TENANTS } from "@/config/tenants";
@@ -76,15 +77,18 @@ export default function AppSidebar() {
   // visible solo para el tenant Espacio Luz
   const canManage = user?.role === "admin" || user?.role === "gestor";
   const showDomTemplate = canManage && user?.tenantSlug === "espacioluz";
+  const { data: isPlatformAdmin = false } = usePlatformAdmin();
   const sections: NavSection[] = navSections.map((s) =>
     s.label === "MÓDULOS" && showDomTemplate
       ? { ...s, items: [...s.items, { to: "/plantilla-dom", icon: ClipboardList, label: "Plantilla Permisos DOM" }] }
       : s,
   ).filter((s) => s.items.length > 0);
 
-  const bottomItems: NavItem[] = user?.role === "admin"
-    ? [...baseBottomItems, { to: "/admin", icon: Shield, label: "Administración" }]
-    : baseBottomItems;
+  const bottomItems: NavItem[] = [
+    ...baseBottomItems,
+    ...(user?.role === "admin" ? [{ to: "/admin", icon: Shield, label: "Administración" }] : []),
+    ...(isPlatformAdmin ? [{ to: "/catalogo-legal", icon: Upload, label: "Centro de carga" }] : []),
+  ];
 
   // Prefijo del tenant: los usuarios de un tenant distinto de "default" navegan bajo /t/<slug>
   const tenantPrefix = user && user.tenantSlug !== "default" ? `/t/${user.tenantSlug}` : "";

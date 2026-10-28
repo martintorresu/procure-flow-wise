@@ -20,6 +20,7 @@ import AdminPage from "@/pages/AdminPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectChainPage from "@/pages/ProjectChainPage";
 import RequirementTemplatePage from "@/pages/RequirementTemplatePage";
+import CatalogImportPage from "@/pages/CatalogImportPage";
 import ProfilePage from "@/pages/ProfilePage";
 import CommitmentsPage from "@/pages/CommitmentsPage";
 import MinutaActivaPage from "@/pages/MinutaActivaPage";
@@ -129,6 +130,7 @@ const App = () => (
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectChainPage />} />
               <Route path="/plantilla-dom" element={<RequirementTemplatePage />} />
+              <Route path="/catalogo-legal" element={<CatalogImportPage />} />
               <Route path="/alerts" element={<AlertsPage />} />
               <Route path="/commitments" element={<CommitmentsPage />} />
               <Route path="/minuta" element={<MinutaActivaPage />} />
@@ -146,6 +148,7 @@ const App = () => (
               <Route path="projects" element={<ProjectsPage />} />
               <Route path="projects/:id" element={<ProjectChainPage />} />
               <Route path="plantilla-dom" element={<RequirementTemplatePage />} />
+              <Route path="catalogo-legal" element={<CatalogImportPage />} />
               <Route path="alerts" element={<AlertsPage />} />
               <Route path="commitments" element={<CommitmentsPage />} />
               <Route path="minuta" element={<MinutaActivaPage />} />
