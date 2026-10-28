@@ -173,7 +173,7 @@ export interface GenExisting {
 export interface GenRow {
   origin_type: "legal" | "municipal"; origin_id: string; code: string; name: string; process_code: string | null;
   legal_reference: string | null; origin_version: string | null; evidence_required: string | null; evidence_pending: boolean;
-  activation_mode: "rules"; rule_id: string | null; rule_explanation: string | null; mapping_status: string;
+  activation_mode: "rules"; rule_id: string | null; rule_explanation: string | null; mapping_status: "linked" | "pending_validation" | "unmapped";
   applicability: ReqApplicability; justification: string | null; flow_stage_id: string | null; priority: string | null;
 }
 export interface GenChange { id: string; code: string; from: ReqApplicability; to: ReqApplicability; justification: string | null; rule_id: string | null; rule_explanation: string | null; locked: boolean; lockReason: string | null }
@@ -240,7 +240,7 @@ export function planGeneration(args: {
     inserts.push({
       origin_type: "municipal", origin_id: m.id, code: m.code, name: m.name, process_code: m.process_code, legal_reference: m.source,
       origin_version: null, evidence_required: m.evidence_required, evidence_pending: !m.evidence_required, activation_mode: "rules",
-      rule_id: null, rule_explanation: "Exigencia municipal de la comuna del proyecto.", mapping_status: m.mapping_status,
+      rule_id: null, rule_explanation: "Exigencia municipal de la comuna del proyecto.", mapping_status: m.mapping_status as GenRow["mapping_status"],
       applicability: "applicable", justification: null, flow_stage_id: st ? args.stageIdByCode.get(st) ?? null : null, priority: null,
     });
   }
