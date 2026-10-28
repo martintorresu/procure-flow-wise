@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Progress } from "@/components/ui/progress";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { PROFILE_SECTIONS, type ProfileField, type ProjectProfile } from "@/lib/projectProfile";
-import { useMunicipalities, useProjectMeta, useSaveProjectProfile } from "@/hooks/useProjectRequirementItems";
+import { ALL_PROFILE_FIELDS, PROFILE_SECTIONS, type ProfileField, type ProjectProfile } from "@/lib/projectProfile";
+import { useLegalCatalog, useMunicipalities, useProjectMeta, useSaveProjectProfile } from "@/hooks/useProjectRequirementItems";
 
 const UNSET = "__unset";
 
@@ -56,10 +57,37 @@ export function ProjectProfileForm({ projectId, canEdit }: { projectId: string; 
   const { toast } = useToast();
   const [profile, setProfile] = useState<ProjectProfile>({});
   const [muni, setMuni] = useState<string | null>(null);
+  const { data: cat } = useLegalCatalog();
 
   useEffect(() => {
-    if (meta) { setProfile(meta.profile ?? {}); setMuni(meta.municipality_id); }
+    if (!meta) return;
+    const p: ProjectProfile = { ...(meta.profile ?? {}) };
+    for (const f of ALL_PROFILE_FIELDS) if (f.defaultValue !== undefined && p[f.key] === undefined) p[f.key] = f.defaultValue;
+    setProfile(p); setMuni(meta.municipality_id);
   }, [meta]);
+
+  /** Trámites cuya condición usa cada campo del perfil. */
+  const fieldProcs = useMemo(() => {
+    const m = new Map<string, string[]>();
+    const walk = (c: unknown, code: string) => {
+      if (!c || typeof c !== "object") return;
+      const o = c as Record<string, unknown>;
+      if (typeof o.field === "string") m.set(o.field, [...new Set([...(m.get(o.field) ?? []), code])]);
+      for (const k of ["all", "any"]) if (Array.isArray(o[k])) (o[k] as unknown[]).forEach((x) => walk(x, code));
+    };
+    (cat?.processRules ?? []).forEach((r) => walk(r.condition_json, r.process_code));
+    return m;
+  }, [cat]);
+
+  const answered = ALL_PROFILE_FIELDS.filter((f) => profile[f.key] !== undefined && profile[f.key] !== null && profile[f.key] !== "").length;
+
+  const setField = (key: string, v: unknown) => setProfile((p) => {
+    const n = { ...p, [key]: v };
+    const filled = typeof v === "string" && v.trim() !== "";
+    if (key === "ito_name" && filled) n.has_ito = true;
+    if (key === "independent_reviewer_name" && filled) n.has_independent_reviewer = true;
+    return n;
+  });
 
   if (isLoading) return <Skeleton className="h-64 w-full" />;
 
@@ -75,6 +103,13 @@ export function ProjectProfileForm({ projectId, canEdit }: { projectId: string; 
 
   return (
     <div className="space-y-4">
+      <Card>
+        <CardContent className="space-y-2 p-4">
+          <p className="text-sm font-medium">{answered} de {ALL_PROFILE_FIELDS.length} preguntas respondidas</p>
+          <Progress value={(answered / ALL_PROFILE_FIELDS.length) * 100} className="h-2" />
+          {!canEdit && <p className="text-xs text-muted-foreground">Solo admin y gestor editan el perfil.</p>}
+        </CardContent>
+      </Card>
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base">Municipalidad</CardTitle>
@@ -98,8 +133,13 @@ export function ProjectProfileForm({ projectId, canEdit }: { projectId: string; 
             {s.fields.map((f) => (
               <div key={f.key} className="space-y-1">
                 <Label className="text-sm">{f.label}</Label>
-                <FieldInput f={f} value={profile[f.key]} disabled={!canEdit} onChange={(v) => setProfile((p) => ({ ...p, [f.key]: v }))} />
-                {f.affects && <p className="text-xs text-muted-foreground">Afecta: {f.affects}</p>}
+                <FieldInput f={f} value={profile[f.key]} disabled={!canEdit} onChange={(v) => setField(f.key, v)} />
+                {(f.affects || fieldProcs.get(f.key)) && (
+                  <p className="text-xs text-muted-foreground">
+                    {f.affects ?? ""}{f.affects && fieldProcs.get(f.key) ? " · " : ""}
+                    {fieldProcs.get(f.key) ? `Define ${fieldProcs.get(f.key)!.sort().join(", ")}` : ""}
+                  </p>
+                )}
               </div>
             ))}
           </CardContent>

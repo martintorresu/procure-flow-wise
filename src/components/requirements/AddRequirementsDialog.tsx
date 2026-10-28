@@ -110,7 +110,6 @@ export function AddRequirementsDialog({
         <Tabs defaultValue="search">
           <TabsList>
             <TabsTrigger value="search">Buscador</TabsTrigger>
-            <TabsTrigger value="full">Trámite completo</TabsTrigger>
             <TabsTrigger value="own">Requisito propio</TabsTrigger>
           </TabsList>
 
@@ -167,16 +166,6 @@ export function AddRequirementsDialog({
             </DialogFooter>
           </TabsContent>
 
-          <TabsContent value="full" className="space-y-3">
-            <Label>Trámite</Label>
-            <Select value={fullProc} onValueChange={setFullProc}>
-              <SelectTrigger className="max-w-md"><SelectValue placeholder="Elige un trámite" /></SelectTrigger>
-              <SelectContent>{(cat?.processes ?? []).map((p) => <SelectItem key={p.process_code} value={p.process_code}>{p.process_code} {p.name}</SelectItem>)}</SelectContent>
-            </Select>
-            <p className="text-sm text-muted-foreground">El sistema propone sus requisitos evaluados con el perfil; podrás desmarcar los que no correspondan.</p>
-            <Button disabled={!fullProc} onClick={() => setProposeOpen(true)}>Proponer requisitos</Button>
-          </TabsContent>
-
           <TabsContent value="own" className="space-y-3">
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-1"><Label>Código</Label><Input value={own.code} onChange={(e) => setOwn({ ...own, code: e.target.value })} placeholder="EL-001" /></div>
@@ -192,10 +181,7 @@ export function AddRequirementsDialog({
             <DialogFooter><Button onClick={addOwn} disabled={!own.code.trim() || !own.name.trim() || insert.isPending}>Crear requisito propio</Button></DialogFooter>
           </TabsContent>
         </Tabs>
-        <ProposeRequirementsDialog
-          open={proposeOpen} onOpenChange={setProposeOpen} processCodes={fullProc ? [fullProc] : []} profile={profile}
-          existingCodes={existingCodes} projectId={projectId} tenantId={tenantId} title={`Agregar trámite completo ${fullProc}`}
-        />
+
       </DialogContent>
     </Dialog>
   );
