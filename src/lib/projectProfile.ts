@@ -88,6 +88,8 @@ export const PROFILE_SECTIONS: ProfileSection[] = [
         options: [{ value: "none", label: "Ninguna" }, { value: "green_area_complementary", label: "Complementaria en área verde" }, { value: "pool_near_boundary", label: "Piscina cerca del deslinde" }],
       },
       yes("has_auxiliary_works", "Obras auxiliares"),
+      yes("has_ito", "Tiene ITO", "Se responde sola si hay nombre de ITO"),
+      yes("has_independent_reviewer", "Tiene revisor independiente", "Se responde sola si hay nombre de revisor"),
       yes("is_condominium", "Copropiedad", "Ley de copropiedad"),
       yes("requires_cip", "Requiere CIP", "Certificado de informaciones previas", true),
       yes("pays_municipal_fees", "Paga derechos municipales", "Derechos y aranceles", true),
