@@ -60,7 +60,7 @@ export function RequirementSheet({
   const [newComment, setNewComment] = useState("");
   const [meta, setMeta] = useState({ document_type: "", issuer: "", folio: "", issued_at: "", expires_at: "" });
   const [uploading, setUploading] = useState(false);
-  const { data: stagesByProcess = {} } = useProcessStagesByProcess([form.process_id ?? null]);
+  const { data: stagesByProcess } = useProcessStagesByProcess([form.process_id ?? null]);
 
   useEffect(() => {
     if (item) setForm(item);
@@ -73,7 +73,7 @@ export function RequirementSheet({
   const isOwner = item.owner_user_id === userId;
   const canEditOps = canManage || isOwner;
   const myDocs = docs.filter((d) => d.project_requirement_id === item.id).sort((a, b) => b.version - a.version);
-  const stageOptions = (stagesByProcess as Record<string, { id: string; name: string }[]>)[form.process_id ?? ""] ?? [];
+  const stageOptions = stagesByProcess?.get(form.process_id ?? "") ?? [];
 
   const run = async (patch: Partial<RequirementItem>, ok: string) => {
     try { await update.mutateAsync({ id: item.id, patch }); toast({ title: ok }); return true; }
@@ -125,7 +125,7 @@ export function RequirementSheet({
   };
 
   const statusOptions = item.applicability === "applicable" && item.status ? nextStatuses(item.status, canManage) : [];
-  const needsJust = target === "compliant" && !myDocs.some((d) => d.is_current && d.review_status === "approved") || (target === "observed" && item.status === "compliant");
+  const needsJust = (target === "compliant" && !myDocs.some((d) => d.is_current && d.review_status === "approved")) || (target === "observed" && item.status === "compliant");
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
