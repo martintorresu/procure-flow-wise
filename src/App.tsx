@@ -20,6 +20,7 @@ import AdminPage from "@/pages/AdminPage";
 import ProjectsPage from "@/pages/ProjectsPage";
 import ProjectChainPage from "@/pages/ProjectChainPage";
 import RequirementTemplatePage from "@/pages/RequirementTemplatePage";
+import CatalogImportPage from "@/pages/CatalogImportPage";
 import ProfilePage from "@/pages/ProfilePage";
 import CommitmentsPage from "@/pages/CommitmentsPage";
 import MinutaActivaPage from "@/pages/MinutaActivaPage";
