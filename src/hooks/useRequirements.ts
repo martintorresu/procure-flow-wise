@@ -72,7 +72,7 @@ export function useRequirementCatalog() {
     queryKey: ["requirement_catalog"],
     queryFn: async (): Promise<RequirementCatalogItem[]> => {
       const { data, error } = await supabase
-        .from("requirement_catalog")
+        .from("dom_process_steps")
         .select(CATALOG_COLUMNS)
         .order("sort_order", { ascending: true });
       if (error) throw new Error(error.message);
@@ -129,7 +129,7 @@ export function useApplyRequirementTemplate() {
       tenantId: string;
     }): Promise<number> => {
       const { data: catalog, error: catError } = await supabase
-        .from("requirement_catalog")
+        .from("dom_process_steps")
         .select("id")
         .order("sort_order", { ascending: true });
       if (catError) throw new Error(catError.message);

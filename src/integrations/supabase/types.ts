@@ -171,6 +171,51 @@ export type Database = {
           },
         ]
       }
+      applicability_rules: {
+        Row: {
+          action: string
+          active: boolean
+          condition_json: Json
+          created_at: string
+          explanation: string | null
+          human_validation_required: boolean
+          id: string
+          priority: number
+          requirement_code: string
+          rule_group: string | null
+          rule_id: string
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          active?: boolean
+          condition_json?: Json
+          created_at?: string
+          explanation?: string | null
+          human_validation_required?: boolean
+          id?: string
+          priority?: number
+          requirement_code: string
+          rule_group?: string | null
+          rule_id: string
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          active?: boolean
+          condition_json?: Json
+          created_at?: string
+          explanation?: string | null
+          human_validation_required?: boolean
+          id?: string
+          priority?: number
+          requirement_code?: string
+          rule_group?: string | null
+          rule_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       business_rules: {
         Row: {
           accion_sistema: string
@@ -208,6 +253,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dom_process_steps: {
+        Row: {
+          activity: string
+          code: string
+          created_at: string
+          evidence: string | null
+          gate_code: string | null
+          gate_question: string | null
+          gate_route_no: string | null
+          gate_route_si: string | null
+          id: string
+          responsible_role: string | null
+          sort_order: number
+          stage_name: string
+          stage_number: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity: string
+          code: string
+          created_at?: string
+          evidence?: string | null
+          gate_code?: string | null
+          gate_question?: string | null
+          gate_route_no?: string | null
+          gate_route_si?: string | null
+          id?: string
+          responsible_role?: string | null
+          sort_order: number
+          stage_name: string
+          stage_number: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity?: string
+          code?: string
+          created_at?: string
+          evidence?: string | null
+          gate_code?: string | null
+          gate_question?: string | null
+          gate_route_no?: string | null
+          gate_route_si?: string | null
+          id?: string
+          responsible_role?: string | null
+          sort_order?: number
+          stage_name?: string
+          stage_number?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       email_log: {
         Row: {
@@ -344,6 +443,402 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      flow_gate_reviews: {
+        Row: {
+          answer: string
+          created_at: string
+          created_by: string | null
+          gate_id: string
+          id: string
+          notes: string | null
+          project_id: string
+          reviewed_at: string
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          answer: string
+          created_at?: string
+          created_by?: string | null
+          gate_id: string
+          id?: string
+          notes?: string | null
+          project_id: string
+          reviewed_at?: string
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          answer?: string
+          created_at?: string
+          created_by?: string | null
+          gate_id?: string
+          id?: string
+          notes?: string | null
+          project_id?: string
+          reviewed_at?: string
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_gate_reviews_gate_id_fkey"
+            columns: ["gate_id"]
+            isOneToOne: false
+            referencedRelation: "flow_gates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_gate_reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "flow_gate_reviews_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_gates: {
+        Row: {
+          code: string
+          created_at: string
+          flow_stage_id: string
+          id: string
+          question: string | null
+          route_no: string | null
+          route_yes: string | null
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          flow_stage_id: string
+          id?: string
+          question?: string | null
+          route_no?: string | null
+          route_yes?: string | null
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          flow_stage_id?: string
+          id?: string
+          question?: string | null
+          route_no?: string | null
+          route_yes?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "flow_gates_flow_stage_id_fkey"
+            columns: ["flow_stage_id"]
+            isOneToOne: false
+            referencedRelation: "flow_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      flow_stages: {
+        Row: {
+          client_labels: string[]
+          code: string
+          created_at: string
+          default_process_codes: string[]
+          id: string
+          name: string
+          sort_order: number
+        }
+        Insert: {
+          client_labels?: string[]
+          code: string
+          created_at?: string
+          default_process_codes?: string[]
+          id?: string
+          name: string
+          sort_order: number
+        }
+        Update: {
+          client_labels?: string[]
+          code?: string
+          created_at?: string
+          default_process_codes?: string[]
+          id?: string
+          name?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      import_jobs: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          created_count: number
+          error_count: number
+          file_name: string | null
+          id: string
+          kind: string
+          project_id: string | null
+          skipped_count: number
+          status: string
+          tenant_id: string | null
+          updated_at: string
+          updated_by: string | null
+          updated_count: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          error_count?: number
+          file_name?: string | null
+          id?: string
+          kind: string
+          project_id?: string | null
+          skipped_count?: number
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          updated_count?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          created_count?: number
+          error_count?: number
+          file_name?: string | null
+          id?: string
+          kind?: string
+          project_id?: string | null
+          skipped_count?: number
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          updated_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_jobs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_jobs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_rows: {
+        Row: {
+          created_at: string
+          data: Json
+          error: string | null
+          id: string
+          job_id: string
+          result: string | null
+          row_number: number
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          error?: string | null
+          id?: string
+          job_id: string
+          result?: string | null
+          row_number: number
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          error?: string | null
+          id?: string
+          job_id?: string
+          result?: string | null
+          row_number?: number
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_rows_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "import_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "import_rows_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_processes: {
+        Row: {
+          applicability_text: string | null
+          catalog_version: string | null
+          created_at: string
+          default_flow_stage: string | null
+          family: string | null
+          id: string
+          legal_nature: string | null
+          name: string
+          output_document: string | null
+          process_code: string
+          recipient: string | null
+          updated_at: string
+          version_major: number
+          version_minor: number
+        }
+        Insert: {
+          applicability_text?: string | null
+          catalog_version?: string | null
+          created_at?: string
+          default_flow_stage?: string | null
+          family?: string | null
+          id?: string
+          legal_nature?: string | null
+          name: string
+          output_document?: string | null
+          process_code: string
+          recipient?: string | null
+          updated_at?: string
+          version_major?: number
+          version_minor?: number
+        }
+        Update: {
+          applicability_text?: string | null
+          catalog_version?: string | null
+          created_at?: string
+          default_flow_stage?: string | null
+          family?: string | null
+          id?: string
+          legal_nature?: string | null
+          name?: string
+          output_document?: string | null
+          process_code?: string
+          recipient?: string | null
+          updated_at?: string
+          version_major?: number
+          version_minor?: number
+        }
+        Relationships: []
+      }
+      legal_requirements: {
+        Row: {
+          allows_override: boolean
+          applicability_text: string | null
+          catalog_status: string
+          catalog_version: string | null
+          created_at: string
+          default_priority: string | null
+          effective_from: string | null
+          effective_to: string | null
+          evidence_pending: boolean
+          evidence_required: string | null
+          family: string | null
+          group_code: string | null
+          group_name: string | null
+          id: string
+          is_customizable: boolean
+          issuer: string | null
+          legal_nature: string | null
+          legal_reference: string | null
+          output_document: string | null
+          process_code: string
+          recipient: string | null
+          requirement_code: string
+          requirement_level: string | null
+          requirement_name: string
+          source_document: string | null
+          source_version: string | null
+          updated_at: string
+          version_major: number
+          version_minor: number
+        }
+        Insert: {
+          allows_override?: boolean
+          applicability_text?: string | null
+          catalog_status?: string
+          catalog_version?: string | null
+          created_at?: string
+          default_priority?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          evidence_pending?: boolean
+          evidence_required?: string | null
+          family?: string | null
+          group_code?: string | null
+          group_name?: string | null
+          id?: string
+          is_customizable?: boolean
+          issuer?: string | null
+          legal_nature?: string | null
+          legal_reference?: string | null
+          output_document?: string | null
+          process_code: string
+          recipient?: string | null
+          requirement_code: string
+          requirement_level?: string | null
+          requirement_name: string
+          source_document?: string | null
+          source_version?: string | null
+          updated_at?: string
+          version_major?: number
+          version_minor?: number
+        }
+        Update: {
+          allows_override?: boolean
+          applicability_text?: string | null
+          catalog_status?: string
+          catalog_version?: string | null
+          created_at?: string
+          default_priority?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          evidence_pending?: boolean
+          evidence_required?: string | null
+          family?: string | null
+          group_code?: string | null
+          group_name?: string | null
+          id?: string
+          is_customizable?: boolean
+          issuer?: string | null
+          legal_nature?: string | null
+          legal_reference?: string | null
+          output_document?: string | null
+          process_code?: string
+          recipient?: string | null
+          requirement_code?: string
+          requirement_level?: string | null
+          requirement_name?: string
+          source_document?: string | null
+          source_version?: string | null
+          updated_at?: string
+          version_major?: number
+          version_minor?: number
+        }
+        Relationships: []
       }
       minuta_participants: {
         Row: {
@@ -487,6 +982,148 @@ export type Database = {
           },
         ]
       }
+      municipal_requirements: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          effective_from: string | null
+          effective_to: string | null
+          evidence_required: string | null
+          flow_stage_code: string | null
+          id: string
+          issuer: string | null
+          legal_requirement_id: string | null
+          mapping_status: string
+          municipality_id: string
+          name: string
+          process_code: string | null
+          proposed_shared: boolean
+          requirement_type: string
+          source: string
+          status: string
+          tenant_id: string | null
+          updated_at: string
+          updated_by: string | null
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          evidence_required?: string | null
+          flow_stage_code?: string | null
+          id?: string
+          issuer?: string | null
+          legal_requirement_id?: string | null
+          mapping_status?: string
+          municipality_id: string
+          name: string
+          process_code?: string | null
+          proposed_shared?: boolean
+          requirement_type: string
+          source: string
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          effective_from?: string | null
+          effective_to?: string | null
+          evidence_required?: string | null
+          flow_stage_code?: string | null
+          id?: string
+          issuer?: string | null
+          legal_requirement_id?: string | null
+          mapping_status?: string
+          municipality_id?: string
+          name?: string
+          process_code?: string | null
+          proposed_shared?: boolean
+          requirement_type?: string
+          source?: string
+          status?: string
+          tenant_id?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "municipal_requirements_legal_requirement_id_fkey"
+            columns: ["legal_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "legal_requirements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipal_requirements_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "municipal_requirements_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      municipalities: {
+        Row: {
+          comuna_code: string
+          contact: string | null
+          created_at: string
+          dom_name: string | null
+          id: string
+          intake_channel: string | null
+          name: string
+          region: string | null
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          comuna_code: string
+          contact?: string | null
+          created_at?: string
+          dom_name?: string | null
+          id?: string
+          intake_channel?: string | null
+          name: string
+          region?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          comuna_code?: string
+          contact?: string | null
+          created_at?: string
+          dom_name?: string | null
+          id?: string
+          intake_channel?: string | null
+          name?: string
+          region?: string | null
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       notification_preferences: {
         Row: {
           channel_email: boolean
@@ -546,6 +1183,21 @@ export type Database = {
           },
         ]
       }
+      platform_admins: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       positions: {
         Row: {
           created_at: string
@@ -583,6 +1235,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      process_applicability_rules: {
+        Row: {
+          applicability: string | null
+          condition_json: Json
+          created_at: string
+          explanation: string | null
+          id: string
+          process_code: string
+          updated_at: string
+        }
+        Insert: {
+          applicability?: string | null
+          condition_json?: Json
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          process_code: string
+          updated_at?: string
+        }
+        Update: {
+          applicability?: string | null
+          condition_json?: Json
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          process_code?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       process_comments: {
         Row: {
@@ -1172,6 +1854,228 @@ export type Database = {
           },
         ]
       }
+      project_processes: {
+        Row: {
+          active: boolean
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          process_code: string
+          project_id: string
+          suggested: boolean
+          suggestion_explanation: string | null
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          active?: boolean
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          process_code: string
+          project_id: string
+          suggested?: boolean
+          suggestion_explanation?: string | null
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          active?: boolean
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          process_code?: string
+          project_id?: string
+          suggested?: boolean
+          suggestion_explanation?: string | null
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_processes_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_processes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_requirement_items: {
+        Row: {
+          activation_mode: string
+          applicability: string
+          closed_at: string | null
+          code: string
+          corrective_action: string | null
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          evidence_pending: boolean
+          evidence_required: string | null
+          flow_stage_id: string | null
+          folio: string | null
+          fulfilled_at: string | null
+          id: string
+          justification: string | null
+          legal_reference: string | null
+          link_url: string | null
+          mapping_status: string
+          name: string
+          notes: string | null
+          observation_reason: string | null
+          origin_id: string | null
+          origin_type: string
+          origin_version: string | null
+          owner_name: string | null
+          owner_user_id: string | null
+          priority: string | null
+          process_code: string | null
+          process_id: string | null
+          project_id: string
+          rule_explanation: string | null
+          rule_id: string | null
+          stage_id: string | null
+          status: string | null
+          suggested_code: string | null
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          activation_mode: string
+          applicability?: string
+          closed_at?: string | null
+          code: string
+          corrective_action?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          evidence_pending?: boolean
+          evidence_required?: string | null
+          flow_stage_id?: string | null
+          folio?: string | null
+          fulfilled_at?: string | null
+          id?: string
+          justification?: string | null
+          legal_reference?: string | null
+          link_url?: string | null
+          mapping_status?: string
+          name: string
+          notes?: string | null
+          observation_reason?: string | null
+          origin_id?: string | null
+          origin_type: string
+          origin_version?: string | null
+          owner_name?: string | null
+          owner_user_id?: string | null
+          priority?: string | null
+          process_code?: string | null
+          process_id?: string | null
+          project_id: string
+          rule_explanation?: string | null
+          rule_id?: string | null
+          stage_id?: string | null
+          status?: string | null
+          suggested_code?: string | null
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          activation_mode?: string
+          applicability?: string
+          closed_at?: string | null
+          code?: string
+          corrective_action?: string | null
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          evidence_pending?: boolean
+          evidence_required?: string | null
+          flow_stage_id?: string | null
+          folio?: string | null
+          fulfilled_at?: string | null
+          id?: string
+          justification?: string | null
+          legal_reference?: string | null
+          link_url?: string | null
+          mapping_status?: string
+          name?: string
+          notes?: string | null
+          observation_reason?: string | null
+          origin_id?: string | null
+          origin_type?: string
+          origin_version?: string | null
+          owner_name?: string | null
+          owner_user_id?: string | null
+          priority?: string | null
+          process_code?: string | null
+          process_id?: string | null
+          project_id?: string
+          rule_explanation?: string | null
+          rule_id?: string | null
+          stage_id?: string | null
+          status?: string | null
+          suggested_code?: string | null
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_requirement_items_flow_stage_id_fkey"
+            columns: ["flow_stage_id"]
+            isOneToOne: false
+            referencedRelation: "flow_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_requirement_items_process_id_fkey"
+            columns: ["process_id"]
+            isOneToOne: false
+            referencedRelation: "processes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_requirement_items_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_requirement_items_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "process_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_requirement_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_requirements: {
         Row: {
           applicability: string
@@ -1246,22 +2150,35 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          municipality_id: string | null
           name: string
+          profile: Json
           tenant_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          municipality_id?: string | null
           name: string
+          profile?: Json
           tenant_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          municipality_id?: string | null
           name?: string
+          profile?: Json
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "projects_municipality_id_fkey"
+            columns: ["municipality_id"]
+            isOneToOne: false
+            referencedRelation: "municipalities"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -1326,6 +2243,394 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "requirement_catalog_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requirement_documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_type: string | null
+          expires_at: string | null
+          file_name: string
+          file_path: string
+          file_size: number | null
+          folio: string | null
+          id: string
+          is_current: boolean
+          issued_at: string | null
+          issuer: string | null
+          mime_type: string | null
+          project_requirement_id: string
+          replaces_id: string | null
+          review_status: string
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_type?: string | null
+          expires_at?: string | null
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          folio?: string | null
+          id?: string
+          is_current?: boolean
+          issued_at?: string | null
+          issuer?: string | null
+          mime_type?: string | null
+          project_requirement_id: string
+          replaces_id?: string | null
+          review_status?: string
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_type?: string | null
+          expires_at?: string | null
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          folio?: string | null
+          id?: string
+          is_current?: boolean
+          issued_at?: string | null
+          issuer?: string | null
+          mime_type?: string | null
+          project_requirement_id?: string
+          replaces_id?: string | null
+          review_status?: string
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirement_documents_project_requirement_id_fkey"
+            columns: ["project_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "project_requirement_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirement_documents_replaces_id_fkey"
+            columns: ["replaces_id"]
+            isOneToOne: false
+            referencedRelation: "requirement_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirement_documents_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requirement_events: {
+        Row: {
+          action: string
+          created_at: string
+          created_by: string | null
+          field: string | null
+          id: string
+          justification: string | null
+          new_value: Json | null
+          old_value: Json | null
+          project_id: string | null
+          project_requirement_id: string | null
+          rule_id: string | null
+          tenant_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          created_by?: string | null
+          field?: string | null
+          id?: string
+          justification?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          project_id?: string | null
+          project_requirement_id?: string | null
+          rule_id?: string | null
+          tenant_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          created_by?: string | null
+          field?: string | null
+          id?: string
+          justification?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          project_id?: string | null
+          project_requirement_id?: string | null
+          rule_id?: string | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirement_events_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirement_events_project_requirement_id_fkey"
+            columns: ["project_requirement_id"]
+            isOneToOne: false
+            referencedRelation: "project_requirement_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirement_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requirement_template_items: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          id: string
+          origin_id: string
+          origin_type: string
+          sort_order: number
+          template_id: string
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          origin_id: string
+          origin_type: string
+          sort_order?: number
+          template_id: string
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          origin_id?: string
+          origin_type?: string
+          sort_order?: number
+          template_id?: string
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirement_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "requirement_templates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "requirement_template_items_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      requirement_templates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          project_type: string | null
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          project_type?: string | null
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          project_type?: string | null
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "requirement_templates_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sector_certificates: {
+        Row: {
+          antecedente: string | null
+          base_normativa: string | null
+          certificate_id: string
+          codigo: string | null
+          condicion: string | null
+          created_at: string
+          documento_emitido: string | null
+          emisor: string | null
+          especialidad: string | null
+          etapa_asociada: string | null
+          id: string
+        }
+        Insert: {
+          antecedente?: string | null
+          base_normativa?: string | null
+          certificate_id: string
+          codigo?: string | null
+          condicion?: string | null
+          created_at?: string
+          documento_emitido?: string | null
+          emisor?: string | null
+          especialidad?: string | null
+          etapa_asociada?: string | null
+          id?: string
+        }
+        Update: {
+          antecedente?: string | null
+          base_normativa?: string | null
+          certificate_id?: string
+          codigo?: string | null
+          condicion?: string | null
+          created_at?: string
+          documento_emitido?: string | null
+          emisor?: string | null
+          especialidad?: string | null
+          etapa_asociada?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
+      tenant_requirements: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          customized_at: string | null
+          customized_by: string | null
+          description: string | null
+          evidence_required: string | null
+          flow_stage_id: string | null
+          id: string
+          issuer: string | null
+          legal_reference: string | null
+          name: string
+          origin_code: string | null
+          origin_id: string | null
+          origin_legal_reference: string | null
+          origin_type: string | null
+          origin_version: string | null
+          process_code: string | null
+          tenant_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          customized_at?: string | null
+          customized_by?: string | null
+          description?: string | null
+          evidence_required?: string | null
+          flow_stage_id?: string | null
+          id?: string
+          issuer?: string | null
+          legal_reference?: string | null
+          name: string
+          origin_code?: string | null
+          origin_id?: string | null
+          origin_legal_reference?: string | null
+          origin_type?: string | null
+          origin_version?: string | null
+          process_code?: string | null
+          tenant_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          customized_at?: string | null
+          customized_by?: string | null
+          description?: string | null
+          evidence_required?: string | null
+          flow_stage_id?: string | null
+          id?: string
+          issuer?: string | null
+          legal_reference?: string | null
+          name?: string
+          origin_code?: string | null
+          origin_id?: string | null
+          origin_legal_reference?: string | null
+          origin_type?: string | null
+          origin_version?: string | null
+          process_code?: string | null
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_requirements_flow_stage_id_fkey"
+            columns: ["flow_stage_id"]
+            isOneToOne: false
+            referencedRelation: "flow_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tenant_requirements_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -1528,6 +2833,10 @@ export type Database = {
       }
       generate_process_number: { Args: never; Returns: string }
       process_number_prefix: { Args: { _type: string }; Returns: string }
+      purge_project_requirement_data: {
+        Args: { p_project_id: string }
+        Returns: number
+      }
       seed_administracion_contrato_stages: {
         Args: { p_process_id: string }
         Returns: number
