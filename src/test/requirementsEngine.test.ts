@@ -71,3 +71,24 @@ describe("indicadores", () => {
     expect(nextStatuses("compliant", true)).toEqual(["observed"]);
   });
 });
+
+import { planGeneration } from "@/lib/requirementsEngine";
+describe("generación de requisitos", () => {
+  const base = {
+    processCodes: ["T10"],
+    requirements: [{ id: "1", requirement_code: "R1", process_code: "T10", requirement_name: "x", legal_reference: null, catalog_version: "2.0", evidence_required: null, evidence_pending: true, default_priority: null }],
+    rules: [{ rule_id: "RULE-1", requirement_code: "R1", condition_json: { field: "has_gas", op: "eq", value: true }, action: "exclude", priority: 1, explanation: "Sin gas" }],
+    municipal: [], processStage: new Map(), stageIdByCode: new Map(), docCount: new Map(),
+  };
+  it("exclude deja No aplica con justificación de la regla", () => {
+    const r = planGeneration({ ...base, profile: { has_gas: true }, existing: [] }).inserts[0];
+    expect(r.applicability).toBe("not_applicable");
+    expect(r.justification).toBe("Excluido por regla RULE-1: Sin gas");
+  });
+  it("volver a generar no crea filas y no pisa requisitos con gestión", () => {
+    const existing = [{ id: "a", origin_type: "legal", code: "R1", applicability: "review_required" as const, status: null, owner_user_id: null, owner_name: "Juan", justification: null, process_code: "T10" }];
+    const p = planGeneration({ ...base, profile: { has_gas: true }, existing });
+    expect(p.inserts).toHaveLength(0);
+    expect(p.changes[0].locked).toBe(true);
+  });
+});
