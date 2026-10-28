@@ -34,9 +34,9 @@ export interface KindConfig {
 export const CATALOG_KINDS: KindConfig[] = [
   { kind: "legal_processes", label: "Trámites", description: "Hoja «Trámites V.3» del Excel de ajustes.", codeField: "process_code", keyHeader: "process_code", versioned: true, mainSheetHint: "Trámites V.3" },
   { kind: "legal_requirements", label: "Requisitos legales", description: "requirement_catalog.csv. Ajuste opcional: hoja «Evidencia T25».", codeField: "requirement_code", keyHeader: "requirement_code", versioned: true, adjust: { label: "Evidencias propuestas", sheetHint: "Evidencia T25", keyHeader: "requirement_code" } },
-  { kind: "sector_certificates", label: "Certificados sectoriales", description: "sector_certificate_catalog.csv.", codeField: "certificate_id", keyHeader: "certificate_id", versioned: false },
+  { kind: "sector_certificates", label: "Certificados sectoriales", description: "sector_certificate_catalog.csv.", codeField: "certificate_id", keyHeader: "certificate_id", versioned: true },
   { kind: "process_applicability_rules", label: "Reglas de aplicabilidad de trámites", description: "Columna condition_json de la hoja «Trámites V.3».", codeField: "process_code", keyHeader: "process_code", versioned: true, mainSheetHint: "Trámites V.3" },
-  { kind: "applicability_rules", label: "Reglas de aplicabilidad de requisitos", description: "applicability_rules.csv. Ajuste opcional: hoja «Reglas corregidas».", codeField: "rule_id", keyHeader: "rule_id", versioned: false, adjust: { label: "Reglas corregidas", sheetHint: "Reglas corregidas", keyHeader: "rule_id" } },
+  { kind: "applicability_rules", label: "Reglas de aplicabilidad de requisitos", description: "applicability_rules.csv. Ajuste opcional: hoja «Reglas corregidas».", codeField: "rule_id", keyHeader: "rule_id", versioned: true, adjust: { label: "Reglas corregidas", sheetHint: "Reglas corregidas", keyHeader: "rule_id" } },
 ];
 
 export const kindConfig = (k: CatalogKind) => CATALOG_KINDS.find((c) => c.kind === k)!;
@@ -111,6 +111,17 @@ function parseScalar(v: string): unknown {
   if (v !== "" && !Number.isNaN(Number(v))) return Number(v);
   if (v.startsWith("[")) { try { return JSON.parse(v); } catch { /* texto */ } }
   return v;
+}
+
+/** Versión opcional (catalog_version / version); sin columna se asume 2.0. */
+function versionFields(rec: RowRecord, errors: string[]) {
+  const v = rec.catalog_version || rec.version || "2.0";
+  return {
+    ...parseVersion(v, errors),
+    effective_from: parseDate(rec.effective_from ?? "", "effective_from", errors),
+    effective_to: parseDate(rec.effective_to ?? "", "effective_to", errors),
+    catalog_status: "active",
+  };
 }
 
 export interface BuildContext {
@@ -196,6 +207,7 @@ export function buildRows(kind: CatalogKind, main: Grid, adjust: Grid | null, ct
           certificate_id: code, codigo: nul(rec.codigo), especialidad: nul(rec.especialidad), antecedente: nul(rec.antecedente),
           etapa_asociada: nul(rec.etapa_asociada), emisor: nul(rec.emisor), documento_emitido: nul(rec.documento_emitido),
           base_normativa: nul(rec.base_normativa), condicion: nul(rec.condicion),
+          ...versionFields(rec, errors),
         };
         break;
       }
@@ -234,6 +246,7 @@ export function buildRows(kind: CatalogKind, main: Grid, adjust: Grid | null, ct
           explanation: nul(rec.explanation),
           human_validation_required: review ? true : adj ? false : parseBool(rec.human_validation_required ?? "", "human_validation_required", errors, false),
           active: parseBool(rec.active ?? "", "active", errors, true),
+          ...versionFields(rec, errors),
         };
         break;
       }
@@ -281,7 +294,9 @@ type Client = SupabaseClient<any, any, any>;
 export async function loadExisting(client: Client, kind: CatalogKind): Promise<ExistingIndex> {
   const cfg = kindConfig(kind);
   const cols = cfg.versioned ? `${cfg.codeField},version_major,version_minor` : cfg.codeField;
-  const { data, error } = await client.from(kind).select(cols).limit(10000);
+  // Certificados y reglas de requisitos se comparan contra su versión vigente
+  const source = kind === "sector_certificates" || kind === "applicability_rules" ? `${kind}_current` : kind;
+  const { data, error } = await client.from(source).select(cols).limit(10000);
   if (error) throw error;
   const idx: ExistingIndex = new Map();
   for (const row of (data ?? []) as unknown as Record<string, unknown>[]) {
