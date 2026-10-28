@@ -74,7 +74,6 @@ export function evaluateRequirements(codes: string[], rules: RequirementRule[], 
     const conflict = results.some((x) => x.e.result !== top.e.result);
     const missing = [...new Set(top.e.missing)];
     let explanation = top.r.explanation ?? "";
-    if (missing.length) explanation = `Faltan datos del perfil: ${missing.map(fieldLabel).join(", ")}. ${explanation}`.trim();
     if (conflict) explanation = `Reglas en conflicto; gana ${top.r.rule_id}. ${explanation}`.trim();
     out.set(code, {
       requirement_code: code,
@@ -242,7 +241,7 @@ export function planGeneration(args: {
       origin_type: "municipal", origin_id: m.id, code: m.code, name: m.name, process_code: m.process_code, legal_reference: m.source,
       origin_version: null, evidence_required: m.evidence_required, evidence_pending: !m.evidence_required, activation_mode: "rules",
       rule_id: null, rule_explanation: "Exigencia municipal de la comuna del proyecto.", mapping_status: m.mapping_status,
-      applicability: "review_required", justification: null, flow_stage_id: st ? args.stageIdByCode.get(st) ?? null : null, priority: null,
+      applicability: "applicable", justification: null, flow_stage_id: st ? args.stageIdByCode.get(st) ?? null : null, priority: null,
     });
   }
   return { inserts, changes };
