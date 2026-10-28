@@ -25,6 +25,9 @@ import {
   useRequirementDocuments, useRequirementItems, type FlowGate, type RequirementItem,
 } from "@/hooks/useProjectRequirementItems";
 import { ProcessWizard } from "./ProcessWizard";
+import { GenerateRequirementsDialog } from "./GenerateRequirementsDialog";
+import { BulkActionsBar } from "./BulkActionsBar";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AddRequirementsDialog } from "./AddRequirementsDialog";
 import { RequirementSheet } from "./RequirementSheet";
 import { BulkDocumentUpload } from "./BulkDocumentUpload";
@@ -61,6 +64,12 @@ export function RequirementsTab({
   const [q, setQ] = useState("");
   const [fStatus, setFStatus] = useState(ALL);
   const [fStage, setFStage] = useState(ALL);
+  const [fProc, setFProc] = useState(ALL);
+  const [fAppl, setFAppl] = useState(ALL);
+  const [fOrigin, setFOrigin] = useState(ALL);
+  const [fOwner, setFOwner] = useState(ALL);
+  const [picked, setPicked] = useState<Set<string>>(new Set());
+  const [genCodes, setGenCodes] = useState<string[] | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [gate, setGate] = useState<FlowGate | null>(null);
@@ -88,19 +97,19 @@ export function RequirementsTab({
 
   const kpis = useMemo(() => {
     const appl = items.filter((i) => i.applicability === "applicable");
-    const denom = items.length - items.filter((i) => i.applicability === "not_applicable").length;
     const compliant = appl.filter((i) => i.status === "compliant").length;
     return [
       { label: "Aplicables", value: appl.length },
+      { label: "Revisión requerida", value: items.filter((i) => i.applicability === "review_required").length },
+      { label: "Pendientes", value: appl.filter((i) => i.status === "pending").length },
       { label: "En revisión", value: appl.filter((i) => i.status === "in_review").length },
       { label: "Observados", value: appl.filter((i) => i.status === "observed").length },
       { label: "Conformes", value: compliant },
       { label: "Vencidos", value: items.filter((i) => isOverdue(i)).length },
       { label: "Sin responsable", value: appl.filter((i) => !i.owner_user_id && !i.owner_name).length },
-      { label: "Sin documento", value: appl.filter((i) => !docsByReq.get(i.id)).length },
-      { label: "% de avance", value: `${denom > 0 ? Math.round((compliant / denom) * 100) : 0}%` },
+      { label: "% de avance", value: `${appl.length > 0 ? Math.round((compliant / appl.length) * 100) : 0}%` },
     ];
-  }, [items, docsByReq]);
+  }, [items]);
 
   const stageCards = useMemo(() => stages.map((s) => {
     const gates = (flow?.gates ?? []).filter((g) => g.flow_stage_id === s.id);
@@ -115,8 +124,18 @@ export function RequirementsTab({
     return items.filter((i) =>
       (fStage === ALL || (fStage === "none" ? !i.flow_stage_id : i.flow_stage_id === fStage)) &&
       (fStatus === ALL || (fStatus === "overdue" ? isOverdue(i) : fStatus === "review_required" || fStatus === "not_applicable" ? i.applicability === fStatus : i.applicability === "applicable" && i.status === fStatus)) &&
+      (fProc === ALL || (i.process_code ?? "none") === fProc) &&
+      (fAppl === ALL || i.applicability === fAppl) &&
+      (fOrigin === ALL || i.origin_type === fOrigin) &&
+      (fOwner === ALL || (fOwner === "none" ? !i.owner_user_id && !i.owner_name : (i.owner_user_id ?? `ext:${i.owner_name}`) === fOwner)) &&
       (!term || i.code.toLowerCase().includes(term) || i.name.toLowerCase().includes(term)));
-  }, [items, q, fStatus, fStage]);
+  }, [items, q, fStatus, fStage, fProc, fAppl, fOrigin, fOwner]);
+  const owners = useMemo(() => {
+    const m = new Map<string, string>();
+    items.forEach((i) => { if (i.owner_user_id) m.set(i.owner_user_id, userName.get(i.owner_user_id) ?? "Usuario"); else if (i.owner_name) m.set(`ext:${i.owner_name}`, i.owner_name); });
+    return [...m.entries()].sort((a, b) => a[1].localeCompare(b[1]));
+  }, [items, userName]);
+  const genExisting = useMemo(() => items.map((i) => ({ id: i.id, origin_type: i.origin_type, code: i.code, applicability: i.applicability, status: i.status, owner_user_id: i.owner_user_id, owner_name: i.owner_name, justification: i.justification, process_code: i.process_code })), [items]);
 
   const groups = useMemo(() => {
     const m = new Map<string, { label: string; order: number; rows: RequirementItem[] }>();
@@ -163,15 +182,18 @@ export function RequirementsTab({
 
   if (isLoading || !meta) return <Skeleton className="h-64 w-full" />;
   const existingKeys = new Set(items.map((i) => `${i.origin_type}:${i.code}`));
-  const existingLegal = new Set(items.filter((i) => i.origin_type === "legal").map((i) => i.code));
 
   return (
     <div className="space-y-4">
       <Alert><ShieldCheck className="h-4 w-4" /><AlertDescription>{DISCLAIMER}</AlertDescription></Alert>
 
-      <ProcessWizard projectId={projectId} tenantId={meta.tenant_id} profile={meta.profile ?? {}} canManage={canManage} existingCodes={existingLegal} />
+      <ProcessWizard projectId={projectId} tenantId={meta.tenant_id} profile={meta.profile ?? {}} canManage={canManage}
+        existing={genExisting} docCount={docsByReq} onGenerate={setGenCodes} />
+      <GenerateRequirementsDialog open={!!genCodes} onOpenChange={(o) => !o && setGenCodes(null)} processCodes={genCodes ?? []}
+        profile={meta.profile ?? {}} municipalityId={meta.municipality_id} existing={genExisting} docCount={docsByReq}
+        projectId={projectId} tenantId={meta.tenant_id} />
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-8">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
         {kpis.map((k) => (
           <Card key={k.label}><CardContent className="p-3"><p className="text-xs text-muted-foreground">{k.label}</p><p className="text-xl font-bold">{k.value}</p></CardContent></Card>
         ))}
@@ -215,7 +237,7 @@ export function RequirementsTab({
             <Button size="sm" variant="outline" onClick={exportCsv}><FileDown className="mr-1 h-4 w-4" />CSV</Button>
             <Button size="sm" variant="ghost" onClick={exportHistory}><History className="mr-1 h-4 w-4" />Historial</Button>
           </div>
-          <div className="grid gap-2 pt-2 sm:grid-cols-4">
+          <div className="grid gap-2 pt-2 sm:grid-cols-4 lg:grid-cols-8">
             <Input placeholder="Buscar código o nombre" value={q} onChange={(e) => setQ(e.target.value)} />
             <Select value={groupBy} onValueChange={(v) => setGroupBy(v as GroupBy)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
@@ -239,31 +261,80 @@ export function RequirementsTab({
                 <SelectItem value="overdue">Vencidos</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={fProc} onValueChange={setFProc}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todos los trámites</SelectItem>
+                {[...new Set(items.map((i) => i.process_code ?? "none"))].sort().map((c) => <SelectItem key={c} value={c}>{c === "none" ? "Sin trámite" : c}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={fAppl} onValueChange={setFAppl}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Toda aplicabilidad</SelectItem>
+                {Object.entries(APPLICABILITY_META).map(([k, m]) => <SelectItem key={k} value={k}>{m.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={fOrigin} onValueChange={setFOrigin}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todo origen</SelectItem>
+                {Object.entries(ORIGIN_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={fOwner} onValueChange={setFOwner}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>Todo responsable</SelectItem>
+                <SelectItem value="none">Sin responsable</SelectItem>
+                {owners.map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
+          {canManage && picked.size > 0 && (
+            <BulkActionsBar items={items.filter((i) => picked.has(i.id))} projectId={projectId} users={users} onDone={() => setPicked(new Set())} />
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {items.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Aún no hay requisitos. Completa el perfil y confirma los trámites para recibir la propuesta.</p>}
           {groups.map((g) => (
-            <div key={g.label}>
+            <div key={g.label} className="overflow-x-auto">
               <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{g.label} · {g.rows.length}</p>
-              <ul className="divide-y rounded border">
-                {g.rows.map((i) => {
-                  const st = i.applicability === "applicable" && i.status ? STATUS_META[i.status] : APPLICABILITY_META[i.applicability];
-                  return (
-                    <li key={i.id}>
-                      <button className="flex w-full flex-wrap items-center gap-2 p-2 text-left text-sm hover:bg-muted/40" onClick={() => setSelected(i.id)}>
-                        <span className="w-20 font-mono text-xs">{i.code}</span>
-                        <span className="min-w-[180px] flex-1">{i.name}</span>
-                        {i.mapping_status === "pending_validation" && <Badge variant="outline" className="text-xs">Pendiente de validación</Badge>}
-                        {isOverdue(i) && <Badge variant="destructive" className="text-xs">Vencido</Badge>}
-                        <span className="text-xs text-muted-foreground">{i.owner_user_id ? userName.get(i.owner_user_id) : i.owner_name ?? "Sin responsable"}</span>
-                        <span className="text-xs text-muted-foreground">{docsByReq.get(i.id) ?? 0} doc.</span>
-                        <Badge variant="outline" className={st.badge}>{st.label}</Badge>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+              <table className="w-full min-w-[900px] text-sm">
+                <thead className="bg-muted text-left text-xs">
+                  <tr>
+                    {canManage && (
+                      <th className="w-8 p-2">
+                        <Checkbox aria-label="Seleccionar grupo" checked={g.rows.every((i) => picked.has(i.id))}
+                          onCheckedChange={(c) => setPicked((s) => { const n = new Set(s); g.rows.forEach((i) => (c ? n.add(i.id) : n.delete(i.id))); return n; })} />
+                      </th>
+                    )}
+                    <th className="p-2">Código</th><th className="p-2">Requisito</th><th className="p-2">Trámite</th><th className="p-2">Etapa</th>
+                    <th className="p-2">Aplicabilidad</th><th className="p-2">Estado</th><th className="p-2">Responsable</th><th className="p-2">Fecha</th><th className="p-2">Origen</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {g.rows.map((i) => (
+                    <tr key={i.id} className="cursor-pointer border-t hover:bg-muted/40" onClick={() => setSelected(i.id)}>
+                      {canManage && (
+                        <td className="p-2" onClick={(e) => e.stopPropagation()}>
+                          <Checkbox aria-label={`Seleccionar ${i.code}`} checked={picked.has(i.id)}
+                            onCheckedChange={(c) => setPicked((s) => { const n = new Set(s); if (c) n.add(i.id); else n.delete(i.id); return n; })} />
+                        </td>
+                      )}
+                      <td className="p-2 font-mono text-xs">{i.code}</td>
+                      <td className="max-w-[320px] p-2"><span className="line-clamp-2">{i.name}</span></td>
+                      <td className="p-2 text-xs">{i.process_code ?? "—"}</td>
+                      <td className="p-2 text-xs">{i.flow_stage_id ? stageById.get(i.flow_stage_id)?.code : "—"}</td>
+                      <td className="p-2"><Badge variant="outline" className={APPLICABILITY_META[i.applicability].badge}>{APPLICABILITY_META[i.applicability].label}</Badge></td>
+                      <td className="p-2">{i.status ? <Badge variant="outline" className={STATUS_META[i.status].badge}>{STATUS_META[i.status].label}</Badge> : "—"}</td>
+                      <td className="p-2 text-xs">{i.owner_user_id ? userName.get(i.owner_user_id) : i.owner_name ?? <span className="text-muted-foreground">Sin responsable</span>}</td>
+                      <td className="p-2 text-xs">{i.due_date ?? "—"} {isOverdue(i) && <Badge variant="destructive" className="ml-1 text-xs">Vencido</Badge>}</td>
+                      <td className="p-2 text-xs">{ORIGIN_LABELS[i.origin_type]}{i.mapping_status === "pending_validation" ? " · pendiente de validación" : ""}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ))}
         </CardContent>
