@@ -26,6 +26,7 @@ export function GenerateRequirementsDialog({
   const bulk = useBulkUpdateRequirements(projectId);
   const { toast } = useToast();
   const [accepted, setAccepted] = useState<Set<string>>(new Set());
+  const [toReview, setToReview] = useState<Set<string>>(new Set());
 
   const plan = useMemo(() => {
     if (!cat || !flow) return null;
@@ -37,12 +38,15 @@ export function GenerateRequirementsDialog({
     });
   }, [cat, flow, municipal, processCodes, profile, existing, docCount]);
 
-  useEffect(() => { if (open) setAccepted(new Set()); }, [open]);
+  useEffect(() => { if (open) { setAccepted(new Set()); setToReview(new Set()); } }, [open]);
 
   const apply = async () => {
     if (!plan) return;
     try {
-      const n = plan.inserts.length ? await insert.mutateAsync(plan.inserts) : 0;
+      const rows = plan.inserts.map((r) => (toReview.has(r.code)
+        ? { ...r, applicability: "review_required" as const, justification: null, rule_explanation: `Pasado a revisión por el gestor. ${r.justification ?? ""}`.trim() }
+        : r));
+      const n = rows.length ? await insert.mutateAsync(rows) : 0;
       const ch = plan.changes.filter((c) => !c.locked && accepted.has(c.id));
       if (ch.length) {
         await bulk.mutateAsync(ch.map((c) => ({
@@ -81,6 +85,24 @@ export function GenerateRequirementsDialog({
                 </p>
               )}
             </div>
+            {plan.inserts.some((r) => r.applicability === "not_applicable") && (
+              <div className="rounded border p-3">
+                <p className="font-medium">No aplican según el perfil · {plan.inserts.filter((r) => r.applicability === "not_applicable").length}</p>
+                <p className="text-xs text-muted-foreground">Se registran como «No aplica» con la regla que los excluye. Marca los que quieras pasar a «Revisión requerida».</p>
+                <ScrollArea className="mt-2 max-h-48">
+                  <ul className="space-y-1">
+                    {plan.inserts.filter((r) => r.applicability === "not_applicable").map((r) => (
+                      <li key={r.code} className="flex items-start gap-2 text-xs">
+                        <Checkbox checked={toReview.has(r.code)} aria-label={`Pasar ${r.code} a revisión`}
+                          onCheckedChange={(v) => setToReview((s) => { const n = new Set(s); if (v) n.add(r.code); else n.delete(r.code); return n; })} />
+                        <span className="font-mono">{r.code}</span>
+                        <span className="flex-1">{r.name}<span className="block text-muted-foreground">{r.justification}</span></span>
+                      </li>
+                    ))}
+                  </ul>
+                </ScrollArea>
+              </div>
+            )}
             <div className="rounded border p-3">
               <p className="font-medium">{plan.changes.length} requisitos cambiarían de aplicabilidad</p>
               <p className="text-xs text-muted-foreground">Se aplican solo los que marques. Los que ya tienen gestión no se modifican.</p>
