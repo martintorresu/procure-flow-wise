@@ -34,6 +34,7 @@ export interface RequirementItem {
   priority: string | null;
   owner_user_id: string | null;
   owner_name: string | null;
+  owner_email: string | null;
   due_date: string | null;
   fulfilled_at: string | null;
   folio: string | null;
@@ -376,7 +377,9 @@ export function useReviewDocument(projectId: string | undefined) {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: reqKeys.docs(projectId) });
+      qc.invalidateQueries({ queryKey: reqKeys.items(projectId) });
       qc.invalidateQueries({ queryKey: ["req-events"] });
+      qc.invalidateQueries({ queryKey: ["stage-requirements"] });
     },
   });
 }

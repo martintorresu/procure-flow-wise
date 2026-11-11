@@ -18,14 +18,17 @@ export function BulkDocumentUpload({
   const qc = useQueryClient();
   const [rows, setRows] = useState<{ file: File; reqId: string; error: string | null }[]>([]);
   const [busy, setBusy] = useState(false);
-  const eligible = items.filter((i) => i.applicability !== "not_applicable");
+  const eligible = items.filter((i) => i.applicability === "applicable");
+  const blocked = items.filter((i) => i.applicability === "review_required");
 
   const pick = (files: FileList | null) => {
     if (!files) return;
     const codes = eligible.map((i) => i.code);
     setRows(Array.from(files).map((file) => {
-      const code = matchFileToCode(file.name, codes);
-      return { file, reqId: eligible.find((i) => i.code === code)?.id ?? NONE, error: validateRequirementFile(file) };
+      const code = matchFileToCode(file.name, [...codes, ...blocked.map((i) => i.code)]);
+      const isBlocked = !!code && blocked.some((i) => i.code === code);
+      return { file, reqId: eligible.find((i) => i.code === code)?.id ?? NONE,
+        error: validateRequirementFile(file) ?? (isBlocked ? `${code}: Primero indica si este requisito Aplica o No aplica` : null) };
     }));
   };
 
@@ -50,8 +53,8 @@ export function BulkDocumentUpload({
     <Dialog open={open} onOpenChange={(o) => { if (!o) setRows([]); onOpenChange(o); }}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Carga documental múltiple</DialogTitle>
-          <DialogDescription>Si el nombre empieza con el código del requisito (ej. EL-024_TE1.pdf) se propone el requisito. Revisa antes de guardar.</DialogDescription>
+          <DialogTitle>Carga documental (múltiple)</DialogTitle>
+          <DialogDescription>Si el nombre empieza con el código del requisito (ej. EL-024_TE1.pdf) se propone el requisito. Revisa antes de guardar. Los requisitos en «Revisión requerida» no aceptan documentos: primero indica si Aplica o No aplica.</DialogDescription>
         </DialogHeader>
         <input type="file" multiple accept={REQUIREMENT_FILE_ACCEPT} onChange={(e) => pick(e.target.files)} aria-label="Elegir archivos" />
         <div className="max-h-[50vh] space-y-2 overflow-y-auto">
