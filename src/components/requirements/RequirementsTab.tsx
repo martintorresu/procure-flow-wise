@@ -73,6 +73,8 @@ export function RequirementsTab({
   const [addOpen, setAddOpen] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [gate, setGate] = useState<FlowGate | null>(null);
+  const [exportScope, setExportScope] = useState<"filtered" | "all">("filtered");
+  const [showEvidence, setShowEvidence] = useState(false);
   const [gateForm, setGateForm] = useState({ answer: "yes", notes: "" });
 
   const selectedId = params.get("req");
@@ -151,16 +153,16 @@ export function RequirementsTab({
   }, [filtered, groupBy, stageById, procName]);
 
   const exportRows = () => [
-    ["Código", "Nombre", "Origen", "Vínculo", "Trámite", "Etapa", "Aplicabilidad", "Estado", "Vencido", "Prioridad", "Responsable", "Fecha comprometida", "Fecha cumplimiento", "Folio", "Documentos", "Referencia legal", "Evidencia requerida", "Justificación"],
-    ...filtered.map((i) => [
+    ["Código", "Nombre", "Origen", "Vínculo", "Trámite", "Etapa", "Aplicabilidad", "Estado", "Vencido", "Prioridad", "Responsable", "Correo responsable", "Fecha comprometida", "Fecha cumplimiento", "Folio", "Documentos", "Referencia legal", "Evidencia requerida", "Justificación"],
+    ...(exportScope === "all" ? [...items].sort((a, b) => (stageById.get(a.flow_stage_id ?? "")?.sort_order ?? 99) - (stageById.get(b.flow_stage_id ?? "")?.sort_order ?? 99) || a.code.localeCompare(b.code)) : filtered).map((i) => [
       i.code, i.name, ORIGIN_LABELS[i.origin_type], MAPPING_LABELS[i.mapping_status], i.process_code ?? "",
       i.flow_stage_id ? stageById.get(i.flow_stage_id)?.code ?? "" : "", APPLICABILITY_META[i.applicability].label,
       i.status ? STATUS_META[i.status].label : "", isOverdue(i) ? "Sí" : "", i.priority ? PRIORITY_LABELS[i.priority] ?? i.priority : "",
-      i.owner_user_id ? userName.get(i.owner_user_id) ?? "" : i.owner_name ?? "", i.due_date ?? "", i.fulfilled_at ?? "", i.folio ?? "",
+      i.owner_user_id ? userName.get(i.owner_user_id) ?? "" : i.owner_name ?? "", i.owner_email ?? "", i.due_date ?? "", i.fulfilled_at ?? "", i.folio ?? "",
       docsByReq.get(i.id) ?? 0, i.legal_reference ?? "", i.evidence_pending ? "Evidencia por definir" : i.evidence_required ?? "", i.justification ?? "",
     ]),
   ];
-  const fileBase = `requisitos_${(meta?.name ?? "proyecto").replace(/\W+/g, "_")}`;
+  const fileBase = `requisitos_${(meta?.name ?? "proyecto").replace(/\W+/g, "_")}${exportScope === "all" ? "_completo" : "_filtrado"}`;
   const exportCsv = () => download(`${fileBase}.csv`, toCsv(exportRows() as (string | number)[][]));
   const exportXlsx = async () => {
     const rows = exportRows();
@@ -232,9 +234,16 @@ export function RequirementsTab({
           <div className="flex flex-wrap items-center gap-2">
             <CardTitle className="mr-auto text-base">Checklist ({filtered.length})</CardTitle>
             {canManage && <Button size="sm" onClick={() => setAddOpen(true)}><Plus className="mr-1 h-4 w-4" />Agregar requisitos</Button>}
-            {(canManage || items.some((i) => i.owner_user_id === userId)) && <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)}><Upload className="mr-1 h-4 w-4" />Carga documental</Button>}
-            <Button size="sm" variant="outline" onClick={exportXlsx}><FileSpreadsheet className="mr-1 h-4 w-4" />Excel</Button>
-            <Button size="sm" variant="outline" onClick={exportCsv}><FileDown className="mr-1 h-4 w-4" />CSV</Button>
+            {(canManage || items.some((i) => i.owner_user_id === userId)) && <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)}><Upload className="mr-1 h-4 w-4" />Carga documental (múltiple)</Button>}
+            <Select value={exportScope} onValueChange={(v) => setExportScope(v as "filtered" | "all")}>
+              <SelectTrigger className="h-9 w-auto" aria-label="Qué exportar"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="filtered">Vista filtrada actual ({filtered.length})</SelectItem>
+                <SelectItem value="all">Todo el checklist (todas las etapas) ({items.length})</SelectItem>
+              </SelectContent>
+            </Select>
+            <Button size="sm" variant="outline" onClick={exportXlsx}><FileSpreadsheet className="mr-1 h-4 w-4" />Descargar Excel</Button>
+            <Button size="sm" variant="outline" onClick={exportCsv}><FileDown className="mr-1 h-4 w-4" />Descargar CSV</Button>
             <Button size="sm" variant="ghost" onClick={exportHistory}><History className="mr-1 h-4 w-4" />Historial</Button>
           </div>
           <div className="grid gap-2 pt-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -291,6 +300,9 @@ export function RequirementsTab({
               </SelectContent>
             </Select>
           </div>
+          <label className="flex items-center gap-2 pt-2 text-xs text-muted-foreground">
+            <Checkbox checked={showEvidence} onCheckedChange={(c) => setShowEvidence(!!c)} /> Mostrar columna «Evidencia»
+          </label>
           {canManage && picked.size > 0 && (
             <BulkActionsBar items={items.filter((i) => picked.has(i.id))} projectId={projectId} users={users} onDone={() => setPicked(new Set())} />
           )}
@@ -310,7 +322,7 @@ export function RequirementsTab({
                       </th>
                     )}
                     <th className="p-2">Código</th><th className="p-2">Requisito</th><th className="p-2">Trámite</th><th className="p-2">Etapa</th>
-                    <th className="p-2">Aplicabilidad</th><th className="p-2">Estado</th><th className="p-2">Responsable</th><th className="p-2">Fecha</th><th className="p-2">Origen</th>
+                    <th className="p-2">Aplicabilidad</th><th className="p-2">Estado</th><th className="p-2">Responsable</th><th className="p-2">Fecha</th>{showEvidence && <th className="p-2">Evidencia</th>}<th className="p-2">Origen</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -330,6 +342,7 @@ export function RequirementsTab({
                       <td className="p-2">{i.status ? <Badge variant="outline" className={STATUS_META[i.status].badge}>{STATUS_META[i.status].label}</Badge> : "—"}</td>
                       <td className="p-2 text-xs">{i.owner_user_id ? userName.get(i.owner_user_id) : i.owner_name ?? <span className="text-muted-foreground">Sin responsable</span>}</td>
                       <td className="p-2 text-xs">{i.due_date ?? "—"} {isOverdue(i) && <Badge variant="destructive" className="ml-1 text-xs">Vencido</Badge>}</td>
+                      {showEvidence && <td className="max-w-[260px] p-2 text-xs"><span className="line-clamp-2">{i.evidence_pending || !i.evidence_required ? <i>Evidencia por definir</i> : i.evidence_required}</span></td>}
                       <td className="p-2 text-xs">{ORIGIN_LABELS[i.origin_type]}{i.mapping_status === "pending_validation" ? " · pendiente de validación" : ""}</td>
                     </tr>
                   ))}
@@ -345,7 +358,7 @@ export function RequirementsTab({
       <BulkDocumentUpload open={bulkOpen} onOpenChange={setBulkOpen} projectId={projectId} tenantId={meta.tenant_id}
         items={canManage ? items : items.filter((i) => i.owner_user_id === userId)} />
       <RequirementSheet item={selected} open={!!selected} onOpenChange={(o) => !o && setSelected(null)} docs={docs} stages={stages}
-        processes={processes} canManage={canManage} userId={userId} tenantId={meta.tenant_id} />
+        processes={processes} canManage={canManage} userId={userId} tenantId={meta.tenant_id} onSaved={() => setSelected(null)} />
 
       <Dialog open={!!gate} onOpenChange={(o) => !o && setGate(null)}>
         <DialogContent>
