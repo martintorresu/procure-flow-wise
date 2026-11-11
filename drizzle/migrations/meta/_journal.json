@@ -64,6 +64,13 @@
       "when": 1793214860743,
       "tag": "0008_perfil_proyecto_solo_gestor",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794412797506,
+      "tag": "0009_requisitos_correcciones_qa_nov",
+      "breakpoints": true
     }
   ]
 }

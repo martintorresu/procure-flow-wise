@@ -2043,6 +2043,7 @@ export type Database = {
           origin_id: string | null
           origin_type: string
           origin_version: string | null
+          owner_email: string | null
           owner_name: string | null
           owner_user_id: string | null
           priority: string | null
@@ -2083,6 +2084,7 @@ export type Database = {
           origin_id?: string | null
           origin_type: string
           origin_version?: string | null
+          owner_email?: string | null
           owner_name?: string | null
           owner_user_id?: string | null
           priority?: string | null
@@ -2123,6 +2125,7 @@ export type Database = {
           origin_id?: string | null
           origin_type?: string
           origin_version?: string | null
+          owner_email?: string | null
           owner_name?: string | null
           owner_user_id?: string | null
           priority?: string | null
