@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import writeXlsxFile from "write-excel-file/browser";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -90,13 +90,24 @@ export function RequirementsTab({
     const [kind, v] = f.split(":");
     return kind === "status" ? fStatus === v : kind === "appl" ? fAppl === v && fStatus === ALL : fOwner === v;
   };
+  const checklistRef = useRef<HTMLDivElement>(null);
+  const scrollToChecklist = useRef(false);
+
   const toggleKpi = (f: string) => {
     const [kind, v] = f.split(":");
     const on = kpiActive(f);
+    if (!on) scrollToChecklist.current = true; // solo al activar el filtro
     if (kind === "status") setFStatus(on ? ALL : v);
     else if (kind === "appl") { setFAppl(on ? ALL : v); if (!on) setFStatus(ALL); }
     else setFOwner(on ? ALL : v);
   };
+
+  // Baja hasta el checklist una vez aplicado el filtro del KPI.
+  useEffect(() => {
+    if (!scrollToChecklist.current) return;
+    scrollToChecklist.current = false;
+    checklistRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
 
   const levelByCode = useMemo(() => new Map((cat?.requirements ?? []).map((r) => [r.requirement_code, r.requirement_level])), [cat]);
   const procName = useMemo(() => new Map((cat?.processes ?? []).map((p) => [p.process_code, p.name])), [cat]);
@@ -253,6 +264,7 @@ export function RequirementsTab({
         </CardContent>
       </Card>
 
+      <div ref={checklistRef} id="checklist-requisitos" className="scroll-mt-4">
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-wrap items-center gap-2">
@@ -333,6 +345,7 @@ export function RequirementsTab({
         </CardHeader>
         <CardContent className="space-y-4">
           {items.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Aún no hay requisitos. Completa el perfil y confirma los trámites para recibir la propuesta.</p>}
+          {items.length > 0 && filtered.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">Sin resultados con los filtros actuales. Quita la tarjeta seleccionada o cambia los filtros para ver requisitos.</p>}
           {groups.map((g) => (
             <div key={g.label} className="overflow-x-auto">
               <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">{g.label} · {g.rows.length}</p>
@@ -376,6 +389,7 @@ export function RequirementsTab({
           ))}
         </CardContent>
       </Card>
+      </div>
 
       <AddRequirementsDialog open={addOpen} onOpenChange={setAddOpen} projectId={projectId} tenantId={meta.tenant_id}
         municipalityId={meta.municipality_id} profile={meta.profile ?? {}} existingKeys={existingKeys} />
