@@ -57,6 +57,7 @@ export function BulkDocumentUpload({
           <DialogDescription>Si el nombre empieza con el código del requisito (ej. EL-024_TE1.pdf) se propone el requisito. Revisa antes de guardar. Los requisitos en «Revisión requerida» no aceptan documentos: primero indica si Aplica o No aplica.</DialogDescription>
         </DialogHeader>
         <input type="file" multiple accept={REQUIREMENT_FILE_ACCEPT} onChange={(e) => pick(e.target.files)} aria-label="Elegir archivos" />
+        {rows.length > 0 && <p className="rounded-md border-l-4 border-l-accent bg-accent/10 p-2 text-sm font-medium">Revisa la asignación propuesta. Si es correcta, confirma; si no, cambia el requisito en el selector.</p>}
         <div className="max-h-[50vh] space-y-2 overflow-y-auto">
           {rows.map((r, i) => (
             <div key={i} className="grid items-center gap-2 rounded border p-2 text-sm sm:grid-cols-2">
@@ -64,6 +65,8 @@ export function BulkDocumentUpload({
                 <p className="truncate">{r.file.name}</p>
                 {r.error && <p className="text-xs text-destructive">{r.error}</p>}
               </div>
+              <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">Requisito asignado (puedes cambiarlo)</p>
               <Select value={r.reqId} disabled={!!r.error} onValueChange={(v) => setRows((x) => x.map((y, j) => (j === i ? { ...y, reqId: v } : y)))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -71,13 +74,14 @@ export function BulkDocumentUpload({
                   {eligible.map((it) => <SelectItem key={it.id} value={it.id}>{it.code} · {it.name.slice(0, 60)}</SelectItem>)}
                 </SelectContent>
               </Select>
+              </div>
             </div>
           ))}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={save} disabled={busy || !rows.some((r) => !r.error && r.reqId !== NONE)}>
-            {busy ? "Cargando…" : `Guardar ${rows.filter((r) => !r.error && r.reqId !== NONE).length}`}
+            {busy ? "Cargando…" : `Confirmar y guardar (${rows.filter((r) => !r.error && r.reqId !== NONE).length} archivos)`}
           </Button>
         </DialogFooter>
       </DialogContent>

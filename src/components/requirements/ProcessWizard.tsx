@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Compass } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { deactivationBlockers, suggestProcesses, type GenExisting, type ProcessSuggestion } from "@/lib/requirementsEngine";
 import { conditionToText } from "@/lib/conditionText";
@@ -94,10 +95,10 @@ export function ProcessWizard({
   const sections: [string, ProcessSuggestion["result"]][] = [["Sugeridos", "applicable"], ["Requieren revisión", "review_required"], ["No aplican", "not_applicable"]];
 
   return (
-    <Card>
+    <Card className="border-l-[6px] border-l-accent bg-accent/10 shadow-md">
       <CardHeader className="pb-3">
         <div className="flex flex-wrap items-center gap-2">
-          <CardTitle className="mr-auto text-base">Asistente de trámites</CardTitle>
+          <CardTitle className="mr-auto flex items-center gap-2 text-lg"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground"><Compass className="h-4 w-4" /></span>Asistente de trámites</CardTitle>
           {confirmed.length > 0 && canManage && <Button size="sm" variant="outline" onClick={() => onGenerate(confirmed)}>Generar requisitos</Button>}
           <Button size="sm" onClick={evaluate}>Evaluar trámites</Button>
         </div>

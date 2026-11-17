@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, Upload, FileSpreadsheet, FileDown, History, ShieldCheck } from "lucide-react";
 import { toCsv } from "@/lib/csv";
@@ -85,6 +86,18 @@ export function RequirementsTab({
     setParams(p, { replace: true });
   };
 
+  const kpiActive = (f: string) => {
+    const [kind, v] = f.split(":");
+    return kind === "status" ? fStatus === v : kind === "appl" ? fAppl === v && fStatus === ALL : fOwner === v;
+  };
+  const toggleKpi = (f: string) => {
+    const [kind, v] = f.split(":");
+    const on = kpiActive(f);
+    if (kind === "status") setFStatus(on ? ALL : v);
+    else if (kind === "appl") { setFAppl(on ? ALL : v); if (!on) setFStatus(ALL); }
+    else setFOwner(on ? ALL : v);
+  };
+
   const levelByCode = useMemo(() => new Map((cat?.requirements ?? []).map((r) => [r.requirement_code, r.requirement_level])), [cat]);
   const procName = useMemo(() => new Map((cat?.processes ?? []).map((p) => [p.process_code, p.name])), [cat]);
   const userName = useMemo(() => new Map(users.map((u) => [u.id, u.full_name || u.email])), [users]);
@@ -100,16 +113,18 @@ export function RequirementsTab({
   const kpis = useMemo(() => {
     const appl = items.filter((i) => i.applicability === "applicable");
     const compliant = appl.filter((i) => i.status === "compliant").length;
+    const overdue = items.filter((i) => isOverdue(i)).length;
+    const amber = "border-warning bg-warning/15 text-foreground";
     return [
-      { label: "Aplicables", value: appl.length },
-      { label: "Revisión requerida", value: items.filter((i) => i.applicability === "review_required").length },
-      { label: "Pendientes", value: appl.filter((i) => i.status === "pending").length },
-      { label: "En revisión", value: appl.filter((i) => i.status === "in_review").length },
-      { label: "Observados", value: appl.filter((i) => i.status === "observed").length },
-      { label: "Conformes", value: compliant },
-      { label: "Vencidos", value: items.filter((i) => isOverdue(i)).length },
-      { label: "Sin responsable", value: appl.filter((i) => !i.owner_user_id && !i.owner_name).length },
-      { label: "% de avance", value: `${appl.length > 0 ? Math.round((compliant / appl.length) * 100) : 0}%` },
+      { label: "Aplicables", value: appl.length, filter: "appl:applicable", tone: "" },
+      { label: "Revisión requerida", value: items.filter((i) => i.applicability === "review_required").length, filter: "status:review_required", tone: amber },
+      { label: "Pendientes", value: appl.filter((i) => i.status === "pending").length, filter: "status:pending", tone: "bg-muted" },
+      { label: "En revisión", value: appl.filter((i) => i.status === "in_review").length, filter: "status:in_review", tone: "border-primary/40 bg-primary/10 text-foreground" },
+      { label: "Observados", value: appl.filter((i) => i.status === "observed").length, filter: "status:observed", tone: amber },
+      { label: "Conformes", value: compliant, filter: "status:compliant", tone: "border-success bg-success/15 text-foreground" },
+      { label: "Vencidos", value: overdue, filter: "status:overdue", tone: overdue > 0 ? "border-destructive bg-destructive text-destructive-foreground" : "" },
+      { label: "Sin responsable", value: appl.filter((i) => !i.owner_user_id && !i.owner_name).length, filter: "owner:none", tone: "" },
+      { label: "% de avance", value: `${appl.length > 0 ? Math.round((compliant / appl.length) * 100) : 0}%`, filter: null, tone: "" },
     ];
   }, [items]);
 
@@ -196,9 +211,18 @@ export function RequirementsTab({
         projectId={projectId} tenantId={meta.tenant_id} />
 
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
-        {kpis.map((k) => (
-          <Card key={k.label}><CardContent className="p-3"><p className="text-xs text-muted-foreground">{k.label}</p><p className="text-xl font-bold">{k.value}</p></CardContent></Card>
-        ))}
+        {kpis.map((k) => {
+          const active = k.filter ? kpiActive(k.filter) : false;
+          const body = <CardContent className="p-3"><p className={`text-xs ${k.tone.includes("destructive-foreground") ? "" : "text-muted-foreground"}`}>{k.label}</p><p className="text-xl font-bold">{k.value}</p></CardContent>;
+          if (!k.filter) return <Card key={k.label} className={k.tone}>{body}</Card>;
+          return (
+            <Tooltip key={k.label}><TooltipTrigger asChild>
+              <Card role="button" tabIndex={0} aria-pressed={active} onClick={() => toggleKpi(k.filter!)}
+                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), toggleKpi(k.filter!))}
+                className={`cursor-pointer transition hover:shadow-md ${k.tone} ${active ? "ring-2 ring-ring ring-offset-2" : ""}`}>{body}</Card>
+            </TooltipTrigger><TooltipContent>{active ? "Quitar filtro" : `Filtrar por ${k.label.toLowerCase()}`}</TooltipContent></Tooltip>
+          );
+        })}
       </div>
 
       <Card>
